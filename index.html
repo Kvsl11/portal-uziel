@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,6 +29,7 @@
     <script>
         // Tailwind configuration
         tailwind.config = {
+            darkMode: 'class', // Habilitando o modo escuro baseado em classe
             theme: {
                 extend: {
                     fontFamily: {
@@ -50,7 +51,7 @@
     </script>
     <style>
         html { scroll-behavior: smooth; }
-        #portal { scroll-margin-top: 13.5rem; }
+        #portal { scroll-margin-top: 8rem; }
         #verse { scroll-margin-top: 8rem; }
 
         body { display: flex; flex-direction: column; min-height: 100vh; }
@@ -85,11 +86,12 @@
         
         .modal-overlay { transition: opacity 0.3s ease; }
         .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
-        .rota-table th, .audit-table th { padding: 12px 16px; text-align: left; background-color: #f1f5f9; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
+        .rota-table th, .audit-table th { padding: 12px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
         .rota-table td, .audit-table td { padding: 12px 16px; }
-        .rota-table tbody tr, .audit-table tbody tr { border-bottom-width: 1px; border-color: #e5e7eb; }
+        .rota-table tbody tr, .audit-table tbody tr { border-bottom-width: 1px; }
         .rota-table tbody tr:last-child, .audit-table tbody tr:last-child { border-bottom-width: 0; }
         .rota-table tbody tr.current-month { background-color: #e0f2fe; }
+        .dark .rota-table tbody tr.current-month { background-color: #0c4a6e; } /* Dark mode for current month */
 
         .filter-btn { transition: all 0.3s ease; }
         .filter-btn.active { background-color: #2397cf; color: white; }
@@ -141,15 +143,24 @@
         .attendance-tab-button:not(.active) {
             color: #475569; /* slate-600 */
         }
+        .dark .attendance-tab-button:not(.active) {
+            color: #cbd5e1; /* slate-300 */
+        }
         .attendance-tab-button:not(.active):hover {
             background-color: #e2e8f0; /* slate-200 */
         }
-
+        .dark .attendance-tab-button:not(.active):hover {
+            background-color: #334155; /* slate-700 */
+        }
 
         .admin-only-input:disabled {
             background-color: #f8fafc;
             cursor: not-allowed;
             color: #94a3b8;
+        }
+        .dark .admin-only-input:disabled {
+             background-color: #1e293b; /* slate-800 */
+             color: #64748b; /* slate-500 */
         }
         
         .accordion-content {
@@ -169,6 +180,10 @@
         .playlist-item.active, .playlist-item:hover {
             background-color: #f0fdfa; /* teal-50 */
             border-color: #14b8a6; /* teal-500 */
+        }
+        .dark .playlist-item.active, .dark .playlist-item:hover {
+            background-color: #115e59; /* teal-900 */
+            border-color: #2dd4bf; /* teal-400 */
         }
 
         /* Toggle Switch Styles */
@@ -212,7 +227,7 @@
             transform: translateX(22px);
         }
 
-  @media (max-width: 768px) {
+    @media (max-width: 768px) {
         .content-hidden {
             display: block !important;
             }
@@ -220,7 +235,7 @@
 
     </style>
 
-    <!-- Agora sim, o seu script de bloqueio de inspeção -->
+    <!-- Script de bloqueio de inspeção -->
     <script>
         (function disableInspect() {
         // Bloqueia clique direito
@@ -243,25 +258,25 @@
     </script>
 
 </head>
-<body class="bg-brand-background text-brand-text font-sans">
+<body class="bg-brand-background dark:bg-slate-900 text-brand-text dark:text-slate-300 font-sans">
 
     <div id="main-login-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm"></div>
-        <div class="relative bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
+        <div class="relative bg-white dark:bg-slate-800 w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
             <div class="mb-6">
                 <h1 class="text-4xl font-bold font-anton text-brand-blue tracking-wider">UZIEL</h1>
-                <p class="text-slate-500">Bem-vindo ao Portal do Ministério</p>
+                <p class="text-slate-500 dark:text-slate-400">Bem-vindo ao Portal do Ministério</p>
             </div>
-            <p class="text-slate-600 mb-6">Por favor, insira suas credenciais para continuar.</p>
+            <p class="text-slate-600 dark:text-slate-300 mb-6">Por favor, insira suas credenciais para continuar.</p>
             <form id="main-login-form">
                 <div class="space-y-4">
                     <div>
                         <label for="main-username" class="sr-only">Usuário</label>
-                        <input type="text" id="main-username" placeholder="Usuário" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50" required>
+                        <input type="text" id="main-username" placeholder="Usuário" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50" required>
                     </div>
                     <div>
                         <label for="main-password" class="sr-only">Senha</label>
-                        <input type="password" id="main-password" placeholder="Senha" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50" required>
+                        <input type="password" id="main-password" placeholder="Senha" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50" required>
                     </div>
                 </div>
                 <p id="main-login-error" class="text-red-500 text-sm h-4 mt-4 mb-2"></p>
@@ -284,18 +299,29 @@
                 <a href="#portal" class="font-medium text-slate-200 hover:text-white transition-colors duration-300">Ferramentas</a>
                 <a href="#verse" class="font-medium text-slate-200 hover:text-white transition-colors duration-300">Inspiração</a>
                 <a href="https://docs.google.com/forms/d/1VF8dLdhjZnqK4_K2r_-ELXhV1frXMRdSZF-ORHR-TZA/edit?usp=drivesdk" id="header-cta-btn" target="_blank" class="bg-brand-blue text-white font-semibold px-5 py-2 rounded-full hover:bg-brand-dark-blue transition-all shadow-md hover:shadow-lg hover:scale-105">Seja Membro</a>
+                <!-- Botão de Tema AQUI -->
+                <button id="desktop-theme-toggle" class="theme-toggle-btn text-slate-200 hover:text-white w-10 h-10 rounded-full flex items-center justify-center" aria-label="Alternar tema">
+                    <i class="fas fa-moon text-lg"></i>
+                    <i class="fas fa-sun text-lg hidden"></i>
+                </button>
             </nav>
-            <button id="mobile-menu-button" class="lg:hidden z-[61] text-white transition-colors duration-300">
-                <i id="menu-open-icon" class="fas fa-bars fa-lg"></i>
-                <i id="menu-close-icon" class="fas fa-times fa-lg hidden"></i>
-            </button>
+            <div class="flex items-center gap-2 lg:hidden">
+                <button id="mobile-theme-toggle" class="theme-toggle-btn text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300" aria-label="Alternar tema">
+                     <i class="fas fa-moon text-lg"></i>
+                     <i class="fas fa-sun text-lg hidden"></i>
+                </button>
+                <button id="mobile-menu-button" class="z-[61] text-white transition-colors duration-300 w-10 h-10">
+                    <i id="menu-open-icon" class="fas fa-bars fa-lg"></i>
+                    <i id="menu-close-icon" class="fas fa-times fa-lg hidden"></i>
+                </button>
+            </div>
         </div>
     </header>
-    <div id="mobile-menu" class="fixed inset-0 bg-brand-background z-[60] flex items-center justify-center opacity-0 pointer-events-none">
+    <div id="mobile-menu" class="fixed inset-0 bg-brand-background dark:bg-slate-900 z-[60] flex items-center justify-center opacity-0 pointer-events-none">
         <nav class="flex flex-col items-center justify-center h-full gap-8">
-            <a href="#home" class="mobile-nav-link text-3xl font-semibold text-slate-700">Início</a>
-            <a href="#portal" class="mobile-nav-link text-3xl font-semibold text-slate-700" style="transition-delay: 100ms">Ferramentas</a>
-            <a href="#verse" class="mobile-nav-link text-3xl font-semibold text-slate-700" style="transition-delay: 200ms">Inspiração</a>
+            <a href="#home" class="mobile-nav-link text-3xl font-semibold text-slate-700 dark:text-slate-200">Início</a>
+            <a href="#portal" class="mobile-nav-link text-3xl font-semibold text-slate-700 dark:text-slate-200" style="transition-delay: 100ms">Ferramentas</a>
+            <a href="#verse" class="mobile-nav-link text-3xl font-semibold text-slate-700 dark:text-slate-200" style="transition-delay: 200ms">Inspiração</a>
             <a href="#" id="mobile-header-cta-btn" target="_blank" class="mobile-nav-link mt-4 bg-brand-blue text-white font-semibold px-8 py-3 rounded-full text-xl" style="transition-delay: 300ms">Seja Membro</a>
         </nav>
     </div>
@@ -308,34 +334,34 @@
                  <div class="reveal" style="transition-delay: 300ms;">
              </div>
         </section>
-        <section id="filters-section" class="py-10 sticky top-[76px] md:top-[84px] bg-brand-background/95 backdrop-blur-sm z-40 border-b border-slate-200">
+        <section id="filters-section" class="py-10 sticky top-[76px] md:top-[84px] bg-brand-background/95 dark:bg-slate-900/95 backdrop-blur-sm z-40 border-b border-slate-200 dark:border-slate-800">
             <div class="container mx-auto px-6 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <h3 class="font-semibold text-slate-600 hidden md:block">Navegar por:</h3>
-                <nav id="category-filters" class="flex flex-wrap items-center justify-center gap-2 bg-slate-100 p-2 rounded-full shadow-inner">
-                        <button class="filter-btn active px-4 py-1.5 text-sm font-semibold rounded-full" data-category="all">Todos</button>
-                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full" data-category="media">Mídia & Música</button>
-                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full" data-category="liturgy">Liturgia</button>
-                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full" data-category="organization">Organização</button>
+                <h3 class="font-semibold text-slate-600 dark:text-slate-400 hidden md:block">Navegar por:</h3>
+                <nav id="category-filters" class="flex flex-wrap items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-full shadow-inner">
+                        <button class="filter-btn active px-4 py-1.5 text-sm font-semibold rounded-full text-slate-600 dark:text-slate-300" data-category="all">Todos</button>
+                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full text-slate-600 dark:text-slate-300" data-category="media">Mídia & Música</button>
+                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full text-slate-600 dark:text-slate-300" data-category="liturgy">Liturgia</button>
+                        <button class="filter-btn px-4 py-1.5 text-sm font-semibold rounded-full text-slate-600 dark:text-slate-300" data-category="organization">Organização</button>
                 </nav>
             </div>
         </section>
-        <section id="portal" class="py-16 md:py-20 bg-brand-light-gray">
+        <section id="portal" class="py-16 md:py-20 bg-brand-light-gray dark:bg-slate-950">
             <div class="container mx-auto px-6">
                 <div id="card-grid" class="flex flex-wrap justify-center -m-3">
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><a href="https://drive.google.com/drive/folders/1Feuv0be087x3zRc9hmecsKO4ZSEMcD3Q?usp=drive_link" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-purple-100 text-purple-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-photo-video fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Mídias</h3><p class="text-slate-500 text-sm">Acesse nosso acervo de fotos e vídeos.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><div id="open-playlist-modal" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-green-100 text-green-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fab fa-spotify fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Playlists</h3><p class="text-slate-500 text-sm">Nossas seleções de músicas para inspirar.</p></div></div></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><a href="https://musicasparamissa.com.br/" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-pink-100 text-pink-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-music fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Músicas para Missa</h3><p class="text-slate-500 text-sm">Veja as musicas mais adquadas para as celebrações.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><a href="https://santuarionsamordivino.com.br/liturgia-eucaristica-novo-missal-romano/" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-amber-100 text-amber-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-cross fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Oração Eucarística</h3><p class="text-slate-500 text-sm">Acesse as orações para os momentos de adoração.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><a href="https://www.cnbb.org.br/liturgia-diaria/" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-yellow-100 text-yellow-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-book-open fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Liturgia Diária</h3><p class="text-slate-500 text-sm">Consulte as leituras e o salmo do dia.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><div id="open-rota-modal" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-cyan-100 text-cyan-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-calendar-alt fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Escala de Salmistas</h3><p class="text-slate-500 text-sm">Confira a programação anual dos salmos.</p></div></div></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><div id="open-statute-modal" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-contract fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Estatuto</h3><p class="text-slate-500 text-sm">Consulte as diretrizes do ministério.</p></div></div></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><div id="open-pptx-generator-modal" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-orange-100 text-orange-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-export fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Gerador de Arquivos</h3><p class="text-slate-500 text-sm">Crie PPTX, PDF e visualize o repertório.</p></div></div></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/1VF8dLdhjZnqK4_K2r_-ELXhV1frXMRdSZF-ORHR-TZA/edit?usp=drivesdk" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-sky-100 text-sky-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-user-plus fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Novos Membros</h3><p class="text-slate-500 text-sm">Questionário para quem deseja se juntar a nós.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://drive.google.com/file/d/1Nt1H12O73Xk9GtnVa2P0U3xx9zTZe-gu/view?usp=drivesdk" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-sitemap fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Organograma</h3><p class="text-slate-500 text-sm">Conheça a estrutura de liderança.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/document/d/1_DUy9LPo1L1ZV_bxB1Sa5P8ySR6zZdmPD3qs6B_-gZY/edit?usp=drivesdk" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-cogs fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Processos</h3><p class="text-slate-500 text-sm">Entenda nossos fluxos e procedimentos.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="#" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-teal-100 text-teal-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-hands-helping fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Ação Social</h3><p class="text-slate-500 text-sm">Veja nossos projetos e como participar.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/e/1FAIpQLSfUkS-wHsisihvP-QDA4tgo9N8k8e5eHCn-CLoyghEqVgcY8A/viewform" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-red-100 text-red-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-shield-alt fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Canal de Denúncias</h3><p class="text-slate-500 text-sm">Relato seguro e anônimo.</p></div></a></div>
-                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/e/1FAIpQLSfPhK1m2uOWOioOxDj-oI5xuueDQylWlXgKbnjtEA1gAI0ahg/viewform" target="_blank" class="portal-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-blue-100 text-blue-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-lightbulb fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text mb-1">Críticas e Sugestões</h3><p class="text-slate-500 text-sm">Sua opinião é importante para nós.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><a href="https://drive.google.com/drive/folders/1Feuv0be087x3zRc9hmecsKO4ZSEMcD3Q?usp=drive_link" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-purple-100 text-purple-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-photo-video fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Mídias</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Acesse nosso acervo de fotos e vídeos.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><div id="open-playlist-modal" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-green-100 text-green-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fab fa-spotify fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Playlists</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Nossas seleções de músicas para inspirar.</p></div></div></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="media"><a href="https://musicasparamissa.com.br/" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-pink-100 text-pink-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-music fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Músicas para Missa</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Veja as musicas mais adquadas para as celebrações.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><a href="https://santuarionsamordivino.com.br/liturgia-eucaristica-novo-missal-romano/" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-amber-100 text-amber-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-cross fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Oração Eucarística</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Acesse as orações para os momentos de adoração.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><a href="https://www.cnbb.org.br/liturgia-diaria/" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-yellow-100 text-yellow-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-book-open fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Liturgia Diária</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Consulte as leituras e o salmo do dia.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="liturgy"><div id="open-rota-modal" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-cyan-100 text-cyan-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-calendar-alt fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Escala de Salmistas</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Confira a programação anual dos salmos.</p></div></div></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><div id="open-statute-modal" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-contract fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Estatuto</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Consulte as diretrizes do ministério.</p></div></div></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><div id="open-pptx-generator-modal" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center cursor-pointer h-full"><div class="bg-orange-100 text-orange-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-export fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Gerador de Arquivos</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Crie PPTX, PDF e visualize o repertório.</p></div></div></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/1VF8dLdhjZnqK4_K2r_-ELXhV1frXMRdSZF-ORHR-TZA/edit?usp=drivesdk" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-sky-100 text-sky-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-user-plus fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Novos Membros</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Questionário para quem deseja se juntar a nós.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://drive.google.com/file/d/1Nt1H12O73Xk9GtnVa2P0U3xx9zTZe-gu/view?usp=drivesdk" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-sitemap fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Organograma</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Conheça a estrutura de liderança.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/document/d/1_DUy9LPo1L1ZV_bxB1Sa5P8ySR6zZdmPD3qs6B_-gZY/edit?usp=drivesdk" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-slate-100 text-slate-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-cogs fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Processos</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Entenda nossos fluxos e procedimentos.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="#" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-teal-100 text-teal-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-hands-helping fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Ação Social</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Veja nossos projetos e como participar.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/e/1FAIpQLSfUkS-wHsisihvP-QDA4tgo9N8k8e5eHCn-CLoyghEqVgcY8A/viewform" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-red-100 text-red-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-shield-alt fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Canal de Denúncias</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Relato seguro e anônimo.</p></div></a></div>
+                    <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><a href="https://docs.google.com/forms/d/e/1FAIpQLSfPhK1m2uOWOioOxDj-oI5xuueDQylWlXgKbnjtEA1gAI0ahg/viewform" target="_blank" class="portal-card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full"><div class="bg-blue-100 text-blue-600 rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-lightbulb fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-brand-text dark:text-white mb-1">Críticas e Sugestões</h3><p class="text-slate-500 dark:text-slate-400 text-sm">Sua opinião é importante para nós.</p></div></a></div>
                     <div class="portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization"><div id="open-attendance-trigger" class="portal-card bg-brand-blue p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full cursor-pointer"><div class="bg-white/90 text-brand-blue rounded-full w-16 h-16 mb-4 flex items-center justify-center flex-shrink-0"><i class="fas fa-user-check fa-2x"></i></div><div class="flex flex-col flex-grow"><h3 class="font-bold text-xl text-white mb-1">Controle de Presença</h3><p class="text-blue-100 text-sm">Registre presenças, ausências e consulte pontuações.</p></div></div></div>
                     <div id="user-management-card-wrapper" class="admin-only hidden portal-card-wrapper w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-3 reveal" data-category="organization">
                         <div id="open-user-management-modal" class="portal-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full cursor-pointer">
@@ -377,31 +403,31 @@
         </section>
     </main>
     
-    <div id="statute-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="statute-modal-title"><div class="modal-content bg-white w-full max-w-lg p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0"><div class="flex justify-between items-center mb-6"><div class="flex items-center gap-3"><i class="fas fa-file-contract text-brand-blue text-2xl"></i><h3 id="statute-modal-title" class="text-2xl font-bold text-brand-text">Estatuto do Ministério</h3></div><button id="close-statute-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button></div><p class="text-slate-500 mb-6">Escolha a versão do documento que deseja consultar.</p><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><a href="https://drive.google.com/file/d/1hzVoqTGXw0pBBOTUG7PuIkTjZVrk_cKe/view?usp=drivesdk" target="_blank" class="group block text-left bg-brand-light-gray p-5 rounded-lg border border-slate-200 hover:border-brand-blue hover:bg-white transition-all duration-300"><i class="fas fa-file-signature text-brand-blue text-2xl mb-2"></i><h4 class="font-bold text-lg text-brand-text">Estatuto Novo</h4><p class="text-sm text-slate-500">Versão mais recente e vigente das nossas diretrizes.</p></a><a href="https://drive.google.com/file/d/1sCjQkqn7VN0aanL0XvfuSocXregwZs_O/view?usp=drivesdk" target="_blank" class="group block text-left bg-brand-light-gray p-5 rounded-lg border border-slate-200 hover:border-brand-blue hover:bg-white transition-all duration-300"><i class="fas fa-archive text-slate-500 group-hover:text-brand-blue text-2xl mb-2"></i><h4 class="font-bold text-lg text-brand-text">Estatuto Antigo</h4><p class="text-sm text-slate-500">Versão anterior para consulta de histórico.</p></a></div></div></div>
-    <div id="rota-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="rota-modal-title"><div class="modal-content bg-white w-full max-w-4xl p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden"><div class="flex justify-between items-center p-6 border-b border-slate-200"><div class="flex items-center gap-3"><i class="fas fa-calendar-check text-brand-blue text-2xl"></i><h3 id="rota-modal-title" class="text-2xl font-bold text-brand-text">Escala de Salmistas Anual</h3></div><button id="regenerate-rota-btn" class="hidden bg-brand-blue text-white font-semibold py-1.5 px-4 rounded-full hover:bg-brand-dark-blue transition-all shadow-md text-sm ml-auto mr-4"><i class="fas fa-random mr-2"></i>Gerar Nova Lista</button><button id="close-rota-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button></div><div id="rota-loading" class="text-center py-12"><i class="fas fa-spinner fa-spin text-brand-blue text-4xl"></i><p class="mt-4 text-slate-600">Gerando escala anual...</p></div><div id="rota-content" class="hidden"><div class="max-h-[60vh] overflow-y-auto"><table class="w-full text-sm text-slate-700 rota-table"><thead class="sticky top-0 bg-slate-100 z-10"><tr><th>Data (1º Domingo)</th><th>Salmista</th><th>Substituto(a)</th></tr></thead><tbody id="rota-table-body" class="bg-white"></tbody></table></div><div class="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 text-center">Esta escala é gerada automaticamente para o período de um ano a partir do mês atual.</div></div></div></div>
+    <div id="statute-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="statute-modal-title"><div class="modal-content bg-white dark:bg-slate-800 w-full max-w-lg p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0"><div class="flex justify-between items-center mb-6"><div class="flex items-center gap-3"><i class="fas fa-file-contract text-brand-blue text-2xl"></i><h3 id="statute-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Estatuto do Ministério</h3></div><button id="close-statute-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button></div><p class="text-slate-500 dark:text-slate-400 mb-6">Escolha a versão do documento que deseja consultar.</p><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><a href="https://drive.google.com/file/d/1hzVoqTGXw0pBBOTUG7PuIkTjZVrk_cKe/view?usp=drivesdk" target="_blank" class="group block text-left bg-brand-light-gray dark:bg-slate-700 p-5 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-brand-blue hover:bg-white dark:hover:bg-slate-600 transition-all duration-300"><i class="fas fa-file-signature text-brand-blue text-2xl mb-2"></i><h4 class="font-bold text-lg text-brand-text dark:text-white">Estatuto Novo</h4><p class="text-sm text-slate-500 dark:text-slate-400">Versão mais recente e vigente das nossas diretrizes.</p></a><a href="https://drive.google.com/file/d/1sCjQkqn7VN0aanL0XvfuSocXregwZs_O/view?usp=drivesdk" target="_blank" class="group block text-left bg-brand-light-gray dark:bg-slate-700 p-5 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-brand-blue hover:bg-white dark:hover:bg-slate-600 transition-all duration-300"><i class="fas fa-archive text-slate-500 group-hover:text-brand-blue text-2xl mb-2"></i><h4 class="font-bold text-lg text-brand-text dark:text-white">Estatuto Antigo</h4><p class="text-sm text-slate-500 dark:text-slate-400">Versão anterior para consulta de histórico.</p></a></div></div></div>
+    <div id="rota-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="rota-modal-title"><div class="modal-content bg-white dark:bg-slate-800 w-full max-w-4xl p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden"><div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700"><div class="flex items-center gap-3"><i class="fas fa-calendar-check text-brand-blue text-2xl"></i><h3 id="rota-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Escala de Salmistas Anual</h3></div><button id="regenerate-rota-btn" class="hidden bg-brand-blue text-white font-semibold py-1.5 px-4 rounded-full hover:bg-brand-dark-blue transition-all shadow-md text-sm ml-auto mr-4"><i class="fas fa-random mr-2"></i>Gerar Nova Lista</button><button id="close-rota-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button></div><div id="rota-loading" class="text-center py-12"><i class="fas fa-spinner fa-spin text-brand-blue text-4xl"></i><p class="mt-4 text-slate-600 dark:text-slate-300">Gerando escala anual...</p></div><div id="rota-content" class="hidden"><div class="max-h-[60vh] overflow-y-auto"><table class="w-full text-sm text-slate-700 dark:text-slate-300 rota-table"><thead class="sticky top-0 bg-slate-100 dark:bg-slate-700 z-10"><tr><th>Data (1º Domingo)</th><th>Salmista</th><th>Substituto(a)</th></tr></thead><tbody id="rota-table-body" class="bg-white dark:bg-slate-800"></tbody></table></div><div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 text-center">Esta escala é gerada automaticamente para o período de um ano a partir do mês atual.</div></div></div></div>
     
     <!-- ========== PLAYLIST MODAL (MODERNIZED) ========== -->
     <div id="playlist-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
-        <div class="modal-content bg-slate-50 w-full max-w-4xl h-[85vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 bg-white">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-4xl h-[85vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-4">
                     <i class="fab fa-spotify text-green-500 text-3xl"></i>
                     <div>
-                        <h3 id="playlist-modal-title" class="text-2xl font-bold text-brand-text">Playlists</h3>
-                        <p class="text-sm text-slate-500">Nossas seleções de músicas para inspirar.</p>
+                        <h3 id="playlist-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Playlists</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Nossas seleções de músicas para inspirar.</p>
                     </div>
                 </div>
-                <button id="close-playlist-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-playlist-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             
             <div class="flex-grow flex flex-col md:flex-row gap-6 p-6 overflow-y-auto">
                 <!-- Left Column: Playlist List -->
                 <div class="w-full md:w-1/3 flex flex-col gap-4">
                     <!-- Admin-only Add Form -->
-                    <form id="add-playlist-form" class="hidden admin-only bg-white p-4 rounded-lg border border-slate-200">
-                        <h4 class="font-bold text-brand-text mb-2">Adicionar Nova Playlist</h4>
+                    <form id="add-playlist-form" class="hidden admin-only bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-brand-text dark:text-white mb-2">Adicionar Nova Playlist</h4>
                         <div class="flex items-center gap-2">
-                            <input type="url" id="new-playlist-url" placeholder="Cole o link do Spotify ou YouTube" class="flex-grow w-full text-sm rounded-md border-slate-300 shadow-sm" required>
+                            <input type="url" id="new-playlist-url" placeholder="Cole o link do Spotify ou YouTube" class="flex-grow w-full text-sm rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                             <button type="submit" class="flex-shrink-0 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-all" title="Adicionar Playlist">
                                 <i class="fas fa-plus"></i>
                             </button>
@@ -409,10 +435,10 @@
                          <p id="playlist-form-feedback" class="text-xs text-red-500 h-3 mt-1"></p>
                     </form>
                     
-                    <h4 class="font-semibold text-slate-600 mt-2">Playlists Salvas</h4>
+                    <h4 class="font-semibold text-slate-600 dark:text-slate-400 mt-2">Playlists Salvas</h4>
                     <div id="playlist-list-container" class="flex-grow space-y-2 overflow-y-auto pr-2">
                         <!-- Playlists will be dynamically inserted here -->
-                        <div class="text-center text-slate-500 py-8">
+                        <div class="text-center text-slate-500 dark:text-slate-400 py-8">
                             <i class="fas fa-spinner fa-spin text-2xl"></i>
                             <p class="mt-2 text-sm">Carregando...</p>
                         </div>
@@ -420,7 +446,7 @@
                 </div>
 
                 <!-- Right Column: Embed Viewer -->
-                <div id="playlist-embed-container" class="w-full md:w-2/3 bg-white p-4 rounded-lg border flex items-center justify-center">
+                <div id="playlist-embed-container" class="w-full md:w-2/3 bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700 flex items-center justify-center">
                     <div class="text-center text-slate-400">
                         <i class="fas fa-arrow-left fa-2x mb-3"></i>
                         <p class="font-semibold">Selecione uma playlist para visualizar</p>
@@ -431,24 +457,24 @@
     </div>
     
     <div id="pptx-generator-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="pptx-generator-modal-title">
-        <div class="modal-content bg-slate-50 w-full max-w-5xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-5xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
             
-            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 bg-white">
+            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-4">
                     <i class="fas fa-file-export text-brand-blue text-3xl"></i>
                     <div>
-                        <h3 id="pptx-generator-modal-title" class="text-2xl font-bold text-brand-text">Gerador de Arquivos</h3>
-                        <p class="text-sm text-slate-500">Crie PPTX, PDF e visualize o repertório da celebração.</p>
+                        <h3 id="pptx-generator-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Gerador de Arquivos</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Crie PPTX, PDF e visualize o repertório da celebração.</p>
                     </div>
                 </div>
-                <button id="close-pptx-generator-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-pptx-generator-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
 
-            <div id="generator-tabs" class="flex-shrink-0 border-b border-slate-200 px-6 bg-white">
+            <div id="generator-tabs" class="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 px-6 bg-white dark:bg-slate-800">
                 <nav class="flex space-x-4 -mb-px">
-                    <button data-tab="montar" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue">Montar Repertório</button>
-                    <button data-tab="historico" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue">Histórico</button>
-                    <button data-tab="visualizar" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue hidden">Visualizar</button>
+                    <button data-tab="montar" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue dark:text-slate-400 dark:hover:text-brand-blue">Montar Repertório</button>
+                    <button data-tab="historico" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue dark:text-slate-400 dark:hover:text-brand-blue">Histórico</button>
+                    <button data-tab="visualizar" class="generator-tab-btn font-semibold py-4 px-2 border-b-2 border-transparent text-slate-500 hover:text-brand-blue dark:text-slate-400 dark:hover:text-brand-blue hidden">Visualizar</button>
                 </nav>
             </div>
 
@@ -458,54 +484,54 @@
                         <input type="hidden" id="repertory-id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
-                                <label for="mass-date" class="block text-sm font-semibold text-slate-700 mb-1">Data da Missa</label>
-                                <input type="date" id="mass-date" class="admin-only-input block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50">
+                                <label for="mass-date" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Data da Missa</label>
+                                <input type="date" id="mass-date" class="admin-only-input block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50">
                             </div>
                             <div>
-                                <label for="mass-theme" class="block text-sm font-semibold text-slate-700 mb-1">Tema / Ocasião (Opcional)</label>
-                                <input type="text" id="mass-theme" placeholder="Ex: Festa do Padroeiro, Missa de Ramos" class="admin-only-input block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50">
+                                <label for="mass-theme" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Tema / Ocasião (Opcional)</label>
+                                <input type="text" id="mass-theme" placeholder="Ex: Festa do Padroeiro, Missa de Ramos" class="admin-only-input block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
                             <div class="space-y-6">
-                                <div class="bg-white p-4 rounded-lg border">
-                                    <h4 class="font-bold text-brand-text mb-3 flex items-center gap-2"><i class="fas fa-door-open text-slate-400"></i>Ritos Iniciais</h4>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                                    <h4 class="font-bold text-brand-text dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-door-open text-slate-400"></i>Ritos Iniciais</h4>
                                     <div class="space-y-4">
-                                        <div><label for="antes-da-missa" class="block text-sm font-medium text-slate-700">Antes da Missa</label><textarea id="antes-da-missa" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm" placeholder="Copie e cole a letra aqui..."></textarea><label for="link-antes-da-missa" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-antes-da-missa" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="entrada" class="block text-sm font-medium text-slate-700">Entrada</label><textarea id="entrada" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-entrada" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-entrada" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="entrada-especial" class="block text-sm font-medium text-slate-700">Entradas Especiais</label><textarea id="entrada-especial" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-entrada-especial" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-entrada-especial" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="perdao" class="block text-sm font-medium text-slate-700">Perdão</label><textarea id="perdao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-perdao" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-perdao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="gloria" class="block text-sm font-medium text-slate-700">Glória</label><textarea id="gloria" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-gloria" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-gloria" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="antes-da-missa" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Antes da Missa</label><textarea id="antes-da-missa" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" placeholder="Copie e cole a letra aqui..."></textarea><label for="link-antes-da-missa" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-antes-da-missa" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="entrada" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Entrada</label><textarea id="entrada" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-entrada" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-entrada" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="entrada-especial" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Entradas Especiais</label><textarea id="entrada-especial" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-entrada-especial" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-entrada-especial" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="perdao" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Perdão</label><textarea id="perdao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-perdao" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-perdao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="gloria" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Glória</label><textarea id="gloria" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-gloria" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-gloria" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
                                     </div>
                                 </div>
-                                 <div class="bg-white p-4 rounded-lg border">
-                                    <h4 class="font-bold text-brand-text mb-3 flex items-center gap-2"><i class="fas fa-dove text-slate-400"></i>Adoração / Diversos</h4>
+                                 <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                                    <h4 class="font-bold text-brand-text dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-dove text-slate-400"></i>Adoração / Diversos</h4>
                                     <div class="space-y-4">
-                                        <div><label for="adoracao" class="block text-sm font-medium text-slate-700">Adoração</label><textarea id="adoracao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-adoracao" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-adoracao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="adoracao" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Adoração</label><textarea id="adoracao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-adoracao" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-adoracao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="space-y-6">
-                                <div class="bg-white p-4 rounded-lg border">
-                                    <h4 class="font-bold text-brand-text mb-3 flex items-center gap-2"><i class="fas fa-book-open text-slate-400"></i>Liturgia da Palavra</h4>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                                    <h4 class="font-bold text-brand-text dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-book-open text-slate-400"></i>Liturgia da Palavra</h4>
                                     <div class="space-y-4">
-                                        <div><label for="salmo" class="block text-sm font-medium text-slate-700">Salmo</label><textarea id="salmo" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-salmo" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-salmo" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="aclamacao" class="block text-sm font-medium text-slate-700">Aclamação</label><textarea id="aclamacao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-aclamacao" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-aclamacao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="salmo" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Salmo</label><textarea id="salmo" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-salmo" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-salmo" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="aclamacao" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Aclamação</label><textarea id="aclamacao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-aclamacao" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-aclamacao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
                                     </div>
                                 </div>
-                                <div class="bg-white p-4 rounded-lg border">
-                                    <h4 class="font-bold text-brand-text mb-3 flex items-center gap-2"><i class="fas fa-wine-glass text-slate-400"></i>Liturgia Eucarística</h4>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                                    <h4 class="font-bold text-brand-text dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-wine-glass text-slate-400"></i>Liturgia Eucarística</h4>
                                     <div class="space-y-4">
-                                        <div><label for="ofertorio" class="block text-sm font-medium text-slate-700">Ofertório</label><textarea id="ofertorio" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-ofertorio" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-ofertorio" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="santo" class="block text-sm font-medium text-slate-700">Santo</label><textarea id="santo" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-santo" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-santo" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
-                                        <div><label for="comunhao" class="block text-sm font-medium text-slate-700">Comunhão</label><textarea id="comunhao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-comunhao" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-comunhao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="ofertorio" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Ofertório</label><textarea id="ofertorio" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-ofertorio" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-ofertorio" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="santo" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Santo</label><textarea id="santo" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-santo" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-santo" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="comunhao" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Comunhão</label><textarea id="comunhao" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-comunhao" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-comunhao" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
                                     </div>
                                 </div>
-                                <div class="bg-white p-4 rounded-lg border">
-                                    <h4 class="font-bold text-brand-text mb-3 flex items-center gap-2"><i class="fas fa-sign-out-alt text-slate-400"></i>Ritos Finais</h4>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                                    <h4 class="font-bold text-brand-text dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-sign-out-alt text-slate-400"></i>Ritos Finais</h4>
                                     <div class="space-y-4">
-                                        <div><label for="final" class="block text-sm font-medium text-slate-700">Final</label><textarea id="final" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea><label for="link-final" class="block text-sm font-medium text-slate-500 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-final" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 shadow-sm text-sm" placeholder="https://..."></div>
+                                        <div><label for="final" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Final</label><textarea id="final" rows="3" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea><label for="link-final" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Link (YouTube/Spotify)</label><input type="url" id="link-final" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm text-sm" placeholder="https://..."></div>
                                     </div>
                                 </div>
                             </div>
@@ -515,13 +541,13 @@
 
                 <div id="tab-historico" class="generator-tab-pane p-6 hidden">
                      <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-xl font-bold text-brand-text">Histórico de Repertórios</h4>
+                        <h4 class="text-xl font-bold text-brand-text dark:text-white">Histórico de Repertórios</h4>
                         <button id="clear-repertory-history-btn" title="Limpar todo o histórico" class="bg-red-600 text-white font-semibold py-1.5 px-4 rounded-full hover:bg-red-700 transition-all text-sm">
                             <i class="fas fa-trash-alt mr-2"></i>Limpar Histórico
                         </button>
                     </div>
                     <div id="repertory-history-content" class="space-y-3">
-                        <div class="text-center text-slate-500 py-10">
+                        <div class="text-center text-slate-500 dark:text-slate-400 py-10">
                             <i class="fas fa-history fa-2x mb-3"></i>
                             <p>Nenhum repertório salvo encontrado.</p>
                         </div>
@@ -530,7 +556,7 @@
 
                 <div id="tab-visualizar" class="generator-tab-pane p-6 hidden">
                     <div id="repertory-viewer-content">
-                         <div class="text-center text-slate-500 py-10">
+                         <div class="text-center text-slate-500 dark:text-slate-400 py-10">
                             <i class="fas fa-eye fa-2x mb-3"></i>
                             <p>Selecione um repertório no histórico para visualizar.</p>
                         </div>
@@ -538,10 +564,10 @@
                 </div>
             </div>
 
-            <div id="generator-footer" class="flex-shrink-0 p-4 mt-auto bg-white border-t border-slate-200">
+            <div id="generator-footer" class="flex-shrink-0 p-4 mt-auto bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
                 <div id="generator-feedback" class="text-center text-sm mb-3 h-5 font-medium transition-opacity duration-300 opacity-0"></div>
                 <div id="generator-actions" class="flex flex-wrap justify-end items-center gap-3">
-                    <button id="clear-form-btn" title="Limpar formulário atual" class="bg-slate-200 text-slate-800 font-semibold py-2 px-5 rounded-full hover:bg-slate-300 transition-all">
+                    <button id="clear-form-btn" title="Limpar formulário atual" class="bg-slate-200 text-slate-800 font-semibold py-2 px-5 rounded-full hover:bg-slate-300 transition-all dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">
                         <i class="fas fa-undo mr-2"></i>Novo
                     </button>
                     <button id="save-repertory-btn" class="bg-green-600 text-white font-bold py-2 px-5 rounded-full hover:bg-green-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-wait">
@@ -559,13 +585,13 @@
     </div>
     
     <div id="attendance-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[51] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="attendance-modal-title">
-        <div class="modal-content bg-slate-50 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 bg-white">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-user-check text-brand-blue text-2xl"></i>
-                    <h3 id="attendance-modal-title" class="text-2xl font-bold text-brand-text">Controle de Presença e Pontuação</h3>
+                    <h3 id="attendance-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Controle de Presença e Pontuação</h3>
                 </div>
-                <button id="close-attendance-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-attendance-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <div id="attendance-content-area" class="flex-grow overflow-y-auto">
                 </div>
@@ -573,95 +599,95 @@
     </div>
     
     <div id="justification-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 z-[52] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0">
-            <h3 id="justification-title" class="text-xl font-bold text-brand-text mb-2">Justificar Ausência</h3>
-            <p class="text-slate-600 mb-6">Por favor, insira uma justificativa para a ausência. Se deixar em branco, pontos serão aplicados.</p>
-            <textarea id="justification-text" rows="3" class="w-full rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue focus:ring-opacity-50"></textarea>
+        <div class="modal-content bg-white dark:bg-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0">
+            <h3 id="justification-title" class="text-xl font-bold text-brand-text dark:text-white mb-2">Justificar Ausência</h3>
+            <p class="text-slate-600 dark:text-slate-300 mb-6">Por favor, insira uma justificativa para a ausência. Se deixar em branco, pontos serão aplicados.</p>
+            <textarea id="justification-text" rows="3" class="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring-brand-blue focus:ring-opacity-50"></textarea>
             <div class="flex justify-center gap-4 mt-6">
-                 <button id="cancel-justification-btn" class="bg-slate-200 text-slate-800 font-bold py-2 px-8 rounded-full hover:bg-slate-300 transition-all">Cancelar</button>
+                 <button id="cancel-justification-btn" class="bg-slate-200 text-slate-800 font-bold py-2 px-8 rounded-full hover:bg-slate-300 transition-all dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">Cancelar</button>
                  <button id="confirm-justification-btn" class="bg-red-600 text-white font-bold py-2 px-8 rounded-full hover:bg-red-700 transition-all">Confirmar Ausência</button>
             </div>
         </div>
     </div>
 
     <div id="edit-record-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 z-[52] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-white w-full max-w-lg p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+        <div class="modal-content bg-white dark:bg-slate-800 w-full max-w-lg p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-edit text-brand-blue text-2xl"></i>
-                    <h3 class="text-2xl font-bold text-brand-text">Editar Registro</h3>
+                    <h3 class="text-2xl font-bold text-brand-text dark:text-white">Editar Registro</h3>
                 </div>
-                <button id="close-edit-record-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-edit-record-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <form id="edit-record-form" class="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
                 <input type="hidden" id="edit-record-id">
                 <input type="hidden" id="edit-member-id">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700">Membro</label>
-                    <p id="edit-member-name" class="mt-1 text-lg font-semibold text-slate-800"></p>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Membro</label>
+                    <p id="edit-member-name" class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-100"></p>
                 </div>
                 <div>
-                    <label for="edit-date" class="block text-sm font-medium text-slate-700">Data</label>
-                    <input type="date" id="edit-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                    <label for="edit-date" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                    <input type="date" id="edit-date" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                 </div>
                 <div>
-                    <label for="edit-event-type" class="block text-sm font-medium text-slate-700">Tipo de Evento</label>
-                    <select id="edit-event-type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                    <label for="edit-event-type" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de Evento</label>
+                    <select id="edit-event-type" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         <option value="Missa">Missa</option>
                         <option value="Ensaio">Ensaio</option>
                         <option value="Evento">Evento</option>
                     </select>
                 </div>
                  <div>
-                    <label for="edit-status" class="block text-sm font-medium text-slate-700">Status</label>
-                    <select id="edit-status" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                    <label for="edit-status" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+                    <select id="edit-status" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         <option value="Presente">Presente</option>
                         <option value="Ausente">Ausente</option>
                     </select>
                 </div>
                 <div>
-                    <label for="edit-justification" class="block text-sm font-medium text-slate-700">Justificativa</label>
-                    <textarea id="edit-justification" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea>
+                    <label for="edit-justification" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Justificativa</label>
+                    <textarea id="edit-justification" rows="3" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></textarea>
                 </div>
             </form>
-            <div class="p-4 mt-auto bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-                <button id="cancel-edit-btn" type="button" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-full hover:bg-slate-300 transition-all">Cancelar</button>
+            <div class="p-4 mt-auto bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+                <button id="cancel-edit-btn" type="button" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-full hover:bg-slate-300 transition-all dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">Cancelar</button>
                 <button id="save-edit-btn" type="submit" form="edit-record-form" class="bg-brand-blue text-white font-bold py-2 px-6 rounded-full hover:bg-brand-dark-blue transition-all">Salvar Alterações</button>
             </div>
         </div>
     </div>
     
     <div id="user-management-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[52] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-slate-50 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-6 border-b border-slate-200 bg-white">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-4">
                     <i class="fas fa-users-cog text-brand-blue text-3xl"></i>
                     <div>
-                        <h3 class="text-2xl font-bold text-brand-text">Gerenciar Usuários</h3>
-                        <p class="text-sm text-slate-500">Adicione, edite ou remova usuários do portal</p>
+                        <h3 class="text-2xl font-bold text-brand-text dark:text-white">Gerenciar Usuários</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Adicione, edite ou remova usuários do portal</p>
                     </div>
                 </div>
-                <button id="close-user-management-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-user-management-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <div class="p-6 grid grid-cols-1 lg:grid-cols-5 gap-8 flex-grow overflow-y-auto">
-                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-                    <h4 class="text-xl font-bold text-brand-text mb-4">Adicionar Novo Usuário</h4>
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
+                    <h4 class="text-xl font-bold text-brand-text dark:text-white mb-4">Adicionar Novo Usuário</h4>
                     <form id="create-user-form" class="space-y-4">
                         <div>
-                            <label for="new-user-name" class="block text-sm font-medium text-slate-700">Nome Completo</label>
-                            <input type="text" id="new-user-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                            <label for="new-user-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
+                            <input type="text" id="new-user-name" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         </div>
                         <div>
-                            <label for="new-user-username" class="block text-sm font-medium text-slate-700">Usuário (sem @uziel.com)</label>
-                            <input type="text" id="new-user-username" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                            <label for="new-user-username" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Usuário (sem @uziel.com)</label>
+                            <input type="text" id="new-user-username" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         </div>
                         <div>
-                            <label for="new-user-password" class="block text-sm font-medium text-slate-700">Senha</label>
-                            <input type="password" id="new-user-password" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                            <label for="new-user-password" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
+                            <input type="password" id="new-user-password" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         </div>
                         <div>
-                            <label for="new-user-role" class="block text-sm font-medium text-slate-700">Nível de Acesso</label>
-                            <select id="new-user-role" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                            <label for="new-user-role" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nível de Acesso</label>
+                            <select id="new-user-role" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                                 <option value="member">Membro</option>
                                 <option value="admin">Admin</option>
                             </select>
@@ -670,14 +696,14 @@
                         <button type="submit" class="w-full bg-brand-blue text-white font-bold py-3 px-6 rounded-full hover:bg-brand-dark-blue transition-transform transform hover:scale-105">Adicionar Usuário</button>
                     </form>
                 </div>
-                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md flex flex-col overflow-hidden">
-                    <h4 class="text-xl font-bold text-brand-text mb-4 flex-shrink-0">Usuários Atuais</h4>
-                    <div class="table-container border rounded-lg flex-grow overflow-y-auto">
-                        <table class="w-full text-sm text-left text-slate-700 rota-table">
-                            <thead class="bg-slate-100 sticky top-0 z-10">
+                <div class="lg:col-span-3 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md flex flex-col overflow-hidden">
+                    <h4 class="text-xl font-bold text-brand-text dark:text-white mb-4 flex-shrink-0">Usuários Atuais</h4>
+                    <div class="table-container border dark:border-slate-700 rounded-lg flex-grow overflow-y-auto">
+                        <table class="w-full text-sm text-left text-slate-700 dark:text-slate-300 rota-table">
+                            <thead class="bg-slate-100 dark:bg-slate-700 sticky top-0 z-10">
                                 <tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Ações</th></tr>
                             </thead>
-                            <tbody id="users-table-body" class="bg-white">
+                            <tbody id="users-table-body" class="bg-white dark:bg-slate-800">
                                 </tbody>
                         </table>
                     </div>
@@ -687,94 +713,94 @@
     </div>
     
     <div id="edit-user-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 z-[53] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-white w-full max-w-lg p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+        <div class="modal-content bg-white dark:bg-slate-800 w-full max-w-lg p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-user-edit text-brand-blue text-2xl"></i>
-                    <h3 class="text-2xl font-bold text-brand-text">Editar Usuário</h3>
+                    <h3 class="text-2xl font-bold text-brand-text dark:text-white">Editar Usuário</h3>
                 </div>
-                <button id="close-edit-user-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-edit-user-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <form id="edit-user-form" class="p-6 space-y-4">
                 <input type="hidden" id="edit-user-original-username">
                 <div>
-                    <label for="edit-user-name" class="block text-sm font-medium text-slate-700">Nome Completo</label>
-                    <input type="text" id="edit-user-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                    <label for="edit-user-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome Completo</label>
+                    <input type="text" id="edit-user-name" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                 </div>
                 <div>
-                    <label for="edit-user-username-display" class="block text-sm font-medium text-slate-700">Usuário</label>
-                    <input type="text" id="edit-user-username-display" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm bg-slate-100" disabled>
+                    <label for="edit-user-username-display" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Usuário</label>
+                    <input type="text" id="edit-user-username-display" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 shadow-sm" disabled>
                 </div>
                  <div>
-                    <label for="edit-user-role" class="block text-sm font-medium text-slate-700">Nível de Acesso</label>
-                    <select id="edit-user-role" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                    <label for="edit-user-role" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nível de Acesso</label>
+                    <select id="edit-user-role" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" required>
                         <option value="member">Membro</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
                 <div>
-                    <label for="edit-user-password" class="block text-sm font-medium text-slate-700">Nova Senha (deixe em branco para não alterar)</label>
-                    <input type="password" id="edit-user-password" placeholder="••••••••" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                    <label for="edit-user-password" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nova Senha (deixe em branco para não alterar)</label>
+                    <input type="password" id="edit-user-password" placeholder="••••••••" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">
                 </div>
                 <p id="edit-user-error" class="text-red-500 text-sm h-4"></p>
             </form>
-            <div class="p-4 mt-auto bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-                <button id="cancel-edit-user-btn" type="button" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-full hover:bg-slate-300 transition-all">Cancelar</button>
+            <div class="p-4 mt-auto bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+                <button id="cancel-edit-user-btn" type="button" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-full hover:bg-slate-300 transition-all dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">Cancelar</button>
                 <button id="save-user-changes-btn" type="submit" form="edit-user-form" class="bg-brand-blue text-white font-bold py-2 px-6 rounded-full hover:bg-brand-dark-blue transition-all">Salvar Alterações</button>
             </div>
         </div>
     </div>
 
     <div id="whatsapp-config-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[52] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-slate-50 w-full max-w-4xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-6 border-b border-slate-200 bg-white flex-shrink-0">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-4xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
                 <div class="flex items-center gap-4">
                     <i class="fab fa-whatsapp text-green-600 text-3xl"></i>
                     <div>
-                        <h3 class="text-2xl font-bold text-brand-text">Configurar Notificações do WhatsApp</h3>
-                        <p class="text-sm text-slate-500">Defina os números de telefone e o remetente padrão.</p>
+                        <h3 class="text-2xl font-bold text-brand-text dark:text-white">Configurar Notificações do WhatsApp</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Defina os números de telefone e o remetente padrão.</p>
                     </div>
                 </div>
-                <button id="close-whatsapp-config-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-whatsapp-config-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <div class="p-6 flex-grow flex flex-col gap-6 overflow-y-auto">
-                <form id="whatsapp-config-form" class="bg-white p-6 rounded-xl shadow-md flex-shrink-0 space-y-6">
+                <form id="whatsapp-config-form" class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md flex-shrink-0 space-y-6">
                      <div>
-                        <h4 class="text-xl font-bold text-brand-text mb-2">1. Habilitar Notificações Automáticas</h4>
+                        <h4 class="text-xl font-bold text-brand-text dark:text-white mb-2">1. Habilitar Notificações Automáticas</h4>
                         <div class="flex items-center gap-4">
                             <label class="toggle-switch">
                                 <input type="checkbox" id="notification-toggle">
                                 <span class="toggle-slider"></span>
                             </label>
-                            <span id="notification-toggle-label" class="font-medium text-slate-700">Notificações automáticas estão desativadas.</span>
+                            <span id="notification-toggle-label" class="font-medium text-slate-700 dark:text-slate-300">Notificações automáticas estão desativadas.</span>
                         </div>
                     </div>
 
                      <div>
-                        <h4 class="text-xl font-bold text-brand-text mb-2">2. Definir Remetente Padrão</h4>
-                        <label for="notification-sender-select" class="block text-sm font-medium text-slate-700 mb-2">Selecione o usuário cuja conta do WhatsApp enviará as notificações de falta:</label>
-                        <select id="notification-sender-select" class="block w-full max-w-md rounded-md border-slate-300 shadow-sm"></select>
+                        <h4 class="text-xl font-bold text-brand-text dark:text-white mb-2">2. Definir Remetente Padrão</h4>
+                        <label for="notification-sender-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Selecione o usuário cuja conta do WhatsApp enviará as notificações de falta:</label>
+                        <select id="notification-sender-select" class="block w-full max-w-md rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></select>
                     </div>
                 </form>
 
-                <div class="bg-white p-6 rounded-xl shadow-md flex-grow flex flex-col overflow-hidden">
-                    <h4 class="text-xl font-bold text-brand-text mb-4 flex-shrink-0">3. Gerenciar Números de Telefone</h4>
-                    <div class="table-container border rounded-lg flex-grow overflow-y-auto">
-                         <table class="w-full text-sm text-left text-slate-700 rota-table">
-                            <thead class="bg-slate-100 sticky top-0 z-10">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md flex-grow flex flex-col overflow-hidden">
+                    <h4 class="text-xl font-bold text-brand-text dark:text-white mb-4 flex-shrink-0">3. Gerenciar Números de Telefone</h4>
+                    <div class="table-container border dark:border-slate-700 rounded-lg flex-grow overflow-y-auto">
+                         <table class="w-full text-sm text-left text-slate-700 dark:text-slate-300 rota-table">
+                            <thead class="bg-slate-100 dark:bg-slate-700 sticky top-0 z-10">
                                 <tr>
                                     <th>Nome do Membro</th>
                                     <th>Usuário</th>
                                     <th>Número de WhatsApp (ex: 5511999998888)</th>
                                 </tr>
                             </thead>
-                            <tbody id="whatsapp-numbers-table-body" class="bg-white">
+                            <tbody id="whatsapp-numbers-table-body" class="bg-white dark:bg-slate-800">
                                 </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="p-4 mt-auto bg-white border-t border-slate-200 flex justify-between items-center gap-3 flex-shrink-0">
+            <div class="p-4 mt-auto bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center gap-3 flex-shrink-0">
                  <p id="whatsapp-config-feedback" class="text-sm font-medium h-5 transition-opacity duration-300 opacity-0"></p>
                  <button id="save-whatsapp-config-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-full hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
                     <i class="fas fa-save mr-2"></i>Salvar Configurações
@@ -785,16 +811,16 @@
     
     <!-- ========== AUDIT LOG MODAL (UPDATED) ========== -->
     <div id="audit-log-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 z-[52] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="audit-log-modal-title">
-        <div class="modal-content bg-slate-50 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
-            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 bg-white">
+        <div class="modal-content bg-slate-50 dark:bg-slate-900 w-full max-w-6xl h-[90vh] p-0 rounded-2xl shadow-2xl scale-95 opacity-0 overflow-hidden flex flex-col">
+            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex items-center gap-4">
                     <i class="fas fa-history text-brand-blue text-3xl"></i>
                     <div>
-                        <h3 id="audit-log-modal-title" class="text-2xl font-bold text-brand-text">Log de Rastreabilidade</h3>
-                        <p class="text-sm text-slate-500">Histórico de ações importantes realizadas no portal.</p>
+                        <h3 id="audit-log-modal-title" class="text-2xl font-bold text-brand-text dark:text-white">Log de Rastreabilidade</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Histórico de ações importantes realizadas no portal.</p>
                     </div>
                 </div>
-                <button id="close-audit-log-modal" class="text-slate-400 hover:text-slate-800 text-2xl">×</button>
+                <button id="close-audit-log-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl">×</button>
             </div>
             <div class="p-6 flex-grow flex flex-col overflow-y-auto">
                  <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
@@ -802,15 +828,15 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-slate-400"></i>
                         </div>
-                        <input type="text" id="audit-log-search" placeholder="Pesquisar em qualquer campo..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm">
+                        <input type="text" id="audit-log-search" placeholder="Pesquisar em qualquer campo..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md leading-5 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm">
                     </div>
                     <button id="clear-audit-log-btn" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-full hover:bg-red-700 transition-all text-sm w-full md:w-auto flex-shrink-0">
                         <i class="fas fa-trash-alt mr-2"></i>Limpar Histórico de Logs
                     </button>
                 </div>
-                <div class="table-container border rounded-lg flex-grow overflow-y-auto">
-                    <table class="w-full text-sm text-left text-slate-700 audit-table">
-                        <thead class="bg-slate-100 sticky top-0 z-10">
+                <div class="table-container border dark:border-slate-700 rounded-lg flex-grow overflow-y-auto">
+                    <table class="w-full text-sm text-left text-slate-700 dark:text-slate-300 audit-table">
+                        <thead class="bg-slate-100 dark:bg-slate-700 sticky top-0 z-10">
                             <tr>
                                 <th>Data/Hora</th>
                                 <th>Usuário</th>
@@ -819,7 +845,7 @@
                                 <th>Detalhes</th>
                             </tr>
                         </thead>
-                        <tbody id="audit-log-table-body" class="bg-white">
+                        <tbody id="audit-log-table-body" class="bg-white dark:bg-slate-800">
                             <!-- Logs will be inserted here -->
                         </tbody>
                     </table>
@@ -829,24 +855,24 @@
     </div>
 
     <div id="confirmation-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 z-[53] flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true">
-        <div class="modal-content bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0">
-            <h3 id="confirmation-title" class="text-xl font-bold text-brand-text mb-2">Atenção!</h3>
-            <p id="confirmation-message" class="text-slate-600 mb-6"></p>
+        <div class="modal-content bg-white dark:bg-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl text-center scale-95 opacity-0">
+            <h3 id="confirmation-title" class="text-xl font-bold text-brand-text dark:text-white mb-2">Atenção!</h3>
+            <p id="confirmation-message" class="text-slate-600 dark:text-slate-300 mb-6"></p>
             <div class="flex justify-center gap-4">
-                 <button id="cancel-confirmation-btn" class="bg-slate-200 text-slate-800 font-bold py-2 px-8 rounded-full hover:bg-slate-300 transition-all">Cancelar</button>
+                 <button id="cancel-confirmation-btn" class="bg-slate-200 text-slate-800 font-bold py-2 px-8 rounded-full hover:bg-slate-300 transition-all dark:bg-slate-600 dark:text-white dark:hover:bg-slate-500">Cancelar</button>
                  <button id="confirm-action-btn" class="bg-red-600 text-white font-bold py-2 px-8 rounded-full hover:bg-red-700 transition-all">Confirmar</button>
             </div>
         </div>
     </div>
 
 
-    <footer class="bg-white py-12 border-t border-slate-200 content-hidden">
-        <div class="container mx-auto px-6 text-center text-slate-500">
+    <footer class="bg-white dark:bg-slate-800 py-12 border-t border-slate-200 dark:border-slate-700 content-hidden">
+        <div class="container mx-auto px-6 text-center text-slate-500 dark:text-slate-400">
             <div class="flex justify-center space-x-6 mb-8">
                 <a href="https://open.spotify.com/user/31g7w3m744kda4o4ql5cyzvq3zba" target="_blank" class="text-slate-400 hover:text-green-500 transition-colors duration-300" aria-label="Spotify"><i class="fab fa-spotify fa-2x"></i></a>
                 <a href="https://www.instagram.com/oministeriouziel?igsh=MmVha2dyNm9rOW9j" target="_blank" class="text-slate-400 hover:text-pink-500 transition-colors duration-300" aria-label="Instagram"><i class="fab fa-instagram fa-2x"></i></a>
                 <a href="https://www.facebook.com/share/1AWxqDPciq/" target="_blank" class="text-slate-400 hover:text-blue-600 transition-colors duration-300" aria-label="Facebook"><i class="fab fa-facebook fa-2x"></i></a>
-                <a href="https://www.tiktok.com/@ministeriouziel?_t=8nrksX0puQI&_r=1" target="_blank" class="text-slate-400 hover:text-black transition-colors duration-300" aria-label="TikTok"><i class="fab fa-tiktok fa-2x"></i></a>
+                <a href="https://www.tiktok.com/@ministeriouziel?_t=8nrksX0puQI&_r=1" target="_blank" class="text-slate-400 hover:text-black dark:hover:text-white transition-colors duration-300" aria-label="TikTok"><i class="fab fa-tiktok fa-2x"></i></a>
                 <a href="https://youtube.com/@ministeriouziel?si=k1t63Kqr67h3Xm5E" target="_blank" class="text-slate-400 hover:text-red-600 transition-colors duration-300" aria-label="YouTube"><i class="fab fa-youtube fa-2x"></i></a>
             </div>
             <p>© 2025 Ministério Uziel. Todos os direitos reservados.</p>
@@ -875,6 +901,47 @@
         let notificationSenderUsername = null; 
         let automaticNotificationsEnabled = true;
         const SUPER_ADMIN_USERNAME = 'kaio@uziel.com';
+        
+        // --- THEME SWITCHER FUNCTION ---
+        function initializeThemeSwitcher() {
+            const desktopToggle = document.getElementById('desktop-theme-toggle');
+            const mobileToggle = document.getElementById('mobile-theme-toggle');
+            const toggleButtons = [desktopToggle, mobileToggle];
+
+            const updateToggleUI = (isDark) => {
+                toggleButtons.forEach(button => {
+                    if(button) {
+                        const sunIcon = button.querySelector('.fa-sun');
+                        const moonIcon = button.querySelector('.fa-moon');
+                        if(sunIcon && moonIcon) {
+                            sunIcon.classList.toggle('hidden', !isDark);
+                            moonIcon.classList.toggle('hidden', isDark);
+                        }
+                    }
+                });
+            };
+
+            const toggleTheme = () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.theme = isDark ? 'dark' : 'light';
+                updateToggleUI(isDark);
+                logAction('Tema Alterado', 'Interface', `Tema alterado para ${isDark ? 'Escuro' : 'Claro'}`);
+            };
+
+            // Set initial theme based on localStorage or system preference
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                updateToggleUI(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateToggleUI(false);
+            }
+            
+            // Add event listeners
+            toggleButtons.forEach(button => {
+                if(button) button.addEventListener('click', toggleTheme);
+            });
+        }
         
         // --- AUDIT LOG FUNCTION ---
         async function logAction(action, module, details = '') {
@@ -1045,10 +1112,10 @@
                     const deleteButton = `<button data-username="${user.username}" class="delete-user-btn text-sm font-semibold ${canDelete ? 'text-red-500 hover:text-red-700' : 'text-slate-400 cursor-not-allowed'}" ${!canDelete ? 'disabled' : ''}>Excluir</button>`;
                     
                     usersTableBody.innerHTML += `
-                        <tr class="hover:bg-slate-50">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
                             <td class="p-3">${user.name}</td>
                             <td class="p-3">${user.username}</td>
-                            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-800'}">${user.role}</span></td>
+                            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' : 'bg-slate-100 text-slate-800 dark:bg-slate-600 dark:text-slate-200'}">${user.role}</span></td>
                             <td class="p-3 flex gap-4">
                                 ${editButton}
                                 ${deleteButton}
@@ -1253,19 +1320,40 @@
                 const scrolled = window.scrollY > 10;
                 header.classList.toggle('header-scrolled', scrolled);
                 header.classList.toggle('bg-white/90', scrolled);
+                header.classList.toggle('dark:bg-slate-900/90', scrolled);
                 header.classList.toggle('backdrop-blur-sm', scrolled);
                 header.querySelector('h1').classList.toggle('text-white', !scrolled);
                 header.querySelector('h1').classList.toggle('text-brand-blue', scrolled);
                 header.querySelector('p').classList.toggle('text-slate-300', !scrolled);
                 header.querySelector('p').classList.toggle('text-gray-500', scrolled);
-                document.getElementById('mobile-menu-button').classList.toggle('text-white', !scrolled);
-                document.getElementById('mobile-menu-button').classList.toggle('text-brand-text', scrolled);
+                header.querySelector('p').classList.toggle('dark:text-slate-400', scrolled);
+
+                const mobileButton = document.getElementById('mobile-menu-button');
+                mobileButton.classList.toggle('text-white', !scrolled);
+                mobileButton.classList.toggle('text-brand-text', scrolled);
+                mobileButton.classList.toggle('dark:text-white', scrolled);
+
+                const mobileThemeButton = document.getElementById('mobile-theme-toggle');
+                mobileThemeButton.classList.toggle('text-white', !scrolled);
+                mobileThemeButton.classList.toggle('text-brand-text', scrolled);
+                mobileThemeButton.classList.toggle('dark:text-white', scrolled);
+
                 header.querySelectorAll('nav.hidden a:not(#header-cta-btn)').forEach(link => {
                     link.classList.toggle('text-slate-200', !scrolled);
                     link.classList.toggle('hover:text-white', !scrolled);
                     link.classList.toggle('text-slate-600', scrolled);
                     link.classList.toggle('hover:text-brand-blue', scrolled);
+                    link.classList.toggle('dark:text-slate-300', scrolled);
+                    link.classList.toggle('dark:hover:text-white', scrolled);
                 });
+                
+                const desktopThemeButton = document.getElementById('desktop-theme-toggle');
+                desktopThemeButton.classList.toggle('text-slate-200', !scrolled);
+                desktopThemeButton.classList.toggle('hover:text-white', !scrolled);
+                desktopThemeButton.classList.toggle('text-slate-600', scrolled);
+                desktopThemeButton.classList.toggle('hover:text-brand-blue', scrolled);
+                desktopThemeButton.classList.toggle('dark:text-slate-300', scrolled);
+                desktopThemeButton.classList.toggle('dark:hover:text-white', scrolled);
             };
             window.addEventListener('scroll', handleHeaderScroll);
             const mobileMenu = document.getElementById('mobile-menu');
@@ -1427,12 +1515,15 @@
 
              // --- Attendance Modal Logic ---
              document.getElementById('open-attendance-trigger').addEventListener('click', () => { 
-                if(currentUser) { 
-                    logAction('Abriu Ferramenta', 'Controle de Presença', `Usuário abriu o modal de Controle de Presença.`);
-                    openAttendanceModal(); 
-                } 
+                 if(currentUser) { 
+                     logAction('Abriu Ferramenta', 'Controle de Presença', `Usuário abriu o modal de Controle de Presença.`);
+                     openAttendanceModal(); 
+                 } 
              });
              setupModalInteraction('attendance-modal', null, 'close-attendance-modal');
+
+             // Initialize the theme switcher
+             initializeThemeSwitcher();
         });
         
         // --- ALL OTHER FUNCTIONS ---
@@ -1565,7 +1656,7 @@
             addPlaylistForm.classList.toggle('hidden', currentUser.role !== 'admin');
 
             if (allPlaylists.length === 0) {
-                listContainer.innerHTML = `<div class="text-center text-slate-500 py-8"><i class="fas fa-compact-disc fa-2x mb-3"></i><p>Nenhuma playlist foi adicionada ainda.</p></div>`;
+                listContainer.innerHTML = `<div class="text-center text-slate-500 dark:text-slate-400 py-8"><i class="fas fa-compact-disc fa-2x mb-3"></i><p>Nenhuma playlist foi adicionada ainda.</p></div>`;
                 return;
             }
 
@@ -1582,9 +1673,9 @@
 
                 return `
                     <div id="playlist-item-${playlist.id}" class="playlist-item-container flex items-center gap-3">
-                        <button data-url="${playlist.url}" class="view-playlist-btn w-full text-left p-3 rounded-lg border bg-white flex items-center gap-3 playlist-item">
+                        <button data-url="${playlist.url}" class="view-playlist-btn w-full text-left p-3 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-3 playlist-item">
                             <i class="fab ${iconClass} fa-lg w-5 text-center"></i>
-                            <span class="flex-grow text-sm font-semibold text-slate-700 truncate">${hostname}</span>
+                            <span class="flex-grow text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">${hostname}</span>
                             <i class="fas fa-chevron-right text-slate-400"></i>
                         </button>
                         ${adminDeleteButton}
@@ -1648,7 +1739,7 @@
                 const type = spotifyMatch[1];
                 const id = spotifyMatch[2];
                 const height = '352'; 
-                const themeParam = isModern ? '&theme=0' : '';
+                const themeParam = document.documentElement.classList.contains('dark') ? '&theme=0' : '';
                 const spotifyUri = `https://open.spotify.com/embed/${type}/${id}?utm_source=generator${themeParam}`;
                 return `<iframe style="border-radius:12px" src="${spotifyUri}" width="100%" height="${isModern ? '100%' : height}" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="${isModern ? '' : 'mt-4 shadow-lg'}"></iframe>`;
             }
@@ -1710,7 +1801,7 @@
                              'clear-repertory-history-btn': 'fa-trash-alt'
                          };
                         icon.className = `fas ${originalIcons[btnId]} mr-2`;
-                        }
+                         }
                 }
             });
         }
@@ -1844,7 +1935,7 @@
             if (!contentDiv) return;
 
             if (allRepertories.length === 0) {
-                contentDiv.innerHTML = `<div class="text-center text-slate-500 py-10"><i class="fas fa-history fa-2x mb-3"></i><p>Nenhum repertório salvo encontrado.</p></div>`;
+                contentDiv.innerHTML = `<div class="text-center text-slate-500 dark:text-slate-400 py-10"><i class="fas fa-history fa-2x mb-3"></i><p>Nenhum repertório salvo encontrado.</p></div>`;
                 return;
             }
 
@@ -1855,18 +1946,18 @@
                 const title = rep.theme || `Celebração de ${formattedDate}`;
                 
                 const adminButtons = `
-                    <button data-id="${rep.id}" class="edit-repertory-btn bg-slate-100 text-slate-700 font-semibold py-1.5 px-3 rounded-full hover:bg-slate-200 text-xs">Editar</button>
+                    <button data-id="${rep.id}" class="edit-repertory-btn bg-slate-100 text-slate-700 font-semibold py-1.5 px-3 rounded-full hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 text-xs">Editar</button>
                     <button data-id="${rep.id}" class="delete-repertory-btn text-red-500 hover:text-red-700 text-lg"><i class="fas fa-trash-alt"></i></button>
                 `;
 
                 return `
-                    <div class="bg-white p-4 rounded-lg border border-slate-200 flex items-center justify-between gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
                         <div>
-                            <p class="font-bold text-brand-text">${title}</p>
-                            <p class="text-sm text-slate-500">${formattedDate}</p>
+                            <p class="font-bold text-brand-text dark:text-white">${title}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">${formattedDate}</p>
                         </div>
                         <div class="flex items-center gap-2">
-                             <button data-id="${rep.id}" class="view-repertory-btn bg-sky-100 text-sky-700 font-semibold py-1.5 px-3 rounded-full hover:bg-sky-200 text-xs">Visualizar</button>
+                             <button data-id="${rep.id}" class="view-repertory-btn bg-sky-100 text-sky-700 font-semibold py-1.5 px-3 rounded-full hover:bg-sky-200 dark:bg-sky-900 dark:text-sky-300 dark:hover:bg-sky-800 text-xs">Visualizar</button>
                              ${isAdmin ? adminButtons : ''}
                         </div>
                     </div>
@@ -1903,9 +1994,9 @@
                  console.error("Repertório não encontrado para visualização:", repertoryId);
                  const formData = getSongDataFromForm();
                  if(formData.date) {
-                     renderSingleRepertoryView(formData);
+                      renderSingleRepertoryView(formData);
                  } else {
-                      return;
+                       return;
                  }
             } else {
                 renderSingleRepertoryView(repertory);
@@ -1924,14 +2015,14 @@
             const songsWithLyrics = songs ? songs.filter(s => s.lyrics) : [];
 
             if (songsWithLyrics.length === 0) {
-                contentDiv.innerHTML = `<div class="text-center text-slate-500 py-10"><i class="fas fa-music fa-2x mb-3"></i><p>Este repertório está vazio.</p></div>`;
+                contentDiv.innerHTML = `<div class="text-center text-slate-500 dark:text-slate-400 py-10"><i class="fas fa-music fa-2x mb-3"></i><p>Este repertório está vazio.</p></div>`;
                 return;
             }
 
             const formattedDate = date ? new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric'}) : '';
 
             let html = `<div class="text-center mb-6">
-                            <h3 class="text-2xl font-bold text-brand-text">Repertório da Celebração</h3>
+                            <h3 class="text-2xl font-bold text-brand-text dark:text-white">Repertório da Celebração</h3>
                             <p class="text-brand-blue font-semibold">${theme || formattedDate}</p>
                         </div>
                         <div id="repertory-accordion" class="space-y-3">`;
@@ -1939,20 +2030,20 @@
             songsWithLyrics.forEach((song) => {
                 const embedHtml = getEmbedHtml(song.link);
                 html += `
-                    <div class="accordion-item bg-white rounded-lg border border-slate-200 overflow-hidden">
-                        <button class="accordion-header w-full flex justify-between items-center text-left p-4 hover:bg-slate-50 transition-colors focus:outline-none">
-                            <span class="font-bold text-lg text-brand-text">${song.title}</span>
-                            <i class="fas fa-chevron-down transition-transform"></i>
+                    <div class="accordion-item bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <button class="accordion-header w-full flex justify-between items-center text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                            <span class="font-bold text-lg text-brand-text dark:text-white">${song.title}</span>
+                            <i class="fas fa-chevron-down transition-transform text-slate-500 dark:text-slate-400"></i>
                         </button>
                         <div class="accordion-content hidden">
-                           <div class="p-4 border-t border-slate-200">
+                           <div class="p-4 border-t border-slate-200 dark:border-slate-600">
                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                                    <div class="lyrics-container">
-                                       <h5 class="font-semibold text-slate-500 mb-2 text-center">Letra</h5>
-                                       <pre class="text-slate-700 whitespace-pre-wrap font-sans text-base leading-relaxed text-center">${song.lyrics || 'Letra não disponível.'}</pre>
+                                       <h5 class="font-semibold text-slate-500 dark:text-slate-400 mb-2 text-center">Letra</h5>
+                                       <pre class="text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans text-base leading-relaxed text-center">${song.lyrics || 'Letra não disponível.'}</pre>
                                    </div>
                                    <div class="player-container">
-                                        <h5 class="font-semibold text-slate-500 mb-2 text-center">Mídia</h5>
+                                        <h5 class="font-semibold text-slate-500 dark:text-slate-400 mb-2 text-center">Mídia</h5>
                                        ${embedHtml}
                                    </div>
                                </div>
@@ -2088,10 +2179,10 @@
                 const songsWithLyrics = songs.filter(s => s.lyrics);
 
                  if (songsWithLyrics.length === 0) {
-                    showGeneratorFeedback('Nenhum cântico preenchido para gerar o PDF.', true);
-                    setGeneratorButtonsLoading(false);
-                    return;
-                }
+                     showGeneratorFeedback('Nenhum cântico preenchido para gerar o PDF.', true);
+                     setGeneratorButtonsLoading(false);
+                     return;
+                 }
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
                 const pageWidth = doc.internal.pageSize.getWidth();
@@ -2213,7 +2304,7 @@
                         <td>
                             <input type="tel" 
                                    data-username="${user.username}" 
-                                   class="whatsapp-number-input mt-1 block w-full rounded-md border-slate-300 shadow-sm" 
+                                   class="whatsapp-number-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" 
                                    placeholder="55119..." 
                                    value="${user.whatsapp || ''}">
                         </td>
@@ -2323,8 +2414,8 @@ Deus abençoe!`;
             // 2. RECONSTRÓI TODO O HTML
             container.innerHTML = `
                 <div class="flex flex-col h-full">
-                    <div id="attendance-tabs" class="p-6 border-b border-slate-200 bg-white flex-shrink-0">
-                        <nav class="flex flex-wrap items-center justify-center gap-2 bg-slate-100 p-2 rounded-full shadow-inner">
+                    <div id="attendance-tabs" class="p-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
+                        <nav class="flex flex-wrap items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-full shadow-inner">
                             <button data-tab="dashboard" class="attendance-tab-button px-6 py-2 text-sm font-semibold rounded-full flex items-center gap-2 transition-colors duration-200">
                                 <i class="fas fa-chart-line"></i><span>Dashboard</span>
                             </button>
@@ -2342,60 +2433,60 @@ Deus abençoe!`;
                     <div id="tab-content-container" class="p-6 flex-grow overflow-y-auto">
                         <div id="tab-dashboard" class="tab-pane">
                             <div class="dashboard-container">
-                                <h4 class="text-xl font-bold text-brand-text mb-4">Dashboard de Participação</h4>
+                                <h4 class="text-xl font-bold text-brand-text dark:text-white mb-4">Dashboard de Participação</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                    <div class="bg-white p-4 rounded-lg text-center shadow-md">
-                                        <h5 class="text-sm font-semibold text-blue-800 uppercase">Total de Presenças</h5>
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg text-center shadow-md">
+                                        <h5 class="text-sm font-semibold text-blue-800 dark:text-blue-300 uppercase">Total de Presenças</h5>
                                         <p id="stat-total-presence" class="text-3xl font-bold text-blue-600">0</p>
                                     </div>
-                                    <div class="bg-white p-4 rounded-lg text-center shadow-md">
-                                        <h5 class="text-sm font-semibold text-red-800 uppercase">Total de Faltas</h5>
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg text-center shadow-md">
+                                        <h5 class="text-sm font-semibold text-red-800 dark:text-red-300 uppercase">Total de Faltas</h5>
                                         <p id="stat-total-absence" class="text-3xl font-bold text-red-600">0</p>
                                     </div>
-                                    <div class="bg-white p-4 rounded-lg text-center shadow-md">
-                                        <h5 class="text-sm font-semibold text-green-800 uppercase">Taxa de Presença</h5>
+                                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg text-center shadow-md">
+                                        <h5 class="text-sm font-semibold text-green-800 dark:text-green-300 uppercase">Taxa de Presença</h5>
                                         <p id="stat-presence-rate" class="text-3xl font-bold text-green-600">0%</p>
                                     </div>
                                 </div>
-                                <h4 class="text-xl font-bold text-brand-text mb-4 mt-8">Ranking de Pontuação (Faltas)</h4>
-                                <table class="w-full text-sm text-slate-700 rota-table">
-                                    <thead class="sticky top-0 bg-slate-100 z-10">
+                                <h4 class="text-xl font-bold text-brand-text dark:text-white mb-4 mt-8">Ranking de Pontuação (Faltas)</h4>
+                                <table class="w-full text-sm text-slate-700 dark:text-slate-300 rota-table">
+                                    <thead class="sticky top-0 bg-slate-100 dark:bg-slate-700 z-10">
                                         <tr><th>Posição</th><th>Membro</th><th>Pontos de Falta</th></tr>
                                     </thead>
-                                    <tbody id="member-ranking-body" class="bg-white"></tbody>
+                                    <tbody id="member-ranking-body" class="bg-white dark:bg-slate-800"></tbody>
                                 </table>
                             </div>
                         </div>
                         <div id="tab-setup" class="tab-pane hidden">
                             <div class="max-w-md mx-auto text-center">
-                                <h4 class="text-xl font-bold text-brand-text mb-2">Configurar o Evento Atual</h4>
-                                <p class="text-slate-500 mb-6">Selecione o tipo de evento e a data antes de continuar.</p>
+                                <h4 class="text-xl font-bold text-brand-text dark:text-white mb-2">Configurar o Evento Atual</h4>
+                                <p class="text-slate-500 dark:text-slate-400 mb-6">Selecione o tipo de evento e a data antes de continuar.</p>
                                 <form id="event-setup-form" class="space-y-4">
                                     <div>
-                                        <label for="event-type-selector" class="block text-sm font-medium text-slate-700 text-left">Tipo de Evento</label>
-                                        <select id="event-type-selector" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                        <label for="event-type-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300 text-left">Tipo de Evento</label>
+                                        <select id="event-type-selector" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">
                                             <option value="Missa">Missa</option>
                                             <option value="Ensaio">Ensaio</option>
                                             <option value="Evento">Evento</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="event-date-selector" class="block text-sm font-medium text-slate-700 text-left">Data</label>
-                                        <input type="date" id="event-date-selector" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                        <label for="event-date-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300 text-left">Data</label>
+                                        <input type="date" id="event-date-selector" class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">
                                     </div>
                                     <button type="submit" id="event-setup-form-submit-btn" class="w-full bg-brand-blue text-white font-bold py-3 px-6 rounded-full hover:bg-brand-dark-blue disabled:opacity-50" disabled>
                                         <i class="fas fa-spinner fa-spin mr-2"></i><span>Carregando Membros...</span>
                                     </button>
                                 </form>
-                                <div id="current-event-display" class="mt-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 hidden"></div>
+                                <div id="current-event-display" class="mt-6 p-4 rounded-lg bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 hidden"></div>
                             </div>
                         </div>
                         <div id="tab-register" class="tab-pane hidden">
                             <div class="grid-container">
-                                <h4 class="text-xl font-bold text-brand-text mb-2">Registrar Presença ou Falta</h4>
-                                <p class="text-slate-500 mb-4">Clique nos botões para registrar o status de cada membro.</p>
+                                <h4 class="text-xl font-bold text-brand-text dark:text-white mb-2">Registrar Presença ou Falta</h4>
+                                <p class="text-slate-500 dark:text-slate-400 mb-4">Clique nos botões para registrar o status de cada membro.</p>
                                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="members-grid">
-                                    <div class="text-center col-span-full p-8 text-slate-500">
+                                    <div class="text-center col-span-full p-8 text-slate-500 dark:text-slate-400">
                                         <i class="fas fa-info-circle mr-2"></i>Por favor, configure um evento.
                                     </div>
                                 </div>
@@ -2405,8 +2496,8 @@ Deus abençoe!`;
                             <div class="table-container h-full flex flex-col">
                                 <div class="flex flex-wrap items-center justify-between mb-4 gap-4 flex-shrink-0">
                                     <div class="flex items-center gap-4">
-                                        <h4 class="text-xl font-bold text-brand-text">Registros de Presença</h4>
-                                        <select id="member-filter-select" class="text-sm rounded-md border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue focus:ring-opacity-50"></select>
+                                        <h4 class="text-xl font-bold text-brand-text dark:text-white">Registros de Presença</h4>
+                                        <select id="member-filter-select" class="text-sm rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring-brand-blue focus:ring-opacity-50"></select>
                                     </div>
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <button id="export-xlsx-btn" class="bg-green-700 text-white font-semibold py-2 px-4 rounded-full hover:bg-green-800 text-sm">
@@ -2421,19 +2512,19 @@ Deus abençoe!`;
                                     </div>
                                 </div>
                                 <div class="flex-grow overflow-y-auto">
-                                    <table class="w-full text-sm text-left text-slate-700 rota-table">
-                                        <thead class="sticky top-0 bg-slate-100 z-10">
+                                    <table class="w-full text-sm text-left text-slate-700 dark:text-slate-300 rota-table">
+                                        <thead class="sticky top-0 bg-slate-100 dark:bg-slate-700 z-10">
                                             <tr>
                                                 <th>Membro</th><th>Data</th><th>Evento</th><th>Status</th><th>Pontos</th><th>Justificativa</th><th>Ações</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="attendance-table-body" class="bg-white"></tbody>
+                                        <tbody id="attendance-table-body" class="bg-white dark:bg-slate-800"></tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div id="attendance-feedback" class="p-4 bg-white border-t text-center text-sm h-5 font-medium transition-opacity duration-300 opacity-0 flex-shrink-0"></div>
+                    <div id="attendance-feedback" class="p-4 bg-white dark:bg-slate-800 border-t dark:border-slate-700 text-center text-sm h-5 font-medium transition-opacity duration-300 opacity-0 flex-shrink-0"></div>
                 </div>
             `;
 
@@ -2465,23 +2556,23 @@ Deus abençoe!`;
             container.innerHTML = `
                 <div id="member-view-container" class="p-6 h-full flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 flex-shrink-0">
-                        <div><h4 class="text-xl font-bold text-brand-text">Meus Registros</h4><p class="text-slate-500">Bem-vindo(a), ${currentUser.name}.</p></div>
-                        <div class="bg-white border border-red-200 text-red-800 p-4 rounded-lg text-center shadow-md"><h5 class="text-sm font-semibold uppercase">Total de Pontos de Falta</h5><p class="text-3xl font-bold">${memberData?.totalPoints || 0}</p></div>
+                        <div><h4 class="text-xl font-bold text-brand-text dark:text-white">Meus Registros</h4><p class="text-slate-500 dark:text-slate-400">Bem-vindo(a), ${currentUser.name}.</p></div>
+                        <div class="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 p-4 rounded-lg text-center shadow-md"><h5 class="text-sm font-semibold uppercase">Total de Pontos de Falta</h5><p class="text-3xl font-bold">${memberData?.totalPoints || 0}</p></div>
                     </div>
                     <div class="table-container flex-grow overflow-y-auto">
-                        <table class="w-full text-sm text-left text-slate-700 rota-table"><thead class="sticky top-0 bg-slate-100 z-10"><tr><th>Data</th><th>Evento</th><th>Status</th><th>Pontos</th><th>Justificativa</th></tr></thead><tbody id="member-records-table-body" class="bg-white"></tbody></table>
+                        <table class="w-full text-sm text-left text-slate-700 dark:text-slate-300 rota-table"><thead class="sticky top-0 bg-slate-100 dark:bg-slate-700 z-10"><tr><th>Data</th><th>Evento</th><th>Status</th><th>Pontos</th><th>Justificativa</th></tr></thead><tbody id="member-records-table-body" class="bg-white dark:bg-slate-800"></tbody></table>
                     </div>
                 </div>`;
             const tableBody = document.getElementById('member-records-table-body');
             if (memberRecords.length > 0) {
                  tableBody.innerHTML = memberRecords.map(rec => {
-                     const statusClass = rec.status === 'Presente' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                     const statusClass = rec.status === 'Presente' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
                      const dateString = rec.date ? new Date(rec.date + 'T00:00:00').toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'Data inválida';
                      return `<tr><td>${dateString}</td><td>${rec.eventType || 'N/A'}</td><td><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rec.status}</span></td><td class="font-bold ${rec.points > 0 ? 'text-red-600' : ''}">${rec.points}</td><td class="text-xs">${rec.justification || '---'}</td></tr>`;
                  }).join('');
             } else { tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Nenhum registro encontrado.</td></tr>'; }
         }
-        
+    
         function initializeAdminFunctionality() {
             const container = document.getElementById('attendance-content-area');
             if (!container) return;
