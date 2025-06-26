@@ -220,35 +220,6 @@
 
     </style>
 
-  <!-- Substitua este bloco pelo código abaixo -->
-  <script>
-    (function disableInspect() {
-      // Bloqueia clique direito
-      document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-      });
-
-      // Bloqueia F12, Ctrl+Shift+I/J, Ctrl+U
-      document.addEventListener('keydown', function(e) {
-        const forbidden =
-          e.key === 'F12' ||
-          (e.ctrlKey && e.shiftKey && ['I', 'J'].includes(e.key)) ||
-          (e.ctrlKey && e.key === 'U');
-        if (forbidden) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      });
-
-      // Impede também abertura por menu de desenvolvedor no Chrome
-      Object.defineProperty(window, 'console', {
-        get: function() {
-          throw new Error('Acesso ao console bloqueado');
-        }
-      });
-    })();
-  </script>
-
 </head>
 <body class="bg-brand-background text-brand-text font-sans">
 
