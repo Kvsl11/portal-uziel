@@ -212,7 +212,7 @@
             transform: translateX(22px);
         }
 
-       @media (max-width: 768px) {
+  @media (max-width: 768px) {
         .content-hidden {
             display: block !important;
             }
@@ -303,10 +303,10 @@
         <section id="home" class="pt-32 pb-16 md:pt-48 md:pb-24 text-white">
              <div class="overlay"></div>
              <div class="content-wrapper container mx-auto px-6 text-center">
-                <h2 class="text-4xl md:text-6xl font-bold mb-4 reveal" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Bem-vindo ao nosso Portal</h2>
-                <p class="max-w-3xl mx-auto text-lg text-slate-200 mb-8 reveal" style="transition-delay: 150ms; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Um espaço dedicado para organizar, inspirar e fortalecer a nossa comunidade. Explore os recursos e conecte-se.</p>
-                <div class="reveal" style="transition-delay: 300ms;">
-            </div>
+                 <h2 class="text-4xl md:text-6xl font-bold mb-4 reveal" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Bem-vindo ao nosso Portal</h2>
+                 <p class="max-w-3xl mx-auto text-lg text-slate-200 mb-8 reveal" style="transition-delay: 150ms; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Um espaço dedicado para organizar, inspirar e fortalecer a nossa comunidade. Explore os recursos e conecte-se.</p>
+                 <div class="reveal" style="transition-delay: 300ms;">
+             </div>
         </section>
         <section id="filters-section" class="py-10 sticky top-[76px] md:top-[84px] bg-brand-background/95 backdrop-blur-sm z-40 border-b border-slate-200">
             <div class="container mx-auto px-6 flex flex-col sm:flex-row justify-center items-center gap-4">
@@ -397,7 +397,7 @@
             <div class="flex-grow flex flex-col md:flex-row gap-6 p-6 overflow-y-auto">
                 <!-- Left Column: Playlist List -->
                 <div class="w-full md:w-1/3 flex flex-col gap-4">
-                      <!-- Admin-only Add Form -->
+                    <!-- Admin-only Add Form -->
                     <form id="add-playlist-form" class="hidden admin-only bg-white p-4 rounded-lg border border-slate-200">
                         <h4 class="font-bold text-brand-text mb-2">Adicionar Nova Playlist</h4>
                         <div class="flex items-center gap-2">
@@ -989,7 +989,29 @@
              const closeBtn = document.getElementById(closeBtnId);
              if (!modal || (!openBtn && openBtnId) || !closeBtn) return;
              const content = modal.querySelector('.modal-content');
-             const openModal = () => { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; setTimeout(() => { modal.classList.add('is-open'); modal.classList.remove('opacity-0'); content.classList.remove('scale-95', 'opacity-0'); }, 10); if (onOpen) onOpen(); };
+             const openModal = () => {
+                 modal.classList.remove('hidden');
+                 document.body.style.overflow = 'hidden';
+                 setTimeout(() => {
+                     modal.classList.add('is-open');
+                     modal.classList.remove('opacity-0');
+                     content.classList.remove('scale-95', 'opacity-0');
+                 }, 10);
+                 
+                 // Enhanced Logging: Log when a modal is opened via a card
+                 if (currentUser && openBtnId) {
+                     try {
+                         const openButtonElement = document.getElementById(openBtnId);
+                         const cardTitle = openButtonElement?.querySelector('h3')?.textContent.trim() || openBtnId.replace(/open-|-modal|-trigger/g, ' ').trim();
+                         const module = cardTitle || modalId.replace('-modal', '');
+                         logAction('Abriu Ferramenta', module, `Usuário abriu o modal '${module}'.`);
+                     } catch (e) {
+                         console.error("Error during modal open logging:", e);
+                     }
+                 }
+                 
+                 if (onOpen) onOpen();
+             };
              const closeModal = () => { content.classList.add('scale-95', 'opacity-0'); modal.classList.add('opacity-0'); modal.classList.remove('is-open'); setTimeout(() => { modal.classList.add('hidden'); if (!document.querySelector('.modal-overlay.is-open')) { document.body.style.overflow = ''; } }, 300); };
              if (openBtn) { openBtn.addEventListener('click', openModal); }
              closeBtn.addEventListener('click', closeModal);
@@ -1035,7 +1057,7 @@
                     `;
                 });
             }
-                                
+                          
             function openEditUserModal(username) {
                 const user = userCredentials.find(u => u.username === username);
                 if (!user || !editUserModal || !currentUser) return;
@@ -1300,6 +1322,8 @@
             });
             document.getElementById('clear-audit-log-btn')?.addEventListener('click', clearAuditLog);
 
+            // Enhanced Logging for External Link Cards
+            addLoggingToLinkCards();
 
             // Login System
             loadUserCredentials();
@@ -1402,7 +1426,12 @@
             });
 
              // --- Attendance Modal Logic ---
-             document.getElementById('open-attendance-trigger').addEventListener('click', () => { if(currentUser) { openAttendanceModal(); } });
+             document.getElementById('open-attendance-trigger').addEventListener('click', () => { 
+                if(currentUser) { 
+                    logAction('Abriu Ferramenta', 'Controle de Presença', `Usuário abriu o modal de Controle de Presença.`);
+                    openAttendanceModal(); 
+                } 
+             });
              setupModalInteraction('attendance-modal', null, 'close-attendance-modal');
         });
         
@@ -1460,6 +1489,26 @@
                 if(document.getElementById('audit-log-modal').classList.contains('is-open')) {
                     renderAuditLog();
                 }
+            });
+        }
+
+        // NEW: Enhanced logging for external link cards
+        function addLoggingToLinkCards() {
+            const cardGrid = document.getElementById('card-grid');
+            if (!cardGrid) return;
+
+            const linkCards = cardGrid.querySelectorAll('.portal-card-wrapper > a.portal-card');
+            
+            linkCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    if (!currentUser) return; 
+
+                    const titleEl = card.querySelector('h3');
+                    const moduleName = titleEl ? titleEl.textContent.trim() : 'Link Externo';
+                    
+                    const details = `Redirecionado para ${card.href}.`;
+                    logAction('Acesso a Link Externo', moduleName, details);
+                });
             });
         }
 
@@ -1550,6 +1599,11 @@
                     
                     document.querySelectorAll('.playlist-item').forEach(item => item.classList.remove('active'));
                     e.currentTarget.classList.add('active');
+
+                    // Enhanced Logging: Log when a user views a playlist embed
+                    if (currentUser) {
+                        logAction('Visualizou Playlist', 'Playlists', `Visualizou a playlist/vídeo no link: ${url}`);
+                    }
                 });
             });
 
@@ -1649,12 +1703,12 @@
                 } else {
                      if (icon) {
                          const originalIcons = { 
-                            'generate-pptx-btn': 'fa-file-powerpoint', 
-                            'generate-pdf-btn': 'fa-file-pdf', 
-                            'save-repertory-btn': 'fa-save',
-                            'clear-form-btn': 'fa-undo',
-                            'clear-repertory-history-btn': 'fa-trash-alt'
-                        };
+                             'generate-pptx-btn': 'fa-file-powerpoint', 
+                             'generate-pdf-btn': 'fa-file-pdf', 
+                             'save-repertory-btn': 'fa-save',
+                             'clear-form-btn': 'fa-undo',
+                             'clear-repertory-history-btn': 'fa-trash-alt'
+                         };
                         icon.className = `fas ${originalIcons[btnId]} mr-2`;
                         }
                 }
@@ -2700,7 +2754,7 @@ Deus abençoe!`;
                     );
                 });
             }
-                                        
+                                    
             container.querySelector('#attendance-tabs')?.addEventListener('click', (e) => {
                 const button = e.target.closest('.attendance-tab-button');
                 if (!button) return;
