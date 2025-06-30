@@ -495,17 +495,23 @@
 
                         <!-- Seção para Adicionar Cânticos -->
                         <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700 mb-6 admin-only-input-area">
-                            <h4 class="font-bold text-brand-text dark:text-white mb-3">Adicionar Cântico ao Repertório</h4>
-                            <div class="flex flex-col sm:flex-row items-end gap-4">
-                                <div class="flex-grow w-full sm:w-auto">
-                                    <label for="song-type-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de Cântico</label>
-                                    <select id="song-type-selector" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></select>
-                                </div>
-                                <button type="button" id="add-song-btn" class="admin-only-input w-full sm:w-auto bg-brand-blue text-white font-semibold py-2 px-4 rounded-md hover:bg-brand-dark-blue transition-all">
-                                    <i class="fas fa-plus mr-2"></i>Adicionar
-                                </button>
+                        <h4 class="font-bold text-brand-text dark:text-white mb-3">Adicionar Cântico ao Repertório</h4>
+                        <div class="flex flex-col sm:flex-row items-end gap-4">
+                            <div id="song-type-selector-wrapper" class="flex-grow w-full sm:w-auto">
+                                <label for="song-type-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo de Cântico</label>
+                                <select id="song-type-selector" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"></select>
                             </div>
+
+                            <div id="custom-song-type-wrapper" class="hidden flex-grow w-full sm:w-auto">
+                                <label for="custom-song-type-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Cântico Personalizado</label>
+                                <input type="text" id="custom-song-type-input" placeholder="Ex: Cântico de Meditação" class="admin-only-input mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-brand-blue focus:ring focus:ring-brand-blue focus:ring-opacity-50">
+                            </div>
+
+                            <button type="button" id="add-song-btn" class="admin-only-input w-full sm:w-auto bg-brand-blue text-white font-semibold py-2 px-4 rounded-md hover:bg-brand-dark-blue transition-all">
+                                <i class="fas fa-plus mr-2"></i>Adicionar
+                            </button>
                         </div>
+                    </div>
                         
                         <!-- Container para os Cânticos Adicionados -->
                         <div id="dynamic-song-fields-container" class="space-y-4">
@@ -1772,12 +1778,12 @@
         let songFieldCounter = 0;
 
         function populateSongTypeSelector() {
-            const selector = document.getElementById('song-type-selector');
-            if (!selector) return;
-            selector.innerHTML = songFields
-                .map(field => `<option value="${field.title}">${field.title}</option>`)
-                .join('');
-        }
+         const selector = document.getElementById('song-type-selector');
+         if (!selector) return;
+         selector.innerHTML = songFields
+             .map(field => `<option value="${field.title}">${field.title}</option>`)
+             .join('') + '<option value="custom">Outro (Personalizado)...</option>'; // <-- ALTERAÇÃO AQUI
+     }
 
         function createSongFieldHTML(title, lyrics = '', link = '') {
             songFieldCounter++;
@@ -1807,59 +1813,100 @@
             `;
         }
         
-        // **FIX**: This function is now called only once on page load, preventing duplicate listeners.
-        function initializeGeneratorEventListeners() {
-            document.getElementById('add-song-btn')?.addEventListener('click', () => {
-                const selector = document.getElementById('song-type-selector');
-                if (!selector) return;
-                const songType = selector.value;
-                const container = document.getElementById('dynamic-song-fields-container');
-                container.insertAdjacentHTML('beforeend', createSongFieldHTML(songType));
-            });
+        // **SUBSTITUA TODA A FUNÇÃO** com este código atualizado
+     function initializeGeneratorEventListeners() {
+         
+         // --- LÓGICA ATUALIZADA PARA O BOTÃO "ADICIONAR" ---
+         document.getElementById('add-song-btn')?.addEventListener('click', () => {
+             const selector = document.getElementById('song-type-selector');
+             const customInput = document.getElementById('custom-song-type-input');
+             if (!selector || !customInput) return;
 
-            document.getElementById('dynamic-song-fields-container')?.addEventListener('click', (e) => {
-                const removeBtn = e.target.closest('.remove-song-btn');
-                if (removeBtn) {
-                     removeBtn.closest('.dynamic-song-card').remove();
-                }
-            });
+             let songType = selector.value;
 
-            document.getElementById('save-repertory-btn')?.addEventListener('click', saveRepertory);
-            document.getElementById('clear-repertory-history-btn')?.addEventListener('click', clearAllRepertories);
-            document.getElementById('generate-pptx-btn')?.addEventListener('click', generatePptx);
-            document.getElementById('generate-pdf-btn')?.addEventListener('click', generatePdf);
-            
-            const tabsContainer = document.getElementById('generator-tabs');
-            tabsContainer?.addEventListener('click', (e) => {
-                const targetButton = e.target.closest('.generator-tab-btn');
-                if (!targetButton) return;
-                
-                const tabName = targetButton.dataset.tab;
+             // Se a opção for 'custom', pega o valor do campo de texto
+             if (songType === 'custom') {
+                 songType = customInput.value.trim();
+                 if (!songType) {
+                     showGeneratorFeedback("Por favor, digite um nome para o cântico personalizado.", true);
+                     return;
+                 }
+             }
+             
+             // Adiciona o cântico ao formulário
+             const container = document.getElementById('dynamic-song-fields-container');
+             container.insertAdjacentHTML('beforeend', createSongFieldHTML(songType));
 
-                if (tabName === 'visualizar' && targetButton.classList.contains('hidden')) {
-                    return; 
-                }
-                
-                tabsContainer.querySelectorAll('.generator-tab-btn').forEach(btn => btn.classList.remove('active'));
-                targetButton.classList.add('active');
-                
-                document.querySelectorAll('.generator-tab-pane').forEach(pane => {
-                    pane.classList.toggle('hidden', pane.id !== `tab-${tabName}`);
-                });
-            });
+             // Reseta a interface de seleção para o estado inicial
+             const selectorWrapper = document.getElementById('song-type-selector-wrapper');
+             const customInputWrapper = document.getElementById('custom-song-type-wrapper');
+             selector.value = songFields[0]?.title || ''; // Volta para a primeira opção da lista
+             selectorWrapper.classList.remove('hidden');
+             customInputWrapper.classList.add('hidden');
+             customInput.value = '';
+         });
 
-            const historyContentDiv = document.getElementById('repertory-history-content');
-            historyContentDiv?.addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.closest('.edit-repertory-btn')) {
-                    loadRepertoryForEditing(target.closest('.edit-repertory-btn').dataset.id);
-                } else if (target.closest('.view-repertory-btn')) {
-                    loadRepertoryForViewing(target.closest('.view-repertory-btn').dataset.id);
-                } else if (target.closest('.delete-repertory-btn')) {
-                    deleteRepertory(target.closest('.delete-repertory-btn').dataset.id);
-                }
-            });
-        }
+         // --- NOVO CÓDIGO PARA CONTROLAR A VISIBILIDADE DO CAMPO PERSONALIZADO ---
+         const songTypeSelector = document.getElementById('song-type-selector');
+         if (songTypeSelector) {
+             songTypeSelector.addEventListener('change', () => {
+                 const customInputWrapper = document.getElementById('custom-song-type-wrapper');
+                 const selectorWrapper = document.getElementById('song-type-selector-wrapper');
+                 if (songTypeSelector.value === 'custom') {
+                     selectorWrapper.classList.add('hidden'); // Esconde o seletor
+                     customInputWrapper.classList.remove('hidden'); // Mostra o campo de texto
+                     document.getElementById('custom-song-type-input').focus();
+                 } else {
+                     selectorWrapper.classList.remove('hidden'); // Garante que o seletor está visível
+                     customInputWrapper.classList.add('hidden'); // Esconde o campo de texto
+                 }
+             });
+         }
+
+         // --- CÓDIGO ORIGINAL DA FUNÇÃO (MANTIDO) ---
+         document.getElementById('dynamic-song-fields-container')?.addEventListener('click', (e) => {
+             const removeBtn = e.target.closest('.remove-song-btn');
+             if (removeBtn) {
+                 removeBtn.closest('.dynamic-song-card').remove();
+             }
+         });
+
+         document.getElementById('save-repertory-btn')?.addEventListener('click', saveRepertory);
+         document.getElementById('clear-repertory-history-btn')?.addEventListener('click', clearAllRepertories);
+         document.getElementById('generate-pptx-btn')?.addEventListener('click', generatePptx);
+         document.getElementById('generate-pdf-btn')?.addEventListener('click', generatePdf);
+         
+         const tabsContainer = document.getElementById('generator-tabs');
+         tabsContainer?.addEventListener('click', (e) => {
+             const targetButton = e.target.closest('.generator-tab-btn');
+             if (!targetButton) return;
+             
+             const tabName = targetButton.dataset.tab;
+
+             if (tabName === 'visualizar' && targetButton.classList.contains('hidden')) {
+                 return; 
+             }
+             
+             tabsContainer.querySelectorAll('.generator-tab-btn').forEach(btn => btn.classList.remove('active'));
+             targetButton.classList.add('active');
+             
+             document.querySelectorAll('.generator-tab-pane').forEach(pane => {
+                 pane.classList.toggle('hidden', pane.id !== `tab-${tabName}`);
+             });
+         });
+
+         const historyContentDiv = document.getElementById('repertory-history-content');
+         historyContentDiv?.addEventListener('click', (e) => {
+             const target = e.target;
+             if (target.closest('.edit-repertory-btn')) {
+                 loadRepertoryForEditing(target.closest('.edit-repertory-btn').dataset.id);
+             } else if (target.closest('.view-repertory-btn')) {
+                 loadRepertoryForViewing(target.closest('.view-repertory-btn').dataset.id);
+             } else if (target.closest('.delete-repertory-btn')) {
+                 deleteRepertory(target.closest('.delete-repertory-btn').dataset.id);
+             }
+         });
+     }
         
         function getSongDataFromForm() {
             const form = document.getElementById('pptx-form');
