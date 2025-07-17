@@ -1,25 +1,15 @@
 // Define um nome para o cache do seu aplicativo
-const CACHE_NAME = 'portal-uziel-cache-v1';
+const CACHE_NAME = 'portal-uziel-cache-v2';
 
 // Lista de todos os arquivos que o seu aplicativo precisa para funcionar offline
 const urlsToCache = [
   './',
   './index.html',
   './3.png',
+  './4.jpg',
   './5.png',
-  './Ministério uziel.png',
-  './Imagem do WhatsApp de 2024-10-20 à(s) 10.44.46_3463bbb5.jpg',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Anton&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-  'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
-  'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
+  './6.png',
+  './manifest.json'
 ];
 
 // Evento 'install': é disparado quando o Service Worker é instalado pela primeira vez.
