@@ -1343,17 +1343,17 @@
             
             // Firebase Initialization
             try {
-                const fallbackConfig = { apiKey: "AIzaSyASN-L5S6-KexN4OtKUOUrGDU1JaMuVsMY", authDomain: "forms-d0559.firebaseapp.com", projectId: "forms-d0559", storageBucket: "forms-d0559.appspot.com", messagingSenderId: "494787147690", appId: "1:494787147690:web:b2a4f4b4e85e76df929dd3", measurementId: "G-TJT2CRB34L" };
-                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-                let firebaseConfig = JSON.parse(firebaseConfigStr);
-                if (!firebaseConfig.apiKey) { firebaseConfig = fallbackConfig; }
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'portal-uziel-v1-fallback';
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                const auth = getAuth(app);
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
-                onAuthStateChanged(auth, (user) => { if (user) { initializeDataListeners(); } });
-            } catch (error) { console.error("Error initializing Firebase:", error); }
+                const fallbackConfig = { apiKey: "AIzaSyASN-L5S6-KexN4OtKUOUrGDU1JaMuVsMY", authDomain: "portal-uziel-295cb.firebaseapp.com", projectId: "portal-uziel-295cb", storageBucket: "portal-uziel-295cb.firebasestorage.app", messagingSenderId: "98540572300", appId: "1:98540572300:web:1277c0ed3a69442d8975a9", measurementId: "G-1RTQ4KYFTE" };
+                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+                let firebaseConfig = JSON.parse(firebaseConfigStr);
+                if (!firebaseConfig.apiKey) { firebaseConfig = fallbackConfig; }
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'portal-uziel-v1-fallback';
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
+                onAuthStateChanged(auth, (user) => { if (user) { initializeDataListeners(); } });
+            } catch (error) { console.error("Error initializing Firebase:", error); }
 
             // Other initializations
             const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } }); }, { threshold: 0.1 });
