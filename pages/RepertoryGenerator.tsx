@@ -7,7 +7,7 @@ import { SONG_TYPES, REPERTORY_COVERS } from '../constants';
 import { RepertoryService, AuditService } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { Song, Repertory } from '../types';
-import { fetchLyrics, generateRepertoryImage } from '../services/geminiService';
+import { fetchLyrics, generateRepertoryImage, smartProcessLyrics } from '../services/geminiService';
 import ImageViewer from '../components/ImageViewer';
 import { AnimatePresence, motion } from 'framer-motion';
 import ChordRenderer from '../components/ChordRenderer';
@@ -409,7 +409,12 @@ const RepertoryGenerator: React.FC = () => {
   const [showFullImage, setShowFullImage] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
+  const [pdfChoiceModal, setPdfChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
   const [pptxChoiceModal, setPptxChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
+  const [isGeneratingPPTX, setIsGeneratingPPTX] = useState(false);
+  const [pptxProgress, setPptxProgress] = useState({ current: 0, total: 0 });
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState({ current: 0, total: 0 });
   const activeGenerationRef = useRef<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 10 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -455,22 +460,39 @@ const RepertoryGenerator: React.FC = () => {
   const resetForm = () => { setSongs([]); setTheme(''); setEditingId(null); setDate(''); setCoverImage(REPERTORY_COVERS[0]); };
   const requestDelete = (e: React.MouseEvent, id: string) => { e.stopPropagation(); e.preventDefault(); setDeleteModal({ isOpen: true, title: 'Excluir Repertório?', description: 'Você está prestes a excluir este repertório permanentemente.', onConfirm: async () => { setIsProcessing(true); const prevHistory = [...history]; setHistory(prev => prev.filter(h => h.id !== id)); setDeletingId(id); try { await RepertoryService.delete(id); if (currentUser) { await AuditService.log(currentUser.username, 'Repertory', 'DELETE', `Excluiu repertório ID: ${id}`, currentUser.role, currentUser.name); } } catch (err: any) { setHistory(prevHistory); alert("Erro ao excluir: " + err.message); } finally { setIsProcessing(false); setDeletingId(null); setDeleteModal(prev => ({...prev, isOpen: false})); } } }); };
   const getLogoGeometry = (x: number, y: number, size: number) => { const s = size / 100; return [ { type: 'rect', x: x + 44*s, y: y + 2*s, w: 12*s, h: 96*s }, { type: 'rect', x: x + 18*s, y: y + 22*s, w: 64*s, h: 12*s }, { type: 'rect', x: x + 30*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 16*s, y: y + 50*s, w: 10*s, h: 20*s }, { type: 'rect', x: x + 60*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 74*s, y: y + 50*s, w: 10*s, h: 20*s }, ]; };
-  const generatePDF = (repSongs: Song[], repTheme: string, repDate: string, creatorName: string) => {
+  const generatePDF = async (repSongs: Song[], repTheme: string, repDate: string, creatorName: string, columns: 1 | 2 | 3 = 1) => {
     try {
-      const doc = new jsPDF();
-      let yPos = 20;
-      const margin = 20;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const maxLineWidth = pageWidth - margin * 2;
+      setIsGeneratingPDF(true);
+      setPdfProgress({ current: 0, total: repSongs.length });
 
-      // Header
+      const doc = new jsPDF();
+      const margin = 15; // Slightly reduced margin for 3 columns
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      // Column Configuration
+      const colCount = columns;
+      const colGap = 5;
+      const colWidth = (pageWidth - (margin * 2) - (colGap * (colCount - 1))) / colCount;
+      
+      let currentCol = 0;
+      let yPos = 20;
+
+      // Helper to get current X based on column
+      const getX = () => margin + (currentCol * (colWidth + colGap));
+
+
+
+      // Header (Only on first page, spans all columns)
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
+      doc.setTextColor(41, 170, 226); // Brand Blue
       doc.text("Ministério de Música Uziel", pageWidth / 2, yPos, { align: "center" });
       yPos += 10;
       
       doc.setFontSize(16);
       doc.setFont("helvetica", "normal");
+      doc.setTextColor(0);
       doc.text(`Repertório: ${repTheme}`, pageWidth / 2, yPos, { align: "center" });
       yPos += 8;
       
@@ -478,59 +500,229 @@ const RepertoryGenerator: React.FC = () => {
       doc.setTextColor(100);
       const formattedDate = new Date(repDate + 'T12:00:00').toLocaleDateString('pt-BR');
       doc.text(`Data: ${formattedDate} | Criado por: ${creatorName}`, pageWidth / 2, yPos, { align: "center" });
-      yPos += 15;
+      yPos += 10;
       doc.setDrawColor(200);
       doc.line(margin, yPos, pageWidth - margin, yPos);
       yPos += 15;
 
-      doc.setTextColor(0);
+      const startYFirstPage = yPos;
 
-      repSongs.forEach((song, index) => {
-        if (yPos > 260) {
-          doc.addPage();
-          yPos = 20;
-        }
-
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text(`${index + 1}. ${song.title} (${song.type})`, margin, yPos);
-        yPos += 6;
-
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "italic");
-        doc.setTextColor(100);
-        doc.text(`Tom: ${song.key || 'N/A'} | Artista: ${song.artist || 'N/A'}`, margin, yPos);
-        yPos += 10;
-
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(0);
-
-        let cleanLyrics = song.lyrics.replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '');
-        cleanLyrics = cleanLyrics.replace(/\*\*/g, '').replace(/\*/g, '');
-
-        const lines = doc.splitTextToSize(cleanLyrics, maxLineWidth);
-        
-        for (let i = 0; i < lines.length; i++) {
-          if (yPos > 280) {
+      // Helper to check page/column break
+      const checkPageBreak = (heightNeeded: number) => {
+        if (yPos + heightNeeded > pageHeight - margin) {
+          if (currentCol < colCount - 1) {
+            // Move to next column
+            currentCol++;
+            // If on first page, respect header height
+            if (doc.getNumberOfPages() === 1) {
+                yPos = startYFirstPage;
+            } else {
+                yPos = 20; // Top margin for new column on subsequent pages
+            }
+          } else {
+            // New Page
             doc.addPage();
+            currentCol = 0;
             yPos = 20;
           }
-          doc.text(lines[i], margin, yPos);
-          yPos += 5;
+          return true;
         }
-        yPos += 12; // Extra space between songs
-      });
+        return false;
+      };
+
+      for (let i = 0; i < repSongs.length; i++) {
+        const song = repSongs[i];
+        setPdfProgress({ current: i + 1, total: repSongs.length });
+        
+        checkPageBreak(40); // Ensure title fits
+
+        // Song Title
+        // 1 col: 16, 2 col: 14, 3 col: 12
+        const titleSize = columns === 1 ? 16 : (columns === 2 ? 14 : 12);
+        doc.setFontSize(titleSize);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0);
+        
+        // Wrap title if needed
+        const titleLines = doc.splitTextToSize(`${i + 1}. ${song.title} (${song.type})`, colWidth);
+        doc.text(titleLines, getX(), yPos);
+        yPos += (titleLines.length * (columns === 1 ? 7 : (columns === 2 ? 6 : 5)));
+
+        // Metadata
+        // 1 col: 10, 2 col: 9, 3 col: 8
+        const metaSize = columns === 1 ? 10 : (columns === 2 ? 9 : 8);
+        doc.setFontSize(metaSize);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100);
+        
+        const metaText = `Tom: ${song.key || 'N/A'} | Artista: ${song.artist || 'N/A'}`;
+        const metaLines = doc.splitTextToSize(metaText, colWidth);
+        doc.text(metaLines, getX(), yPos);
+        yPos += (metaLines.length * (columns === 1 ? 5 : (columns === 2 ? 4 : 3)));
+        yPos += (columns === 1 ? 5 : (columns === 2 ? 4 : 3)); // Extra padding after metadata
+
+        // Process Lyrics with AI for PDF (Chorus expansion, formatting)
+        let processedLyrics = song.lyrics;
+        try {
+            const result = await smartProcessLyrics(song.lyrics, 'pdf');
+            if (typeof result === 'string') {
+                processedLyrics = result;
+            }
+        } catch (e) {
+            console.warn("PDF AI processing failed, falling back to raw lyrics", e);
+        }
+
+        // Lyrics Rendering
+        const lines = processedLyrics.split(/\r\n|\r|\n/);
+        
+        lines.forEach(line => {
+            if (!line.trim()) {
+                yPos += (columns === 1 ? 5 : (columns === 2 ? 4 : 3));
+                return;
+            }
+
+            // Check if line has chords
+            if (line.includes('[')) {
+                // CHORD LINE RENDERING
+                const chordFontSize = columns === 1 ? 10 : (columns === 2 ? 9 : 8);
+                const lyricFontSize = columns === 1 ? 12 : (columns === 2 ? 10 : 9);
+                const chordHeight = columns === 1 ? 5 : (columns === 2 ? 4 : 3);
+                const lyricHeight = columns === 1 ? 6 : (columns === 2 ? 5 : 4);
+                const totalLineHeight = chordHeight + lyricHeight + (columns === 1 ? 2 : 1);
+
+                checkPageBreak(totalLineHeight);
+
+                let currentX = getX();
+                
+                // Split logic from ChordRenderer
+                const parts = line.split(/(\[[^\]]+\])/g);
+                let currentChord = '';
+                
+                // Group into blocks
+                const blocks: {chord: string, lyric: string}[] = [];
+                parts.forEach(part => {
+                    if (part.startsWith('[') && part.endsWith(']')) {
+                        if (currentChord) {
+                            blocks.push({ chord: currentChord, lyric: '' });
+                        }
+                        currentChord = part.replace(/[\[\]]/g, '');
+                    } else {
+                        blocks.push({ chord: currentChord, lyric: part });
+                        currentChord = '';
+                    }
+                });
+                if (currentChord) blocks.push({ chord: currentChord, lyric: '' });
+
+                // Render Blocks
+                blocks.forEach(block => {
+                    // Calculate Widths
+                    doc.setFontSize(chordFontSize);
+                    doc.setFont("helvetica", "bold");
+                    const chordWidth = doc.getTextWidth(block.chord);
+
+                    doc.setFontSize(lyricFontSize);
+                    const tokens = parseRichText(block.lyric);
+                    let lyricWidth = 0;
+                    tokens.forEach(t => {
+                        doc.setFont("helvetica", t.bold ? "bold" : (t.italic ? "italic" : "normal"));
+                        lyricWidth += doc.getTextWidth(t.text);
+                    });
+
+                    const blockWidth = Math.max(chordWidth, lyricWidth) + 1;
+
+                    // Wrap if needed (basic wrapping for chords is hard, so we just clip/overflow or move to next line if huge)
+                    // For 3 columns, wrapping is more likely needed.
+                    if (currentX + blockWidth > getX() + colWidth) {
+                        currentX = getX();
+                        yPos += totalLineHeight;
+                        checkPageBreak(totalLineHeight);
+                    }
+
+                    // Draw Chord
+                    if (block.chord) {
+                        doc.setFontSize(chordFontSize);
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(41, 170, 226); // Brand Blue
+                        doc.text(block.chord, currentX, yPos);
+                    }
+
+                    // Draw Lyric
+                    if (block.lyric) {
+                        let localX = currentX;
+                        doc.setFontSize(lyricFontSize);
+                        tokens.forEach(t => {
+                            doc.setFont("helvetica", t.bold ? "bold" : (t.italic ? "italic" : "normal"));
+                            
+                            // Color handling
+                            if (t.color) {
+                                doc.setTextColor(t.color);
+                            } else {
+                                doc.setTextColor(0); // Default black
+                            }
+
+                            doc.text(t.text, localX, yPos + chordHeight);
+                            localX += doc.getTextWidth(t.text);
+                        });
+                    }
+
+                    currentX += blockWidth;
+                });
+
+                yPos += totalLineHeight;
+
+            } else {
+                // TEXT ONLY LINE RENDERING
+                const fontSize = columns === 1 ? 12 : (columns === 2 ? 10 : 9);
+                const lineHeight = columns === 1 ? 6 : (columns === 2 ? 5 : 4);
+                doc.setFontSize(fontSize);
+                
+                checkPageBreak(lineHeight);
+
+                const tokens = parseRichText(line);
+                let currentX = getX();
+
+                tokens.forEach(t => {
+                    doc.setFont("helvetica", t.bold ? "bold" : (t.italic ? "italic" : "normal"));
+                    if (t.color) doc.setTextColor(t.color);
+                    else doc.setTextColor(0);
+
+                    // Word wrapping for text lines
+                    const words = t.text.split(/(\s+)/); // Split keeping spaces
+                    
+                    words.forEach(word => {
+                        const wordWidth = doc.getTextWidth(word);
+                        if (currentX + wordWidth > getX() + colWidth) {
+                            currentX = getX();
+                            yPos += lineHeight;
+                            checkPageBreak(lineHeight);
+                        }
+                        doc.text(word, currentX, yPos);
+                        currentX += wordWidth;
+                    });
+                });
+                
+                yPos += lineHeight;
+            }
+        });
+
+        yPos += (columns === 1 ? 10 : (columns === 2 ? 8 : 5));
+      }
 
       doc.save(`Repertorio_${normalizeFilename(repTheme)}.pdf`);
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       alert("Erro ao gerar PDF. Verifique o console.");
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfProgress({ current: 0, total: 0 });
     }
   };
 
-  const generatePPTX = (repSongs: Song[], repTheme: string, repDate: string, creatorName?: string, ratio: '16:9' | '4:3' = '16:9') => {
+  const generatePPTX = async (repSongs: Song[], repTheme: string, repDate: string, creatorName?: string, ratio: '16:9' | '4:3' = '16:9') => {
     try {
+      setIsGeneratingPPTX(true);
+      setPptxProgress({ current: 0, total: repSongs.length });
+
       const pptx = new pptxgen();
       pptx.layout = ratio === '16:9' ? 'LAYOUT_16x9' : 'LAYOUT_4x3';
 
@@ -555,58 +747,90 @@ const RepertoryGenerator: React.FC = () => {
       });
 
       // Song Slides
-      repSongs.forEach((song) => {
-        let cleanLyrics = song.lyrics.replace(/\[.*?\]/g, '');
-        cleanLyrics = cleanLyrics.replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '');
-        cleanLyrics = cleanLyrics.replace(/\*\*/g, '').replace(/\*/g, '');
+      for (let i = 0; i < repSongs.length; i++) {
+        const song = repSongs[i];
+        setPptxProgress({ current: i + 1, total: repSongs.length });
+
+        let chunks: string[] = [];
         
-        const allLines = cleanLyrics.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        
-        const chunks = [];
-        // Reduced from 5 to 4 lines per slide to prevent overflow
-        for (let i = 0; i < allLines.length; i += 4) {
-          chunks.push(allLines.slice(i, i + 4));
+        // Always use Gemini for intelligent processing (Chorus expansion, formatting, splitting)
+        try {
+            const result = await smartProcessLyrics(song.lyrics, 'pptx');
+            if (Array.isArray(result)) {
+                chunks = result;
+            } else if (typeof result === 'string') {
+                // Fallback if it returns a string (shouldn't happen for pptx mode but safe to handle)
+                chunks = [result];
+            }
+        } catch (e) {
+            console.warn("Gemini PPTX processing failed, falling back to simple split", e);
+            // Fallback logic
+            let clean = song.lyrics.replace(/\[.*?\]/g, '')
+                .replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '')
+                .replace(/\*\*/g, '').replace(/\*/g, '');
+            const lines = clean.split('\n').filter(l => l.trim());
+            for (let j = 0; j < lines.length; j += 5) {
+                chunks.push(lines.slice(j, j + 5).join('\n'));
+            }
         }
 
-        if (chunks.length === 0) {
-          let s = pptx.addSlide();
-          s.background = { color: "000000" };
-          s.addText(song.title.toUpperCase(), {
-            x: 0, y: "40%", w: "100%", align: "center",
-            fontSize: 40, color: "FFFFFF", bold: true, wrap: true
-          });
-          return;
+        if (!chunks || chunks.length === 0) {
+            // Empty slide fallback
+            let s = pptx.addSlide();
+            s.background = { color: "000000" };
+            const headerParts = [song.type.toUpperCase(), song.title.toUpperCase()];
+            if (song.artist) headerParts.push(song.artist);
+            if (song.key) headerParts.push(`Tom: ${song.key}`);
+            
+            s.addText(headerParts.join(' | '), {
+                x: "5%", y: "5%", w: "90%", h: "10%",
+                fontSize: 14, color: "8E8E93", align: "left", bold: true, wrap: true
+            });
+            
+            s.addText(song.title.toUpperCase(), {
+                x: 0, y: "40%", w: "100%", align: "center",
+                fontSize: 40, color: "FFFFFF", bold: true, wrap: true
+            });
+            continue;
         }
 
         chunks.forEach((chunk, idx) => {
           let s = pptx.addSlide();
           s.background = { color: "000000" };
           
-          // Header (Title) - Ends at 15%
-          s.addText(song.title, {
+          const headerParts = [
+            song.type.toUpperCase(),
+            song.title.toUpperCase()
+          ];
+          if (song.artist) headerParts.push(song.artist);
+          if (song.key) headerParts.push(`Tom: ${song.key}`);
+          const headerText = headerParts.join(' | ');
+
+          s.addText(headerText, {
             x: "5%", y: "5%", w: "90%", h: "10%",
             fontSize: 14, color: "8E8E93", align: "left", bold: true, wrap: true
           });
 
-          // Body (Lyrics) - Starts at 18%, Ends at 88% (70% height)
-          s.addText(chunk.join('\n'), {
+          s.addText(chunk, {
             x: "5%", y: "18%", w: "90%", h: "70%",
             fontSize: 36, color: "FFFFFF", align: "center", valign: "middle",
             bold: true, wrap: true
           });
 
-          // Footer (Page Number) - Starts at 92%
           s.addText(`${idx + 1} / ${chunks.length}`, {
             x: "5%", y: "92%", w: "90%", h: "5%",
             fontSize: 12, color: "4A4A4A", align: "right"
           });
         });
-      });
+      }
 
       pptx.writeFile({ fileName: `Projecao_${normalizeFilename(repTheme)}.pptx` });
     } catch (error) {
       console.error("Erro ao gerar PPTX:", error);
       alert("Erro ao gerar PPTX. Verifique o console.");
+    } finally {
+      setIsGeneratingPPTX(false);
+      setPptxProgress({ current: 0, total: 0 });
     }
   };
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
@@ -641,13 +865,56 @@ const RepertoryGenerator: React.FC = () => {
         </div>
       )}
       {activeTab === 'history' && (
-          <><div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">{[{ id: 'all', label: 'Todos', icon: 'fa-layer-group' }, { id: 'upcoming', label: 'Próximos', icon: 'fa-calendar-check' }, { id: 'past', label: 'Realizados', icon: 'fa-history' }].map((f) => (<button key={f.id} onClick={() => setFilterStatus(f.id as any)} className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${filterStatus === f.id ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><i className={`fas ${f.icon}`}></i> {f.label}</button>))}</div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">{displayHistory.map((rep) => { const bgImage = rep.coverImage || REPERTORY_COVERS[0]; const isStaticFallback = bgImage === REPERTORY_COVERS[0]; const shouldUsePremium = isStaticFallback || !rep.coverImage; const isDeleting = deletingId === rep.id; const dateObj = new Date(rep.date + 'T12:00:00'); const today = new Date(); today.setHours(0,0,0,0); const repDate = new Date(rep.date + 'T12:00:00'); repDate.setHours(0,0,0,0); const isUpcoming = repDate >= today; const canManage = isSuperAdmin || (currentUser?.role === 'admin' && rep.createdBy === currentUser?.username); const creatorUser = usersList.find(u => u.username === rep.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (rep.createdBy ? rep.createdBy.split('@')[0] : 'Uziel'); return (<div key={rep.id} className={`group bg-white dark:bg-[#0b1221] rounded-[2.5rem] p-4 shadow-lg hover:shadow-2xl border border-slate-100 dark:border-white/5 transition-all hover:-translate-y-2 relative flex flex-col ${isDeleting ? 'opacity-50 pointer-events-none' : ''} ${isUpcoming ? 'opacity-100' : 'opacity-60 mix-blend-luminosity hover:mix-blend-normal hover:opacity-100 duration-500'}`}><div onClick={() => { const repWithCover = { ...rep, coverImage: bgImage }; setViewingRep(repWithCover); setActiveTab('view'); }} className="cursor-pointer"><div className="aspect-square rounded-[2rem] relative overflow-hidden p-8 flex flex-col justify-between text-white shadow-md z-0 transform-gpu bg-slate-900">{shouldUsePremium ? (<PremiumBackground variant="golden" />) : (<div className="absolute inset-0"><img src={bgImage} onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = REPERTORY_COVERS[0]; }} alt="Capa" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10s] ease-in-out group-hover:scale-110 opacity-60 rounded-[2rem] animate-breathing" /></div>)}<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20 rounded-[2rem]"></div><div className="flex justify-between items-start z-10"><span className="text-6xl font-display font-bold text-white drop-shadow-lg">{dateObj.getDate()}</span>{rep.isPrivate && <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20"><i className="fas fa-lock text-xs"></i></div>}</div><div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10"><div className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center text-[10px] font-bold shadow-sm overflow-hidden">{creatorUser?.photoURL ? (<img src={creatorUser.photoURL} alt={creatorName} className="w-full h-full object-cover" />) : (creatorName.charAt(0).toUpperCase())}</div><span className="text-[10px] font-bold text-white uppercase tracking-wider">{creatorName}</span></div></div><div className="mt-5 mb-3 px-2"><span className="block text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mb-1">{dateObj.toLocaleDateString('pt-BR', {month:'long', year:'numeric'})}</span><span className="block font-bold text-xl leading-tight line-clamp-2 text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{rep.theme || 'Culto de Domingo'}</span></div></div><div className="mt-auto px-2 pb-2 flex justify-between items-center relative z-20 border-t border-slate-100 dark:border-white/5 pt-4"><span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i className="fas fa-music text-brand-500"></i> {rep.songs.length} faixas</span><div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); generatePDF(rep.songs, rep.theme, rep.date, rep.createdBy); }} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-all active:scale-90 active:bg-red-50 dark:active:bg-red-900/20 group/pdf"><i className="fas fa-file-pdf transition-transform group-active/pdf:scale-75 group-active/pdf:text-red-500"></i></button><button onClick={(e) => { e.stopPropagation(); setPptxChoiceModal({ isOpen: true, rep }); }} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-all active:scale-90 active:bg-orange-50 dark:active:bg-orange-900/20 group/pptx"><i className="fas fa-file-powerpoint transition-transform group-active/pptx:scale-75 group-active/pptx:text-orange-500"></i></button>{canManage && <button onClick={() => loadForEditing(rep)} className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-500/10 hover:bg-brand-100 dark:hover:bg-brand-500/20 text-brand-500 flex items-center justify-center transition-colors"><i className="fas fa-pen"></i></button>}{canManage && <button onClick={(e) => requestDelete(e, rep.id!)} disabled={isDeleting} className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 flex items-center justify-center transition-colors disabled:opacity-50">{isDeleting ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-trash"></i>}</button>}</div></div></div>); })} {displayHistory.length === 0 && (<div className="col-span-full py-20 text-center opacity-50 flex flex-col items-center"><div className="w-24 h-24 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4"><i className="fas fa-folder-open text-44 text-slate-300"></i></div><p className="font-bold text-slate-400">Nenhum repertório encontrado.</p></div>)}</div></>
+          <><div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">{[{ id: 'all', label: 'Todos', icon: 'fa-layer-group' }, { id: 'upcoming', label: 'Próximos', icon: 'fa-calendar-check' }, { id: 'past', label: 'Realizados', icon: 'fa-history' }].map((f) => (<button key={f.id} onClick={() => setFilterStatus(f.id as any)} className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${filterStatus === f.id ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><i className={`fas ${f.icon}`}></i> {f.label}</button>))}</div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">{displayHistory.map((rep) => { const bgImage = rep.coverImage || REPERTORY_COVERS[0]; const isStaticFallback = bgImage === REPERTORY_COVERS[0]; const shouldUsePremium = isStaticFallback || !rep.coverImage; const isDeleting = deletingId === rep.id; const dateObj = new Date(rep.date + 'T12:00:00'); const today = new Date(); today.setHours(0,0,0,0); const repDate = new Date(rep.date + 'T12:00:00'); repDate.setHours(0,0,0,0); const isUpcoming = repDate >= today; const canManage = isSuperAdmin || (currentUser?.role === 'admin' && rep.createdBy === currentUser?.username); const creatorUser = usersList.find(u => u.username === rep.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (rep.createdBy ? rep.createdBy.split('@')[0] : 'Uziel'); return (<div key={rep.id} className={`group bg-white dark:bg-[#0b1221] rounded-[2.5rem] p-4 shadow-lg hover:shadow-2xl border border-slate-100 dark:border-white/5 transition-all hover:-translate-y-2 relative flex flex-col ${isDeleting ? 'opacity-50 pointer-events-none' : ''} ${isUpcoming ? 'opacity-100' : 'opacity-60 mix-blend-luminosity hover:mix-blend-normal hover:opacity-100 duration-500'}`}><div onClick={() => { const repWithCover = { ...rep, coverImage: bgImage }; setViewingRep(repWithCover); setActiveTab('view'); }} className="cursor-pointer"><div className="aspect-square rounded-[2rem] relative overflow-hidden p-8 flex flex-col justify-between text-white shadow-md z-0 transform-gpu bg-slate-900">{shouldUsePremium ? (<PremiumBackground variant="golden" />) : (<div className="absolute inset-0"><img src={bgImage} onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = REPERTORY_COVERS[0]; }} alt="Capa" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10s] ease-in-out group-hover:scale-110 opacity-60 rounded-[2rem] animate-breathing" /></div>)}<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/20 rounded-[2rem]"></div><div className="flex justify-between items-start z-10"><span className="text-6xl font-display font-bold text-white drop-shadow-lg">{dateObj.getDate()}</span>{rep.isPrivate && <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20"><i className="fas fa-lock text-xs"></i></div>}</div><div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10"><div className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center text-[10px] font-bold shadow-sm overflow-hidden">{creatorUser?.photoURL ? (<img src={creatorUser.photoURL} alt={creatorName} className="w-full h-full object-cover" />) : (creatorName.charAt(0).toUpperCase())}</div><span className="text-[10px] font-bold text-white uppercase tracking-wider">{creatorName}</span></div></div><div className="mt-5 mb-3 px-2"><span className="block text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mb-1">{dateObj.toLocaleDateString('pt-BR', {month:'long', year:'numeric'})}</span><span className="block font-bold text-xl leading-tight line-clamp-2 text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{rep.theme || 'Culto de Domingo'}</span></div></div><div className="mt-auto px-2 pb-2 flex justify-between items-center relative z-20 border-t border-slate-100 dark:border-white/5 pt-4"><span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i className="fas fa-music text-brand-500"></i> {rep.songs.length} faixas</span><div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); setPdfChoiceModal({ isOpen: true, rep }); }} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-all active:scale-90 active:bg-red-50 dark:active:bg-red-900/20 group/pdf"><i className="fas fa-file-pdf transition-transform group-active/pdf:scale-75 group-active/pdf:text-red-500"></i></button><button onClick={(e) => { e.stopPropagation(); setPptxChoiceModal({ isOpen: true, rep }); }} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-all active:scale-90 active:bg-orange-50 dark:active:bg-orange-900/20 group/pptx"><i className="fas fa-file-powerpoint transition-transform group-active/pptx:scale-75 group-active/pptx:text-orange-500"></i></button>{canManage && <button onClick={() => loadForEditing(rep)} className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-500/10 hover:bg-brand-100 dark:hover:bg-brand-500/20 text-brand-500 flex items-center justify-center transition-colors"><i className="fas fa-pen"></i></button>}{canManage && <button onClick={(e) => requestDelete(e, rep.id!)} disabled={isDeleting} className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 flex items-center justify-center transition-colors disabled:opacity-50">{isDeleting ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-trash"></i>}</button>}</div></div></div>); })} {displayHistory.length === 0 && (<div className="col-span-full py-20 text-center opacity-50 flex flex-col items-center"><div className="w-24 h-24 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4"><i className="fas fa-folder-open text-44 text-slate-300"></i></div><p className="font-bold text-slate-400">Nenhum repertório encontrado.</p></div>)}</div></>
       )}
       {activeTab === 'view' && viewingRep && (
-         <div className="space-y-8 animate-fade-in-up"><div className="flex justify-between items-center"><button onClick={() => setActiveTab('history')} className="flex items-center gap-2 text-slate-500 hover:text-brand-600 font-bold text-xs uppercase tracking-widest bg-white dark:bg-white/5 px-6 py-3 rounded-xl shadow-sm w-fit transition-colors border border-slate-200 dark:border-white/5"><i className="fas fa-arrow-left"></i> Voltar</button><div className="flex gap-2"><button onClick={() => generatePDF(viewingRep.songs, viewingRep.theme, viewingRep.date, viewingRep.createdBy)} className="px-6 py-3 rounded-xl bg-white dark:bg-white/10 text-slate-800 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95 active:shadow-inner flex items-center gap-2 shadow-sm text-xs uppercase tracking-wider group"><i className="fas fa-file-pdf text-red-500 text-lg transition-transform group-active:scale-125 group-active:rotate-12"></i> PDF</button><button onClick={() => setPptxChoiceModal({ isOpen: true, rep: viewingRep })} className="px-6 py-3 rounded-xl bg-white dark:bg-white/10 text-slate-800 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95 active:shadow-inner flex items-center gap-2 shadow-sm text-xs uppercase tracking-wider group"><i className="fas fa-file-powerpoint text-orange-400 text-lg transition-transform group-active:scale-125 group-active:rotate-12"></i> PPTX</button></div></div><div className="bg-slate-900 rounded-[3rem] p-10 md:p-16 text-center shadow-2xl relative overflow-hidden text-white group">{(() => { const bgImage = viewingRep.coverImage || REPERTORY_COVERS[0]; const isStaticFallback = bgImage === REPERTORY_COVERS[0]; const shouldUsePremium = isStaticFallback || !viewingRep.coverImage; if (shouldUsePremium) { return <PremiumBackground variant="golden" />; } return ( <img src={bgImage} onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = REPERTORY_COVERS[0]; }} alt="Capa Hero" className="absolute inset-0 w-full h-full object-cover opacity-60 animate-breathing" /> ); })()}<div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div><div className="relative z-10 max-w-3xl mx-auto"><span className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest mb-6">Repertório Oficial</span><h2 className="text-5xl md:text-7xl font-display font-bold mb-4 text-shadow-lg">{viewingRep.theme}</h2><p className="text-slate-300 font-medium text-lg uppercase tracking-widest flex justify-center items-center gap-3"><i className="fas fa-calendar"></i> {new Date(viewingRep.date + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'})}</p><div className="mt-4 flex justify-center items-center gap-2 opacity-70">{(() => { const creatorUser = usersList.find(u => u.username === viewingRep.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (viewingRep.createdBy ? viewingRep.createdBy.split('@')[0] : 'Uziel'); return (<><div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-[10px] font-bold overflow-hidden">{creatorUser?.photoURL ? <img src={creatorUser.photoURL} className="w-full h-full object-cover" /> : creatorName.charAt(0).toUpperCase()}</div><span className="text-xs font-bold uppercase tracking-wider">Criado por {creatorName}</span></>); })()}</div></div></div><div className="space-y-6 max-w-5xl mx-auto">{viewingRep.songs.map((song, idx) => { const spotifyUrl = getSpotifyEmbedUrl(song.link); const youtubeUrl = getYoutubeEmbedUrl(song.link); const currentRootKey = song.key ? song.key.replace(/m.*/, '') : ''; const hasChords = song.lyrics.includes('['); return (<div key={idx} className="bg-white dark:bg-[#0b1221] rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-white/5 overflow-hidden transition-all duration-300 md:hover:scale-[1.01] hover:shadow-2xl group"><div className="p-6 md:p-8 border-b border-slate-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50 dark:bg-white/[0.02]"><div className="flex items-center gap-4 w-full justify-center md:justify-start"><div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center text-xl md:text-3xl font-bold text-slate-300 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-white/5 transition-all duration-300 group-hover:bg-brand-500 group-hover:text-white group-hover:scale-110">{idx + 1}</div><div className="text-center md:text-left"><div className="flex items-center justify-center md:justify-start gap-2 md:gap-3 mb-1 md:mb-2"><span className="px-2 py-0.5 md:px-3 md:py-1 rounded-md bg-slate-200 dark:bg-white/10 text-[10px] md:text-sm font-bold uppercase text-slate-600 dark:text-slate-300">{song.type}</span>{hasChords && (<div className="relative group/key" onClick={e => e.stopPropagation()}><select value={currentRootKey} onChange={e => handleViewTranspose(song.id, e.target.value)} className="appearance-none bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 font-bold text-[10px] md:text-sm py-0.5 md:py-1 pl-2 md:pl-3 pr-5 md:pr-8 rounded-md cursor-pointer outline-none hover:bg-brand-200 dark:hover:bg-brand-900/50 transition-colors">{MusicUtils.KEYS.map(k => (<option key={k} value={k}>{k}</option>))}</select><div className="absolute right-1.5 md:right-3 top-1/2 -translate-y-1/2 pointer-events-none text-brand-600 dark:text-brand-400 text-[8px] md:text-xs"><i className="fas fa-chevron-down"></i></div></div>)}</div><h3 className="text-2xl md:text-5xl font-bold text-slate-800 dark:text-white leading-tight md:leading-tight">{song.title}</h3>{song.artist && <p className="text-sm md:text-xl font-bold text-slate-400 mt-1">{song.artist}</p>}</div></div>{song.link && !spotifyUrl && !youtubeUrl && (<a href={song.link} target="_blank" rel="noreferrer" className="px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 shadow-lg"><i className="fas fa-external-link-alt"></i> Ouvir Mídia</a>)}</div><div className="flex flex-col"><div className="p-4 md:p-8 w-full"><ChordRenderer text={song.lyrics} center={true} /></div>{(spotifyUrl || youtubeUrl) && (<div className="bg-slate-50/50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 w-full p-4 md:p-6"><div className="max-w-4xl mx-auto">{spotifyUrl ? (<div className="w-full rounded-xl overflow-hidden shadow-sm"><iframe src={spotifyUrl} width="100%" height="152" frameBorder="0" allowFullScreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div>) : (<div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black"><iframe src={youtubeUrl!} width="100%" height="100%" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe></div>)}</div></div>)}</div></div>); })}</div></div>
+         <div className="space-y-8 animate-fade-in-up"><div className="flex justify-between items-center"><button onClick={() => setActiveTab('history')} className="flex items-center gap-2 text-slate-500 hover:text-brand-600 font-bold text-xs uppercase tracking-widest bg-white dark:bg-white/5 px-6 py-3 rounded-xl shadow-sm w-fit transition-colors border border-slate-200 dark:border-white/5"><i className="fas fa-arrow-left"></i> Voltar</button><div className="flex gap-2"><button onClick={() => setPdfChoiceModal({ isOpen: true, rep: viewingRep })} className="px-6 py-3 rounded-xl bg-white dark:bg-white/10 text-slate-800 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95 active:shadow-inner flex items-center gap-2 shadow-sm text-xs uppercase tracking-wider group"><i className="fas fa-file-pdf text-red-500 text-lg transition-transform group-active:scale-125 group-active:rotate-12"></i> PDF</button><button onClick={() => setPptxChoiceModal({ isOpen: true, rep: viewingRep })} className="px-6 py-3 rounded-xl bg-white dark:bg-white/10 text-slate-800 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95 active:shadow-inner flex items-center gap-2 shadow-sm text-xs uppercase tracking-wider group"><i className="fas fa-file-powerpoint text-orange-400 text-lg transition-transform group-active:scale-125 group-active:rotate-12"></i> PPTX</button></div></div><div className="bg-slate-900 rounded-[3rem] p-10 md:p-16 text-center shadow-2xl relative overflow-hidden text-white group">{(() => { const bgImage = viewingRep.coverImage || REPERTORY_COVERS[0]; const isStaticFallback = bgImage === REPERTORY_COVERS[0]; const shouldUsePremium = isStaticFallback || !viewingRep.coverImage; if (shouldUsePremium) { return <PremiumBackground variant="golden" />; } return ( <img src={bgImage} onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = REPERTORY_COVERS[0]; }} alt="Capa Hero" className="absolute inset-0 w-full h-full object-cover opacity-60 animate-breathing" /> ); })()}<div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div><div className="relative z-10 max-w-3xl mx-auto"><span className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest mb-6">Repertório Oficial</span><h2 className="text-5xl md:text-7xl font-display font-bold mb-4 text-shadow-lg">{viewingRep.theme}</h2><p className="text-slate-300 font-medium text-lg uppercase tracking-widest flex justify-center items-center gap-3"><i className="fas fa-calendar"></i> {new Date(viewingRep.date + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'})}</p><div className="mt-4 flex justify-center items-center gap-2 opacity-70">{(() => { const creatorUser = usersList.find(u => u.username === viewingRep.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (viewingRep.createdBy ? viewingRep.createdBy.split('@')[0] : 'Uziel'); return (<><div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-[10px] font-bold overflow-hidden">{creatorUser?.photoURL ? <img src={creatorUser.photoURL} className="w-full h-full object-cover" /> : creatorName.charAt(0).toUpperCase()}</div><span className="text-xs font-bold uppercase tracking-wider">Criado por {creatorName}</span></>); })()}</div></div></div><div className="space-y-6 max-w-5xl mx-auto">{viewingRep.songs.map((song, idx) => { const spotifyUrl = getSpotifyEmbedUrl(song.link); const youtubeUrl = getYoutubeEmbedUrl(song.link); const currentRootKey = song.key ? song.key.replace(/m.*/, '') : ''; const hasChords = song.lyrics.includes('['); return (<div key={idx} className="bg-white dark:bg-[#0b1221] rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-white/5 overflow-hidden transition-all duration-300 md:hover:scale-[1.01] hover:shadow-2xl group"><div className="p-6 md:p-8 border-b border-slate-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50 dark:bg-white/[0.02]"><div className="flex items-center gap-4 w-full justify-center md:justify-start"><div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center text-xl md:text-3xl font-bold text-slate-300 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-white/5 transition-all duration-300 group-hover:bg-brand-500 group-hover:text-white group-hover:scale-110">{idx + 1}</div><div className="text-center md:text-left"><div className="flex items-center justify-center md:justify-start gap-2 md:gap-3 mb-1 md:mb-2"><span className="px-2 py-0.5 md:px-3 md:py-1 rounded-md bg-slate-200 dark:bg-white/10 text-[10px] md:text-sm font-bold uppercase text-slate-600 dark:text-slate-300">{song.type}</span>{hasChords && (<div className="relative group/key" onClick={e => e.stopPropagation()}><select value={currentRootKey} onChange={e => handleViewTranspose(song.id, e.target.value)} className="appearance-none bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 font-bold text-[10px] md:text-sm py-0.5 md:py-1 pl-2 md:pl-3 pr-5 md:pr-8 rounded-md cursor-pointer outline-none hover:bg-brand-200 dark:hover:bg-brand-900/50 transition-colors">{MusicUtils.KEYS.map(k => (<option key={k} value={k}>{k}</option>))}</select><div className="absolute right-1.5 md:right-3 top-1/2 -translate-y-1/2 pointer-events-none text-brand-600 dark:text-brand-400 text-[8px] md:text-xs"><i className="fas fa-chevron-down"></i></div></div>)}</div><h3 className="text-2xl md:text-5xl font-bold text-slate-800 dark:text-white leading-tight md:leading-tight">{song.title}</h3>{song.artist && <p className="text-sm md:text-xl font-bold text-slate-400 mt-1">{song.artist}</p>}</div></div>{song.link && !spotifyUrl && !youtubeUrl && (<a href={song.link} target="_blank" rel="noreferrer" className="px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 shadow-lg"><i className="fas fa-external-link-alt"></i> Ouvir Mídia</a>)}</div><div className="flex flex-col"><div className="p-4 md:p-8 w-full"><ChordRenderer text={song.lyrics} center={true} /></div>{(spotifyUrl || youtubeUrl) && (<div className="bg-slate-50/50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 w-full p-4 md:p-6"><div className="max-w-4xl mx-auto">{spotifyUrl ? (<div className="w-full rounded-xl overflow-hidden shadow-sm"><iframe src={spotifyUrl} width="100%" height="152" frameBorder="0" allowFullScreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div>) : (<div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black"><iframe src={youtubeUrl!} width="100%" height="100%" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full"></iframe></div>)}</div></div>)}</div></div>); })}</div></div>
       )}
       {showFullImage && ( <ImageViewer src={coverImage || REPERTORY_COVERS[0]} onClose={() => setShowFullImage(false)} /> )}
-      {pptxChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-orange-100 dark:border-orange-500/20"><i className="fas fa-file-powerpoint"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PowerPoint</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">Escolha a proporção ideal para a projeção da sua igreja.</p><div className="flex flex-col gap-3"><button onClick={() => { if(pptxChoiceModal.rep) generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '16:9'); setPptxChoiceModal({ isOpen: false, rep: null }); }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button><button onClick={() => { if(pptxChoiceModal.rep) generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '4:3'); setPptxChoiceModal({ isOpen: false, rep: null }); }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button><button onClick={() => setPptxChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button></div></div></div>, document.body)}
+      {isGeneratingPDF && createPortal(
+        <div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+            <div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center">
+                <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-500/20">
+                    <i className="fas fa-file-pdf"></i>
+                </div>
+                <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Gerando PDF</h3>
+                <div className="flex flex-col items-center justify-center py-4 animate-fade-in">
+                    <div className="w-12 h-12 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-red-500 font-bold text-sm animate-pulse">
+                        Processando música {pdfProgress.current} de {pdfProgress.total}...
+                    </p>
+                    <p className="text-xs text-slate-400 mt-2">Expandindo refrões e formatando...</p>
+                </div>
+            </div>
+        </div>, document.body
+      )}
+      {pdfChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-500/20"><i className="fas fa-file-pdf"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PDF</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">Escolha o layout ideal para impressão.</p>
+      
+      <div className="flex flex-col gap-3">
+            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 1); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">1 Coluna (Padrão)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Letras grandes, fácil leitura</span></div><i className="fas fa-file-alt text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 2); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">2 Colunas (Equilibrado)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bom equilíbrio entre espaço e tamanho</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 3); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">3 Colunas (Compacto)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Economiza papel, estilo livreto</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={() => setPdfChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
+        </div>
+      </div></div>, document.body)}
+      {pptxChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-orange-100 dark:border-orange-500/20"><i className="fas fa-file-powerpoint"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PowerPoint</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">Escolha a proporção ideal para a projeção da sua igreja.</p>
+      
+      {isGeneratingPPTX ? (
+        <div className="flex flex-col items-center justify-center py-4 animate-fade-in">
+            <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+            <p className="text-orange-500 font-bold text-sm animate-pulse">
+                Processando música {pptxProgress.current} de {pptxProgress.total}...
+            </p>
+            <p className="text-xs text-slate-400 mt-2">Utilizando IA para otimizar quebras de linha...</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+            <button onClick={async () => { if(pptxChoiceModal.rep) { await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '16:9'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pptxChoiceModal.rep) { await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '4:3'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={() => setPptxChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
+        </div>
+      )}
+      </div></div>, document.body)}
       <DeleteConfirmationModal isOpen={deleteModal.isOpen} onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} onConfirm={deleteModal.onConfirm} title={deleteModal.title} description={deleteModal.description} isProcessing={isProcessing} />
     </div>
   );

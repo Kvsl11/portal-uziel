@@ -214,11 +214,31 @@ async function runWithFallback<T>(
 
 const extractJson = (text: string): string | null => {
     if (!text) return null;
-    const firstOpen = text.indexOf('{');
-    const lastClose = text.lastIndexOf('}');
-    if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
-        return text.substring(firstOpen, lastClose + 1);
+    
+    const firstOpenBrace = text.indexOf('{');
+    const firstOpenBracket = text.indexOf('[');
+    
+    // If neither exists
+    if (firstOpenBrace === -1 && firstOpenBracket === -1) return null;
+
+    // Determine which comes first (ignoring -1)
+    let isObject = false;
+    if (firstOpenBrace !== -1 && (firstOpenBracket === -1 || firstOpenBrace < firstOpenBracket)) {
+        isObject = true;
     }
+
+    if (isObject) {
+        const lastCloseBrace = text.lastIndexOf('}');
+        if (lastCloseBrace !== -1 && lastCloseBrace > firstOpenBrace) {
+            return text.substring(firstOpenBrace, lastCloseBrace + 1);
+        }
+    } else {
+        const lastCloseBracket = text.lastIndexOf(']');
+        if (lastCloseBracket !== -1 && lastCloseBracket > firstOpenBracket) {
+            return text.substring(firstOpenBracket, lastCloseBracket + 1);
+        }
+    }
+
     return null;
 };
 
@@ -540,6 +560,76 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore') =
   } catch (e) {
       console.error("Gemini TTS Error:", e);
       throw e; 
+  }
+};
+
+export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf'): Promise<string[] | string> => {
+  if (!lyrics) return format === 'pptx' ? [] : "";
+  
+  const systemInstruction = `
+  Você é um editor chefe de um ministério de música profissional.
+  Sua tarefa é preparar letras de músicas para:
+  1. Projeção em Telões (PPTX) - Foco em legibilidade e impacto.
+  2. Impressão (PDF) - Foco em estrutura musical e clareza para os músicos.
+  
+  TAREFA GERAL:
+  - Identifique o REFRÃO (geralmente em negrito ou cor).
+  - EXPANDA O REFRÃO: Repita-o integralmente após CADA estrofe, se ainda não estiver repetido.
+  - CORRIJA: Erros de digitação, pontuação excessiva, e padronize maiúsculas no início das frases.
+  
+  ${format === 'pptx' ? `
+  REGRAS ESPECÍFICAS PARA PPTX (PROJEÇÃO):
+  - REMOVA COMPLETAMENTE todas as cifras (ex: [A], [Bm7]).
+  - REMOVA tags de formatação visual (**, <c:..>).
+  - ESTRUTURA: Divida o texto em slides de MÁXIMO 5 LINHAS.
+  - QUEBRA INTELIGENTE: Jamais quebre uma frase no meio. Respeite a respiração da música.
+  - FORMATAÇÃO: Use caixa alta/baixa corretamente (Sentence case).
+  - SAÍDA: Retorne APENAS um array JSON de strings. Ex: ["Slide 1...", "Slide 2..."]
+  ` : `
+  REGRAS ESPECÍFICAS PARA PDF (IMPRESSÃO):
+  - MANTENHA todas as cifras (ex: [A]) e tags de formatação (**, <c:..>).
+  - ESTRUTURA: Garanta quebras de linha claras entre estrofes.
+  - SAÍDA: Retorne APENAS uma string crua com o texto completo formatado.
+  `}
+  `;
+
+  const prompt = `Processe a seguinte letra de forma profissional:\n\n${lyrics}`;
+
+  try {
+      const response = await runWithFallback(async (modelName) => {
+          const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
+          return await freshAi.models.generateContent({ 
+              model: modelName, 
+              contents: prompt, 
+              config: { 
+                  systemInstruction, 
+                  temperature: 0.2, // Slightly higher for better formatting decisions
+                  responseMimeType: format === 'pptx' ? "application/json" : "text/plain"
+              } 
+          });
+      }, TEXT_MODELS_FALLBACK, 'gemini-3-flash-preview');
+
+      const text = response.text || "";
+
+      if (format === 'pptx') {
+          const jsonString = extractJson(text);
+          if (jsonString) return JSON.parse(jsonString);
+          return text.split('\n\n'); // Fallback
+      } else {
+          return text;
+      }
+  } catch (error) {
+      console.error("Error processing lyrics:", error);
+      // Fallback
+      if (format === 'pptx') {
+          let clean = lyrics.replace(/\[.*?\]/g, '').replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '').replace(/\*\*/g, '').replace(/\*/g, '');
+          const lines = clean.split('\n').filter(l => l.trim());
+          const chunks = [];
+          for (let i = 0; i < lines.length; i += 5) chunks.push(lines.slice(i, i + 5).join('\n'));
+          return chunks;
+      } else {
+          return lyrics;
+      }
   }
 };
 
