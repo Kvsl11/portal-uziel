@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- UZIEL LOGO FAVICON (SVG Data URI) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='50' y1='5' x2='50' y2='95' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3Cline x1='25' y1='28' x2='75' y2='28' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3Cline x1='35' y1='45' x2='35' y2='85' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3Cline x1='20' y1='55' x2='20' y2='75' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3Cline x1='65' y1='45' x2='65' y2='85' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3Cline x1='80' y1='55' x2='80' y2='75' stroke='%2329aae2' stroke-width='8' stroke-linecap='round' /%3E%3C/svg%3E" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Portal Ministério Uziel</title>
+
+    <!-- Persistência de Tema (Prevenção de FOUC) -->
+    <script>
+      (function() {
+        try {
+          const localTheme = localStorage.getItem('theme');
+          const html = document.documentElement;
+          
+          // Lógica estrita: Só ativa dark se estiver explicitamente salvo como 'dark'.
+          // Caso contrário (null ou 'light'), força a remoção da classe dark.
+          if (localTheme === 'dark') {
+            html.classList.add('dark');
+          } else {
+            html.classList.remove('dark');
+          }
+        } catch (e) {
+          console.error("Theme init error", e);
+        }
+      })();
+    </script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+              display: ['Anton', 'sans-serif'],
+              sacred: ['Cinzel', 'serif'],
+            },
+            colors: {
+              brand: {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                200: '#bae6fd',
+                300: '#7dd3fc',
+                400: '#38bdf8',
+                500: '#0ea5e9',
+                600: '#29aae2', // Brand Primary
+                700: '#0369a1',
+                800: '#075985',
+                900: '#0c4a6e',
+                950: '#082f49',
+              },
+            },
+            boxShadow: {
+              'sm': '0 1px 2px 0 rgba(41, 170, 226, 0.1)',
+              'DEFAULT': '0 1px 3px 0 rgba(41, 170, 226, 0.15)',
+              'md': '0 4px 6px -1px rgba(41, 170, 226, 0.15), 0 2px 4px -2px rgba(41, 170, 226, 0.1)',
+              'lg': '0 10px 15px -3px rgba(41, 170, 226, 0.15), 0 4px 6px -4px rgba(41, 170, 226, 0.1)',
+              'xl': '0 20px 25px -5px rgba(41, 170, 226, 0.2), 0 8px 10px -6px rgba(41, 170, 226, 0.15)',
+              '2xl': '0 35px 60px -15px rgba(41, 170, 226, 0.3)',
+              'premium': '0 25px 50px -12px rgba(41, 170, 226, 0.2), 0 0 30px -10px rgba(41, 170, 226, 0.1)',
+              'premium-dark': '0 25px 60px -15px rgba(41, 170, 226, 0.4), 0 0 40px -10px rgba(41, 170, 226, 0.2)',
+              'glow': '0 0 25px -5px rgba(41, 170, 226, 0.5)',
+              'neon-blue': '0 0 20px rgba(41, 170, 226, 0.5), 0 0 40px rgba(41, 170, 226, 0.2)',
+            },
+            animation: {
+              'fade-in': 'fade-in 0.6s ease-out forwards',
+              'fade-in-up': 'fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'shimmer': 'shimmer 2.5s linear infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'scale-in': 'scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'spin-slow': 'spin 4s linear infinite',
+              'gradient-x': 'gradient-x 15s ease infinite',
+              'breathing': 'breathing 12s ease-in-out infinite',
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'fade-in-up': {
+                '0%': { opacity: '0', transform: 'translateY(20px) scale(0.98)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+              },
+              'shimmer': {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              },
+              'float': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-8px)' },
+              },
+              'scale-in': {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
+              'breathing': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.15)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Cinzel:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style type="text/tailwindcss">
+      :root { color-scheme: light; }
+      .dark { color-scheme: dark; }
+
+      html, body {
+        width: 100%;
+        overflow-x: hidden; 
+        position: relative;
+        overscroll-behavior-y: none;
+        background-color: #ffffff;
+      }
+      .dark body { background-color: #020617; }
+
+      *, *::before, *::after {
+        transition-property: background-color, border-color, color, opacity, transform, box-shadow;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 500ms;
+      }
+
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { 
+        background: rgba(41, 170, 226, 0.2); 
+        border-radius: 99px; 
+      }
+      .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+      
+      .card-walking-border {
+        @apply relative overflow-hidden bg-white dark:bg-[#0f172a];
+      }
+      
+      .card-walking-border::before {
+        content: '';
+        @apply absolute inset-[-150%] opacity-0 transition-opacity duration-700 pointer-events-none;
+        background: conic-gradient(from 0deg, transparent, #29aae2, transparent, #38bdf8, transparent);
+        animation: spin-slow 8s linear infinite;
+        z-index: 1;
+      }
+      
+      .card-walking-border:hover::before {
+        @apply opacity-30 md:opacity-50;
+      }
+
+      .card-walking-border-mask {
+        @apply absolute inset-[1px] rounded-[calc(2rem-1px)] bg-white dark:bg-[#0f172a] z-[2];
+      }
+      
+      .card-content-wrapper {
+        @apply relative z-[3];
+      }
+
+      .glass-panel { 
+        background: rgba(255, 255, 255, 0.7); 
+        backdrop-filter: blur(20px) saturate(180%); 
+        border: 1px solid rgba(255, 255, 255, 0.5); 
+      }
+      .dark .glass-panel { 
+        background: rgba(15, 23, 42, 0.8); 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+      }
+
+      .input-premium {
+        @apply w-full px-6 py-4 rounded-2xl border bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 font-medium text-slate-700 dark:text-white outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all;
+      }
+    </style>
+</head>
+  <body class="text-slate-800 dark:text-slate-200 antialiased selection:bg-brand-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>

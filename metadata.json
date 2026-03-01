@@ -1,0 +1,7 @@
+{
+  "name": "Remix: Remix: Portal Ministério Uziel Definitivo",
+  "description": "Enterprise-grade management portal for the Uziel Ministry, featuring Neural AI Auditing, Real-time Fleet Monitoring, and Dev-Ops Infrastructure Tools.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
