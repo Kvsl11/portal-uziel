@@ -410,6 +410,7 @@ const RepertoryGenerator: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [pdfChoiceModal, setPdfChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
+  const [pdfHeaderTitle, setPdfHeaderTitle] = useState("Ministério de Música Uziel");
   const [pptxChoiceModal, setPptxChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
   const [isGeneratingPPTX, setIsGeneratingPPTX] = useState(false);
   const [pptxProgress, setPptxProgress] = useState({ current: 0, total: 0 });
@@ -460,7 +461,7 @@ const RepertoryGenerator: React.FC = () => {
   const resetForm = () => { setSongs([]); setTheme(''); setEditingId(null); setDate(''); setCoverImage(REPERTORY_COVERS[0]); };
   const requestDelete = (e: React.MouseEvent, id: string) => { e.stopPropagation(); e.preventDefault(); setDeleteModal({ isOpen: true, title: 'Excluir Repertório?', description: 'Você está prestes a excluir este repertório permanentemente.', onConfirm: async () => { setIsProcessing(true); const prevHistory = [...history]; setHistory(prev => prev.filter(h => h.id !== id)); setDeletingId(id); try { await RepertoryService.delete(id); if (currentUser) { await AuditService.log(currentUser.username, 'Repertory', 'DELETE', `Excluiu repertório ID: ${id}`, currentUser.role, currentUser.name); } } catch (err: any) { setHistory(prevHistory); alert("Erro ao excluir: " + err.message); } finally { setIsProcessing(false); setDeletingId(null); setDeleteModal(prev => ({...prev, isOpen: false})); } } }); };
   const getLogoGeometry = (x: number, y: number, size: number) => { const s = size / 100; return [ { type: 'rect', x: x + 44*s, y: y + 2*s, w: 12*s, h: 96*s }, { type: 'rect', x: x + 18*s, y: y + 22*s, w: 64*s, h: 12*s }, { type: 'rect', x: x + 30*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 16*s, y: y + 50*s, w: 10*s, h: 20*s }, { type: 'rect', x: x + 60*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 74*s, y: y + 50*s, w: 10*s, h: 20*s }, ]; };
-  const generatePDF = async (repSongs: Song[], repTheme: string, repDate: string, creatorName: string, columns: 1 | 2 | 3 = 1) => {
+  const generatePDF = async (repSongs: Song[], repTheme: string, repDate: string, creatorName: string, columns: 1 | 2 | 3 = 1, headerTitle: string = "Ministério de Música Uziel") => {
     try {
       setIsGeneratingPDF(true);
       setPdfProgress({ current: 0, total: repSongs.length });
@@ -487,7 +488,7 @@ const RepertoryGenerator: React.FC = () => {
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(41, 170, 226); // Brand Blue
-      doc.text("Ministério de Música Uziel", pageWidth / 2, yPos, { align: "center" });
+      doc.text(headerTitle, pageWidth / 2, yPos, { align: "center" });
       yPos += 10;
       
       doc.setFontSize(16);
@@ -625,7 +626,7 @@ const RepertoryGenerator: React.FC = () => {
                     let lyricWidth = 0;
                     tokens.forEach(t => {
                         doc.setFont("helvetica", t.bold ? "bold" : (t.italic ? "italic" : "normal"));
-                        lyricWidth += doc.getTextWidth(t.text);
+                        lyricWidth += doc.getTextWidth(t.text.toUpperCase());
                     });
 
                     const blockWidth = Math.max(chordWidth, lyricWidth) + 1;
@@ -660,8 +661,9 @@ const RepertoryGenerator: React.FC = () => {
                                 doc.setTextColor(0); // Default black
                             }
 
-                            doc.text(t.text, localX, yPos + chordHeight);
-                            localX += doc.getTextWidth(t.text);
+                            const upperText = t.text.toUpperCase();
+                            doc.text(upperText, localX, yPos + chordHeight);
+                            localX += doc.getTextWidth(upperText);
                         });
                     }
 
@@ -687,7 +689,7 @@ const RepertoryGenerator: React.FC = () => {
                     else doc.setTextColor(0);
 
                     // Word wrapping for text lines
-                    const words = t.text.split(/(\s+)/); // Split keeping spaces
+                    const words = t.text.toUpperCase().split(/(\s+)/); // Split keeping spaces
                     
                     words.forEach(word => {
                         const wordWidth = doc.getTextWidth(word);
@@ -888,12 +890,23 @@ const RepertoryGenerator: React.FC = () => {
             </div>
         </div>, document.body
       )}
-      {pdfChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-500/20"><i className="fas fa-file-pdf"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PDF</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">Escolha o layout ideal para impressão.</p>
+      {pdfChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-500/20"><i className="fas fa-file-pdf"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PDF</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">Escolha o layout ideal para impressão.</p>
       
+      <div className="mb-6 text-left">
+        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Título do Cabeçalho</label>
+        <input 
+          type="text" 
+          value={pdfHeaderTitle} 
+          onChange={(e) => setPdfHeaderTitle(e.target.value)} 
+          className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-700 dark:text-white focus:border-brand-500 outline-none transition-colors"
+          placeholder="Ex: Ministério de Música Uziel"
+        />
+      </div>
+
       <div className="flex flex-col gap-3">
-            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 1); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">1 Coluna (Padrão)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Letras grandes, fácil leitura</span></div><i className="fas fa-file-alt text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 2); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">2 Colunas (Equilibrado)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bom equilíbrio entre espaço e tamanho</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pdfChoiceModal.rep) { await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, pdfChoiceModal.rep.createdBy, 3); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">3 Colunas (Compacto)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Economiza papel, estilo livreto</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 1, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">1 Coluna (Padrão)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Letras grandes, fácil leitura</span></div><i className="fas fa-file-alt text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 2, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">2 Colunas (Equilibrado)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bom equilíbrio entre espaço e tamanho</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 3, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">3 Colunas (Compacto)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Economiza papel, estilo livreto</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
             <button onClick={() => setPdfChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
         </div>
       </div></div>, document.body)}
@@ -909,8 +922,8 @@ const RepertoryGenerator: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-            <button onClick={async () => { if(pptxChoiceModal.rep) { await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '16:9'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pptxChoiceModal.rep) { await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, pptxChoiceModal.rep.createdBy, '4:3'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '16:9'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '4:3'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button>
             <button onClick={() => setPptxChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
         </div>
       )}

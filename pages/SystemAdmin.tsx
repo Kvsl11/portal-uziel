@@ -350,7 +350,11 @@ const SystemAdmin: React.FC = () => {
             setCustomGeminiKey(localGemini);
             setGeminiSource('custom');
         } else {
-            setCustomGeminiKey(process.env.API_KEY || '');
+            let envKey = "";
+            try { envKey = import.meta.env.VITE_GEMINI_API_KEY || ""; } catch(e) {}
+            if (!envKey) { try { if(typeof process !== 'undefined' && process.env) envKey = process.env.API_KEY || ""; } catch(e) {} }
+            
+            setCustomGeminiKey(envKey);
             setGeminiSource('env');
         }
         const localFbConfig = localStorage.getItem('uziel_custom_firebase_config');
@@ -479,7 +483,12 @@ const SystemAdmin: React.FC = () => {
     const handleResetGemini = () => {
         if(confirm("Restaurar chave Gemini para o padrão do sistema (ENV)?")) {
             localStorage.removeItem('uziel_custom_gemini_api_key');
-            setCustomGeminiKey(process.env.API_KEY || '');
+            
+            let envKey = "";
+            try { envKey = import.meta.env.VITE_GEMINI_API_KEY || ""; } catch(e) {}
+            if (!envKey) { try { if(typeof process !== 'undefined' && process.env) envKey = process.env.API_KEY || ""; } catch(e) {} }
+
+            setCustomGeminiKey(envKey);
             setGeminiSource('env');
             setIsEditingGemini(false);
         }

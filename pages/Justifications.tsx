@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { JustificationService, RehearsalService, AttendanceService, AuditService } from '../services/firebase';
-import { GoogleGenAI, Type } from "@google/genai";
+import { ai } from '../services/geminiService';
+import { Type } from "@google/genai";
 import { Rehearsal, AttendanceRecord, Justification, AttendanceSettings } from '../types';
 import Loading from '../components/Loading';
 import Card from '../components/Card';
@@ -150,7 +151,6 @@ const Justifications: React.FC = () => {
   };
 
   const validateJustificationWithAI = async (reason: string, text: string): Promise<{ valid: boolean, message: string }> => {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const systemInstruction = `
       Você é um auditor neural de justificativas do Ministério Uziel.

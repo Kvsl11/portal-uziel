@@ -1,15 +1,31 @@
 
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { FALLBACK_IMAGES, REPERTORY_COVERS } from "../constants";
 import { DailyImageService, LiturgyCacheService } from "./firebase"; 
 import { LiturgyLocalStorage } from "./LiturgyLocalStorage"; 
 
 // --- DYNAMIC API KEY LOADING ---
 // 1. Check LocalStorage (Manual Override)
-// 2. Check Environment Variable
-// 3. Fallback to empty string (will cause error if used)
+// 2. Check Environment Variable (Vite)
+// 3. Check Process Env (Node/AI Studio)
+// 4. Fallback to empty string
 const getApiKey = () => {
-    return localStorage.getItem('uziel_custom_gemini_api_key') || process.env.API_KEY || "";
+    let key = localStorage.getItem('uziel_custom_gemini_api_key');
+    if (key) return key;
+
+    try {
+        key = import.meta.env.VITE_GEMINI_API_KEY || null;
+        if (key) return key;
+    } catch (e) {}
+
+    try {
+        if (typeof process !== 'undefined' && process.env) {
+            key = process.env.API_KEY || null;
+            if (key) return key;
+        }
+    } catch (e) {}
+
+    return "";
 };
 
 const API_KEY = getApiKey();
@@ -584,13 +600,16 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   - ESTRUTURA: Divida o texto em slides de MÁXIMO 5 LINHAS.
   - QUEBRA INTELIGENTE: Jamais quebre uma frase no meio. Respeite a respiração da música.
   - FORMATAÇÃO: Use caixa alta/baixa corretamente (Sentence case).
-  - SAÍDA: Retorne APENAS um array JSON de strings. Ex: ["Slide 1...", "Slide 2..."]
   ` : `
   REGRAS ESPECÍFICAS PARA PDF (IMPRESSÃO):
   - MANTENHA todas as cifras (ex: [A]) e tags de formatação (**, <c:..>).
   - ESTRUTURA: Garanta quebras de linha claras entre estrofes.
-  - SAÍDA: Retorne APENAS uma string crua com o texto completo formatado.
+  - FORMATAÇÃO: Transforme a letra em CAIXA ALTA (LETRAS DE FORMA), mantendo as cifras normais.
   `}
+
+  MUITO IMPORTANTE:
+  NÃO inclua títulos como "PDF/IMPRESSÃO", "PPTX", "REFRÃO", etc.
+  Retorne APENAS a letra da música processada. NENHUMA PALAVRA A MAIS.
   `;
 
   const prompt = `Processe a seguinte letra de forma profissional:\n\n${lyrics}`;
@@ -598,14 +617,32 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   try {
       const response = await runWithFallback(async (modelName) => {
           const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
+          
+          const config: any = {
+              systemInstruction, 
+              temperature: 0.2,
+              responseMimeType: "application/json"
+          };
+
+          if (format === 'pptx') {
+              config.responseSchema = {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+              };
+          } else {
+              config.responseSchema = {
+                  type: Type.OBJECT,
+                  properties: {
+                      formattedLyrics: { type: Type.STRING }
+                  },
+                  required: ["formattedLyrics"]
+              };
+          }
+
           return await freshAi.models.generateContent({ 
               model: modelName, 
               contents: prompt, 
-              config: { 
-                  systemInstruction, 
-                  temperature: 0.2, // Slightly higher for better formatting decisions
-                  responseMimeType: format === 'pptx' ? "application/json" : "text/plain"
-              } 
+              config
           });
       }, TEXT_MODELS_FALLBACK, 'gemini-3-flash-preview');
 
@@ -614,9 +651,28 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
       if (format === 'pptx') {
           const jsonString = extractJson(text);
           if (jsonString) return JSON.parse(jsonString);
-          return text.split('\n\n'); // Fallback
+          
+          // Fallback: Try to clean up conversational text before splitting
+          let cleanText = text.replace(/```(json)?\n?/gi, '').replace(/```/g, '');
+          cleanText = cleanText.replace(/^(Aqui está.*?\n|Claro.*?\n|Entendido.*?\n|Segue a letra.*?\n|Abaixo está.*?\n)/i, '');
+          cleanText = cleanText.replace(/^(PPTX \(PROJEÇÃO\)|PPTX|PROJEÇÃO):?\s*\n?/i, '');
+          return cleanText.trim().split('\n\n');
       } else {
-          return text;
+          let finalLyrics = text;
+          const jsonString = extractJson(text);
+          if (jsonString) {
+              try {
+                  const parsed = JSON.parse(jsonString);
+                  if (parsed.formattedLyrics) finalLyrics = parsed.formattedLyrics;
+              } catch (e) {}
+          }
+          
+          // Fallback and aggressive cleanup
+          let cleanText = finalLyrics;
+          cleanText = cleanText.replace(/```(json|text|markdown)?\n?/gi, '').replace(/```/g, '');
+          cleanText = cleanText.replace(/^(Aqui está.*?\n|Claro.*?\n|Entendido.*?\n|Segue a letra.*?\n|Abaixo está.*?\n)/i, '');
+          cleanText = cleanText.replace(/^(PDF \(IMPRESSÃO\)|PDF\/IMPRESSÃO|PDF|IMPRESSÃO):?\s*\n?/i, '');
+          return cleanText.trim();
       }
   } catch (error) {
       console.error("Error processing lyrics:", error);
