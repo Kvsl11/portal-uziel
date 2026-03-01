@@ -25,12 +25,13 @@ const getApiKey = () => {
         }
     } catch (e) {}
 
-    return "";
+    return "MISSING_API_KEY";
 };
 
 const API_KEY = getApiKey();
 
 // Initialize the new SDK client with the dynamic key
+// Use a dummy key if empty to prevent crashing on module load
 export const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const CACHE_PREFIX = 'uziel_daily_';
@@ -347,6 +348,11 @@ export const fetchLyrics = async (songTitle: string, artist: string, key: string
         .replace(/E\|.*?\n/g, '').replace(/B\|.*?\n/g, '') // Remove guitar tabs
         .trim();
     
+    // SAFETY CHECK: If includeChords is false, ensure no chords are returned
+    if (!includeChords) {
+        contentClean = contentClean.replace(/\[.*?\]/g, '');
+    }
+    
     if (contentClean.length < 50) {
         contentClean = "Conteúdo não encontrado com qualidade suficiente. Por favor, tente ajustar o nome da música ou artista.";
     }
@@ -592,6 +598,7 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   - Identifique o REFRÃO (geralmente em negrito ou cor).
   - EXPANDA O REFRÃO: Repita-o integralmente após CADA estrofe, se ainda não estiver repetido.
   - CORRIJA: Erros de digitação, pontuação excessiva, e padronize maiúsculas no início das frases.
+  - PROIBIDO ADICIONAR CIFRAS: Se a letra original NÃO contiver cifras (acordes entre colchetes como [A], [G]), VOCÊ NÃO DEVE INVENTAR OU ADICIONAR NENHUMA CIFRA. Mantenha o texto exatamente sem cifras.
   
   ${format === 'pptx' ? `
   REGRAS ESPECÍFICAS PARA PPTX (PROJEÇÃO):
@@ -602,7 +609,8 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   - FORMATAÇÃO: Use caixa alta/baixa corretamente (Sentence case).
   ` : `
   REGRAS ESPECÍFICAS PARA PDF (IMPRESSÃO):
-  - MANTENHA todas as cifras (ex: [A]) e tags de formatação (**, <c:..>).
+  - MANTENHA todas as cifras (ex: [A]) e tags de formatação (**, <c:..>) SE ELAS JÁ EXISTIREM no texto original.
+  - NUNCA, SOB NENHUMA HIPÓTESE, ADICIONE CIFRAS SE O TEXTO ORIGINAL NÃO TIVER CIFRAS.
   - ESTRUTURA: Garanta quebras de linha claras entre estrofes.
   - FORMATAÇÃO: Transforme a letra em CAIXA ALTA (LETRAS DE FORMA), mantendo as cifras normais.
   `}
@@ -649,14 +657,24 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
       const text = response.text || "";
 
       if (format === 'pptx') {
+          let parsedArray: string[] | null = null;
           const jsonString = extractJson(text);
-          if (jsonString) return JSON.parse(jsonString);
+          if (jsonString) {
+              try {
+                  parsedArray = JSON.parse(jsonString);
+              } catch (e) {}
+          }
           
-          // Fallback: Try to clean up conversational text before splitting
-          let cleanText = text.replace(/```(json)?\n?/gi, '').replace(/```/g, '');
-          cleanText = cleanText.replace(/^(Aqui está.*?\n|Claro.*?\n|Entendido.*?\n|Segue a letra.*?\n|Abaixo está.*?\n)/i, '');
-          cleanText = cleanText.replace(/^(PPTX \(PROJEÇÃO\)|PPTX|PROJEÇÃO):?\s*\n?/i, '');
-          return cleanText.trim().split('\n\n');
+          if (!parsedArray) {
+              // Fallback: Try to clean up conversational text before splitting
+              let cleanText = text.replace(/```(json)?\n?/gi, '').replace(/```/g, '');
+              cleanText = cleanText.replace(/^(Aqui está.*?\n|Claro.*?\n|Entendido.*?\n|Segue a letra.*?\n|Abaixo está.*?\n)/i, '');
+              cleanText = cleanText.replace(/^(PPTX \(PROJEÇÃO\)|PPTX|PROJEÇÃO):?\s*\n?/i, '');
+              parsedArray = cleanText.trim().split('\n\n');
+          }
+
+          // SAFETY CHECK: PPTX should NEVER have chords
+          return parsedArray.map(slide => slide.replace(/\[.*?\]/g, ''));
       } else {
           let finalLyrics = text;
           const jsonString = extractJson(text);
@@ -672,6 +690,13 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
           cleanText = cleanText.replace(/```(json|text|markdown)?\n?/gi, '').replace(/```/g, '');
           cleanText = cleanText.replace(/^(Aqui está.*?\n|Claro.*?\n|Entendido.*?\n|Segue a letra.*?\n|Abaixo está.*?\n)/i, '');
           cleanText = cleanText.replace(/^(PDF \(IMPRESSÃO\)|PDF\/IMPRESSÃO|PDF|IMPRESSÃO):?\s*\n?/i, '');
+          
+          // SAFETY CHECK: If original lyrics had no chords, ensure the result has no chords
+          const originalHasChords = lyrics.includes('[') && lyrics.includes(']');
+          if (!originalHasChords) {
+              cleanText = cleanText.replace(/\[.*?\]/g, '');
+          }
+          
           return cleanText.trim();
       }
   } catch (error) {
