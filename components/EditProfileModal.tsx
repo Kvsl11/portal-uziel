@@ -175,7 +175,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
         name: formData.name!.toUpperCase(),
         role: formData.role as any, 
         whatsapp: formData.whatsapp || '',
-        password: formData.password
+        password: formData.password ? formData.password.trim() : ''
       };
 
       // Se photoURL for uma string (incluindo string vazia para remoção), adicionamos ao payload

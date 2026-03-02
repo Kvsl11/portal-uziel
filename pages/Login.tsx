@@ -219,7 +219,7 @@ const Login: React.FC = () => {
             
             {/* Footer */}
             <div className="absolute bottom-10 text-center opacity-0 animate-[fade-in_2s_ease-out_2s_forwards]">
-                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-[0.3em]">Secure Environment v2.1</p>
+                <p className="text-[9px] text-slate-500 font-mono uppercase tracking-[0.3em]">&copy; 2026 Ministério Uziel. Todos os direitos reservados.</p>
             </div>
         </div>
       );
@@ -393,7 +393,7 @@ const Login: React.FC = () => {
 
       <div className="absolute bottom-6 text-center z-10 opacity-60 pointer-events-none mix-blend-overlay dark:mix-blend-normal">
           <p className="text-[9px] text-slate-900 dark:text-white font-mono uppercase tracking-[0.2em]">
-              System v2.1 • Secure Environment
+              &copy; 2026 Ministério Uziel. Todos os direitos reservados.
           </p>
       </div>
     </div>

@@ -278,8 +278,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // We need their old password to sign in as them, which we have in usersList
               const targetUserOldData = usersList.find(u => u.username.toLowerCase() === updatedUser.username.toLowerCase());
               
-              // Only update if the password actually changed
-              if (targetUserOldData && targetUserOldData.password !== updatedUser.password) {
+              // Only update if the password actually changed OR if we want to force sync
+              if (targetUserOldData) {
                   // Only attempt to update Auth if we have the old password stored
                   if (targetUserOldData.password) {
                       try {
