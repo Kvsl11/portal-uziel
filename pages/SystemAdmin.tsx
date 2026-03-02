@@ -718,11 +718,18 @@ const SystemAdmin: React.FC = () => {
                                                     <div className="flex items-center gap-3 mb-4">
                                                         <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-400 shadow-sm">
                                                             <i className={`fas ${
+                                                                modValue === 'dashboard' ? 'fa-chart-pie' :
                                                                 modValue === 'repertory' ? 'fa-music' :
                                                                 modValue === 'liturgy' ? 'fa-book-bible' :
                                                                 modValue === 'scales' ? 'fa-calendar-alt' :
                                                                 modValue === 'users' ? 'fa-users' :
                                                                 modValue === 'attendance' ? 'fa-clipboard-check' :
+                                                                modValue === 'rehearsals' ? 'fa-microphone-lines' :
+                                                                modValue === 'playlists' ? 'fa-circle-play' :
+                                                                modValue === 'polls' ? 'fa-square-poll-vertical' :
+                                                                modValue === 'justifications' ? 'fa-file-signature' :
+                                                                modValue === 'creative' ? 'fa-palette' :
+                                                                modValue === 'monitoring' ? 'fa-desktop' :
                                                                 'fa-cogs'
                                                             }`}></i>
                                                         </div>
