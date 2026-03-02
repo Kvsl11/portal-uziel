@@ -116,12 +116,14 @@ const Login: React.FC = () => {
         let detailedError = 'Erro ao conectar. Tente novamente.';
         if (e.code === 'auth/invalid-email' || e.code === 'auth/user-not-found') {
             detailedError = 'Usuário não encontrado.';
-        } else if (e.code === 'auth/wrong-password') {
-            detailedError = 'Senha incorreta.';
+        } else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+            detailedError = 'Senha incorreta ou credenciais inválidas. Verifique se o Caps Lock está ativado.';
         } else if (e.code === 'auth/too-many-requests') {
             detailedError = 'Muitas tentativas. Aguarde um momento.';
         } else if (e.code === 'auth/network-request-failed') {
             detailedError = 'Erro de conexão. Verifique sua internet.';
+        } else if (e.message) {
+            detailedError = e.message;
         }
         setError(detailedError);
         setIsSubmitting(false);
