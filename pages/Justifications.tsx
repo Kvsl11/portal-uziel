@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { JustificationService, RehearsalService, AttendanceService, AuditService } from '../services/firebase';
-import { ai } from '../services/geminiService';
-import { Type } from "@google/genai";
+import { getApiKey } from '../services/geminiService';
+import { GoogleGenAI, Type } from "@google/genai";
 import { Rehearsal, AttendanceRecord, Justification, AttendanceSettings } from '../types';
 import Loading from '../components/Loading';
 import Card from '../components/Card';
@@ -168,7 +168,8 @@ const Justifications: React.FC = () => {
       `;
 
       try {
-          const response = await ai.models.generateContent({
+          const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
+          const response = await freshAi.models.generateContent({
               model: "gemini-3-flash-preview",
               contents: `Motivo: ${reason}. Relato: "${text}"`,
               config: {

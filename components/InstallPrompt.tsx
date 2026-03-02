@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 export default function InstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showPrompt, setShowPrompt] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const { currentUser } = useAuth();
 
     useEffect(() => {
         // Check if iOS
@@ -14,19 +16,12 @@ export default function InstallPrompt() {
         
         if (isIosDevice && !isStandalone) {
             setIsIOS(true);
-            // Show prompt for iOS if not dismissed
-            if (!localStorage.getItem('ios_install_prompt_dismissed')) {
-                setTimeout(() => setShowPrompt(true), 3000);
-            }
         }
 
         // Listen for the beforeinstallprompt event (Android/Desktop Chrome)
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e);
-            if (!localStorage.getItem('install_prompt_dismissed')) {
-                setTimeout(() => setShowPrompt(true), 3000);
-            }
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -35,6 +30,26 @@ export default function InstallPrompt() {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
     }, []);
+
+    useEffect(() => {
+        // Only show prompt if user is logged in
+        if (!currentUser) {
+            setShowPrompt(false);
+            return;
+        }
+
+        if (isIOS) {
+            if (!localStorage.getItem('ios_install_prompt_dismissed')) {
+                const timer = setTimeout(() => setShowPrompt(true), 3000);
+                return () => clearTimeout(timer);
+            }
+        } else if (deferredPrompt) {
+            if (!localStorage.getItem('install_prompt_dismissed')) {
+                const timer = setTimeout(() => setShowPrompt(true), 3000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [currentUser, isIOS, deferredPrompt]);
 
     const handleInstall = async () => {
         if (deferredPrompt) {
@@ -65,18 +80,25 @@ export default function InstallPrompt() {
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
-                className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-[9999] flex flex-col gap-3"
+                className="fixed bottom-24 left-4 right-4 md:bottom-6 md:left-auto md:right-6 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-[9999] flex flex-col gap-3"
             >
                 <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-brand-500 rounded-xl flex items-center justify-center shrink-0 text-white text-xl shadow-lg">
-                        <i className="fas fa-download"></i>
+                    <div className="w-12 h-12 bg-brand-50 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-brand-100 dark:border-slate-700 p-2">
+                        <svg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg' className="w-full h-full">
+                            <line x1='50' y1='5' x2='50' y2='95' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                            <line x1='25' y1='28' x2='75' y2='28' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                            <line x1='35' y1='45' x2='35' y2='85' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                            <line x1='20' y1='55' x2='20' y2='75' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                            <line x1='65' y1='45' x2='65' y2='85' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                            <line x1='80' y1='55' x2='80' y2='75' stroke='#29aae2' strokeWidth='8' strokeLinecap='round' />
+                        </svg>
                     </div>
                     <div className="flex-1">
-                        <h3 className="font-bold text-slate-900 dark:text-white">Instalar Aplicativo</h3>
+                        <h3 className="font-bold text-slate-900 dark:text-white">Instalar Portal Uziel</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             {isIOS 
                                 ? "Para instalar no iOS, toque em 'Compartilhar' e depois em 'Adicionar à Tela de Início'."
-                                : "Instale o Portal Uziel no seu dispositivo para acesso rápido e experiência de aplicativo nativo."}
+                                : "Instale o app no seu dispositivo para acesso rápido e melhor experiência."}
                         </p>
                     </div>
                 </div>

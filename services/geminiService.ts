@@ -9,7 +9,7 @@ import { LiturgyLocalStorage } from "./LiturgyLocalStorage";
 // 2. Check Environment Variable (Vite)
 // 3. Check Process Env (Node/AI Studio)
 // 4. Fallback to empty string
-const getApiKey = () => {
+export const getApiKey = () => {
     let key = localStorage.getItem('uziel_custom_gemini_api_key');
     if (key) return key;
 
