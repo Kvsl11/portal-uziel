@@ -77,10 +77,10 @@ export default function InstallPrompt() {
     return (
         <AnimatePresence>
             <motion.div 
-                initial={{ y: 100, opacity: 0 }}
+                initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 100, opacity: 0 }}
-                className="fixed bottom-24 left-4 right-4 md:bottom-6 md:left-auto md:right-6 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-[9999] flex flex-col gap-3"
+                exit={{ y: -50, opacity: 0 }}
+                className="fixed top-20 left-4 right-4 md:top-24 md:left-0 md:right-0 md:mx-auto md:w-[400px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-[9999] flex flex-col gap-3"
             >
                 <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-brand-50 dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-brand-100 dark:border-slate-700 p-2">
