@@ -18,6 +18,7 @@ import Justifications from './pages/Justifications';
 import Polls from './pages/Polls';
 import Layout from './components/Layout';
 import Loading from './components/Loading';
+import InstallPrompt from './components/InstallPrompt';
 
 const ProtectedRoute = ({ children }: React.PropsWithChildren) => {
   const { currentUser, loading } = useAuth();
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   return (
     <div className="animate-fade-in w-full h-full">
       <AuthProvider>
+        <InstallPrompt />
         <HashRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
