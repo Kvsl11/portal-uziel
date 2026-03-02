@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getDocs, collection, query, writeBatch, orderBy, limit, where, doc, getDoc, Timestamp } from "firebase/firestore";
 import { db, AuditService, DailyImageService, SystemAdminService, DEFAULT_FIREBASE_CONFIG } from '../services/firebase';
 import { APP_ID } from '../constants';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, DEFAULT_PERMISSIONS } from '../context/AuthContext';
 import Card from '../components/Card';
 import Loading from '../components/Loading';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
@@ -227,7 +227,7 @@ const ContextSelectorModal = ({ currentImage, onSelect, onClose }: { currentImag
 
 const SystemAdmin: React.FC = () => {
     const { currentUser } = useAuth();
-    const [activeTab, setActiveTab] = useState<'storage' | 'assets' | 'config'>('storage');
+    const [activeTab, setActiveTab] = useState<'storage' | 'assets' | 'config' | 'acl'>('storage');
     const [stats, setStats] = useState<Record<string, number>>({});
     const [previews, setPreviews] = useState<Record<string, any[]>>({});
     const [dailyImages, setDailyImages] = useState<any[]>([]);
@@ -238,6 +238,110 @@ const SystemAdmin: React.FC = () => {
     const [exploringCollection, setExploringCollection] = useState<string | null>(null);
     const [mappingImage, setMappingImage] = useState<any | null>(null);
     const [purgeModal, setPurgeModal] = useState<{ isOpen: boolean, target: string, title: string, desc: string, action?: () => Promise<void> } | null>(null);
+    
+    // ACL State
+    const { usersList, updateUser } = useAuth();
+    const [selectedUserForACL, setSelectedUserForACL] = useState<string | null>(null);
+    const [aclPermissions, setAclPermissions] = useState<string[]>([]);
+    const [isSavingACL, setIsSavingACL] = useState(false);
+
+    const PERMISSION_MODULES = {
+        REPERTORY: 'repertory',
+        LITURGY: 'liturgy',
+        SCALES: 'scales',
+        USERS: 'users',
+        ATTENDANCE: 'attendance',
+        SYSTEM: 'system'
+    };
+
+    const PERMISSION_ACTIONS = {
+        VIEW: 'view',
+        CREATE: 'create',
+        EDIT: 'edit',
+        DELETE: 'delete'
+    };
+
+    const PERMISSION_MODULES_LABELS: Record<string, string> = {
+        repertory: 'Repertório',
+        liturgy: 'Liturgia',
+        scales: 'Escalas',
+        users: 'Usuários',
+        attendance: 'Frequência',
+        system: 'Sistema'
+    };
+
+    const PERMISSION_ACTIONS_LABELS: Record<string, string> = {
+        view: 'Visualizar',
+        create: 'Criar',
+        edit: 'Editar',
+        delete: 'Excluir'
+    };
+
+    const handleSelectUserACL = (userId: string) => {
+        const user = usersList.find(u => u.username === userId);
+        if (user) {
+            setSelectedUserForACL(userId);
+            
+            if (user.customPermissions && user.customPermissions.length > 0) {
+                setAclPermissions(user.customPermissions);
+            } else {
+                // Pre-fill with Role Defaults
+                // We need to cast to any or keyof typeof DEFAULT_PERMISSIONS because TS might complain about string index
+                const roleDefaults = (DEFAULT_PERMISSIONS as any)[user.role] || [];
+                setAclPermissions([...roleDefaults]);
+            }
+
+            // On mobile, scroll to matrix
+            if (window.innerWidth < 1024) {
+                setTimeout(() => {
+                    document.getElementById('acl-matrix')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        }
+    };
+
+    const togglePermission = (module: string, action: string) => {
+        const perm = `${module}:${action}`;
+        setAclPermissions(prev => {
+            if (prev.includes(perm)) return prev.filter(p => p !== perm);
+            return [...prev, perm];
+        });
+    };
+
+    const handleSaveACL = async () => {
+        if (!selectedUserForACL) return;
+        setIsSavingACL(true);
+        try {
+            const user = usersList.find(u => u.username === selectedUserForACL);
+            if (user) {
+                await updateUser({ ...user, customPermissions: aclPermissions });
+                alert("Permissões atualizadas com sucesso!");
+            }
+        } catch (e) {
+            alert("Erro ao salvar permissões.");
+        } finally {
+            setIsSavingACL(false);
+        }
+    };
+
+    const handleResetACL = async () => {
+        if (!selectedUserForACL) return;
+        if (confirm("Isso removerá todas as permissões personalizadas e o usuário voltará a ter as permissões padrão do seu Cargo (Role). Continuar?")) {
+            setIsSavingACL(true);
+            try {
+                const user = usersList.find(u => u.username === selectedUserForACL);
+                if (user) {
+                    await updateUser({ ...user, customPermissions: [] }); // Empty array or undefined to reset
+                    setAclPermissions([]);
+                    alert("Permissões resetadas para o padrão do cargo.");
+                }
+            } catch (e) {
+                alert("Erro ao resetar permissões.");
+            } finally {
+                setIsSavingACL(false);
+            }
+        }
+    };
 
     const [customGeminiKey, setCustomGeminiKey] = useState('');
     const [customFirebaseConfig, setCustomFirebaseConfig] = useState('');
@@ -534,10 +638,153 @@ const SystemAdmin: React.FC = () => {
                     <button onClick={() => setActiveTab('config')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'config' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Infra & Cotas">
                         <i className="fas fa-microchip text-lg"></i>
                     </button>
+                    <button onClick={() => setActiveTab('acl')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'acl' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Controle de Acesso">
+                        <i className="fas fa-user-shield text-lg"></i>
+                    </button>
                 </div>
             </div>
 
             <AnimatePresence mode="wait">
+                {activeTab === 'acl' && (
+                    <motion.div key="acl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* User List */}
+                            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 border border-slate-100 dark:border-white/5 shadow-xl h-96 lg:h-[80vh] flex flex-col">
+                                <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <i className="fas fa-users text-brand-500"></i> Selecione um Usuário
+                                </h3>
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                    {usersList.map(user => (
+                                        <button
+                                            key={user.username}
+                                            onClick={() => handleSelectUserACL(user.username)}
+                                            className={`w-full p-4 rounded-2xl flex items-center gap-3 transition-all text-left border ${
+                                                selectedUserForACL === user.username
+                                                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 shadow-md'
+                                                : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-slate-100 dark:hover:bg-white/10'
+                                            }`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ${
+                                                user.role === 'super-admin' ? 'bg-purple-500' : user.role === 'admin' ? 'bg-blue-500' : 'bg-slate-400'
+                                            }`}>
+                                                {user.name.charAt(0)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-bold truncate ${selectedUserForACL === user.username ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                    {user.name}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">{user.role}</p>
+                                            </div>
+                                            {user.customPermissions && user.customPermissions.length > 0 && (
+                                                <i className="fas fa-asterisk text-[8px] text-orange-500" title="Permissões Personalizadas"></i>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Permissions Matrix */}
+                            <div id="acl-matrix" className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 md:p-8 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col relative overflow-hidden min-h-[500px]">
+                                {selectedUserForACL ? (
+                                    <>
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-100 dark:border-white/5 pb-6 gap-4">
+                                            <div>
+                                                <h2 className="text-xl md:text-2xl font-display font-bold text-slate-800 dark:text-white mb-1">
+                                                    Matriz de Acesso
+                                                </h2>
+                                                <p className="text-sm text-slate-400">
+                                                    Editando: <span className="text-brand-500 font-bold">{usersList.find(u => u.username === selectedUserForACL)?.name}</span>
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <button 
+                                                    onClick={handleResetACL}
+                                                    className="flex-1 md:flex-none px-4 py-3 md:py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-xs font-bold uppercase tracking-wider"
+                                                >
+                                                    Resetar
+                                                </button>
+                                                <button 
+                                                    onClick={handleSaveACL}
+                                                    disabled={isSavingACL}
+                                                    className="flex-[2] md:flex-none px-6 py-3 md:py-2 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                                                >
+                                                    {isSavingACL ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>}
+                                                    Salvar
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20 max-h-[60vh] lg:max-h-none">
+                                            {Object.entries(PERMISSION_MODULES).map(([modKey, modValue]) => (
+                                                <div key={modKey} className="bg-slate-50 dark:bg-black/20 rounded-2xl p-5 border border-slate-100 dark:border-white/5">
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-400 shadow-sm">
+                                                            <i className={`fas ${
+                                                                modValue === 'repertory' ? 'fa-music' :
+                                                                modValue === 'liturgy' ? 'fa-book-bible' :
+                                                                modValue === 'scales' ? 'fa-calendar-alt' :
+                                                                modValue === 'users' ? 'fa-users' :
+                                                                modValue === 'attendance' ? 'fa-clipboard-check' :
+                                                                'fa-cogs'
+                                                            }`}></i>
+                                                        </div>
+                                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-xs tracking-widest">
+                                                            {PERMISSION_MODULES_LABELS[modValue] || modKey}
+                                                        </h4>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-2">
+                                                        {Object.entries(PERMISSION_ACTIONS).map(([actKey, actValue]) => {
+                                                            const permString = `${modValue}:${actValue}`;
+                                                            const isGlobalWildcard = aclPermissions.includes('*');
+                                                            const isModuleWildcard = aclPermissions.includes(`${modValue}:*`);
+                                                            const isChecked = isGlobalWildcard || isModuleWildcard || aclPermissions.includes(permString);
+                                                            
+                                                            // Disable if covered by a wildcard (either global or module-level)
+                                                            // Actually, if global wildcard is set, everything should be checked and disabled?
+                                                            // Or just checked. Let's make it checked.
+                                                            // If we uncheck a box while global wildcard is on, we should probably remove global wildcard and add all others? That's complex.
+                                                            // For now, just display state.
+                                                            
+                                                            return (
+                                                                <label key={actKey} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-white/5 cursor-pointer transition-colors group select-none">
+                                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${
+                                                                        isChecked 
+                                                                        ? 'bg-brand-500 border-brand-500 text-white' 
+                                                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                                                                    }`}>
+                                                                        {isChecked && <i className="fas fa-check text-[10px]"></i>}
+                                                                    </div>
+                                                                    <input 
+                                                                        type="checkbox" 
+                                                                        className="hidden"
+                                                                        checked={isChecked}
+                                                                        onChange={() => togglePermission(modValue, actValue)}
+                                                                        disabled={(isGlobalWildcard || isModuleWildcard) && actValue !== '*'} 
+                                                                    />
+                                                                    <span className={`text-xs font-medium ${isChecked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                                        {PERMISSION_ACTIONS_LABELS[actValue] || actKey}
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600 py-20 lg:py-0">
+                                        <i className="fas fa-user-shield text-6xl mb-4 opacity-50"></i>
+                                        <p className="text-lg font-bold uppercase tracking-widest text-center px-4">Selecione um usuário</p>
+                                        <p className="text-sm mt-2 max-w-xs text-center opacity-70 px-4">Toque em um nome na lista acima para gerenciar suas permissões.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
                 {activeTab === 'storage' && (
                     <motion.div key="storage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -7,7 +7,24 @@ export interface User {
   whatsapp?: string;
   photoURL?: string;
   voicePreference?: string; // New field for AI Voice persistence
+  customPermissions?: string[]; // Array of permission strings "module:action"
 }
+
+export const PERMISSION_MODULES = {
+  REPERTORY: 'repertory',
+  LITURGY: 'liturgy',
+  SCALES: 'scales',
+  USERS: 'users',
+  ATTENDANCE: 'attendance',
+  SYSTEM: 'system'
+} as const;
+
+export const PERMISSION_ACTIONS = {
+  VIEW: 'view',
+  CREATE: 'create',
+  EDIT: 'edit',
+  DELETE: 'delete'
+} as const;
 
 export interface Member {
   id: string;

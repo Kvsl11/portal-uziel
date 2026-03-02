@@ -13,7 +13,41 @@ interface AuthContextType {
   removeUser: (username: string) => Promise<void>;
   updateUser: (user: User) => Promise<void>;
   loading: boolean;
+  checkPermission: (module: string, action: string) => boolean;
 }
+
+export const PERMISSION_MODULES = {
+  REPERTORY: 'repertory',
+  LITURGY: 'liturgy',
+  SCALES: 'scales',
+  USERS: 'users',
+  ATTENDANCE: 'attendance',
+  SYSTEM: 'system'
+} as const;
+
+export const PERMISSION_ACTIONS = {
+  VIEW: 'view',
+  CREATE: 'create',
+  EDIT: 'edit',
+  DELETE: 'delete'
+} as const;
+
+export const DEFAULT_PERMISSIONS = {
+  'member': [
+    'repertory:view', 
+    'liturgy:view', 
+    'scales:view', 
+    'attendance:view'
+  ],
+  'admin': [
+    'repertory:view', 'repertory:create', 'repertory:edit', 'repertory:delete',
+    'liturgy:view', 'liturgy:create', 'liturgy:edit',
+    'scales:view', 'scales:create', 'scales:edit',
+    'users:view', 'users:create', 'users:edit',
+    'attendance:view', 'attendance:create', 'attendance:edit'
+  ],
+  'super-admin': ['*'] // Wildcard
+};
 
 const AuthContext = createContext<AuthContextType>(null!);
 
@@ -264,8 +298,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
   };
 
+  const checkPermission = (module: string, action: string): boolean => {
+    if (!currentUser) return false;
+    
+    // 1. Super Admin Bypass
+    if (currentUser.role === 'super-admin') return true;
+
+    // 2. Check for Custom Permissions (Override)
+    if (currentUser.customPermissions && currentUser.customPermissions.length > 0) {
+      return currentUser.customPermissions.includes(`${module}:${action}`) || currentUser.customPermissions.includes(`${module}:*`);
+    }
+
+    // 3. Fallback to Role Defaults
+    const rolePerms = DEFAULT_PERMISSIONS[currentUser.role] || [];
+    if (rolePerms.includes('*')) return true;
+    
+    return rolePerms.includes(`${module}:${action}`) || rolePerms.includes(`${module}:*`);
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, usersList, login, logout, addUser, removeUser, updateUser, loading }}>
+    <AuthContext.Provider value={{ currentUser, usersList, login, logout, addUser, removeUser, updateUser, loading, checkPermission }}>
       {children}
     </AuthContext.Provider>
   );
