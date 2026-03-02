@@ -278,21 +278,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // We need their old password to sign in as them, which we have in usersList
               const targetUserOldData = usersList.find(u => u.username.toLowerCase() === updatedUser.username.toLowerCase());
               
-              // Only attempt to update Auth if we have the old password stored
-              if (targetUserOldData && targetUserOldData.password) {
-                  try {
-                      // We pass the stored password as "oldPassword". 
-                      // The service handles retries if the stored password was already the new one.
-                      await AuthService.updateOtherUserPassword(updatedUser.username, targetUserOldData.password, updatedUser.password);
-                  } catch (error: any) {
-                      console.error("Failed to update other user's password in Auth:", error);
-                      throw new Error(`Não foi possível alterar a senha no sistema de login. O usuário precisará redefinir a senha via email ou o Admin deve recriar o usuário. Erro: ${error.message}`);
+              // Only update if the password actually changed
+              if (targetUserOldData && targetUserOldData.password !== updatedUser.password) {
+                  // Only attempt to update Auth if we have the old password stored
+                  if (targetUserOldData.password) {
+                      try {
+                          // We pass the stored password as "oldPassword". 
+                          // The service handles retries if the stored password was already the new one.
+                          await AuthService.updateOtherUserPassword(updatedUser.username, targetUserOldData.password, updatedUser.password);
+                      } catch (error: any) {
+                          console.error("Failed to update other user's password in Auth:", error);
+                          throw new Error(`Não foi possível alterar a senha no sistema de login. O usuário precisará redefinir a senha via email ou o Admin deve recriar o usuário. Erro: ${error.message}`);
+                      }
+                  } else {
+                      // If we don't have the old password, we can't update Auth.
+                      // We must warn the admin.
+                      console.warn("Skipping Auth update because old password is unknown.");
+                      throw new Error("A senha atual deste usuário não está registrada no banco de dados. Não é possível atualizar a senha automaticamente. Por favor, exclua e recrie o usuário.");
                   }
-              } else {
-                  // If we don't have the old password, we can't update Auth.
-                  // We must warn the admin.
-                  console.warn("Skipping Auth update because old password is unknown.");
-                  throw new Error("A senha atual deste usuário não está registrada no banco de dados. Não é possível atualizar a senha automaticamente. Por favor, exclua e recrie o usuário.");
               }
           }
       }
