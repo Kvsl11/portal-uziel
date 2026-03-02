@@ -17,11 +17,18 @@ interface AuthContextType {
 }
 
 export const PERMISSION_MODULES = {
+  DASHBOARD: 'dashboard',
   REPERTORY: 'repertory',
   LITURGY: 'liturgy',
   SCALES: 'scales',
   USERS: 'users',
   ATTENDANCE: 'attendance',
+  REHEARSALS: 'rehearsals',
+  PLAYLISTS: 'playlists',
+  POLLS: 'polls',
+  JUSTIFICATIONS: 'justifications',
+  CREATIVE: 'creative',
+  MONITORING: 'monitoring',
   SYSTEM: 'system'
 } as const;
 
@@ -34,17 +41,31 @@ export const PERMISSION_ACTIONS = {
 
 export const DEFAULT_PERMISSIONS = {
   'member': [
+    'dashboard:view',
     'repertory:view', 
     'liturgy:view', 
     'scales:view', 
-    'attendance:view'
+    'attendance:view',
+    'rehearsals:view',
+    'playlists:view',
+    'polls:view',
+    'justifications:create', // Members create justifications
+    'justifications:view',
+    'creative:view'
   ],
   'admin': [
+    'dashboard:view',
     'repertory:view', 'repertory:create', 'repertory:edit', 'repertory:delete',
     'liturgy:view', 'liturgy:create', 'liturgy:edit',
     'scales:view', 'scales:create', 'scales:edit',
     'users:view', 'users:create', 'users:edit',
-    'attendance:view', 'attendance:create', 'attendance:edit'
+    'attendance:view', 'attendance:create', 'attendance:edit',
+    'rehearsals:view', 'rehearsals:create', 'rehearsals:edit', 'rehearsals:delete',
+    'playlists:view', 'playlists:create', 'playlists:edit', 'playlists:delete',
+    'polls:view', 'polls:create', 'polls:edit', 'polls:delete',
+    'justifications:view', 'justifications:edit', // Admins approve/reject (edit)
+    'creative:view', 'creative:create',
+    'monitoring:view'
   ],
   'super-admin': ['*'] // Wildcard
 };

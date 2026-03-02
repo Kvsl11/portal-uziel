@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getDocs, collection, query, writeBatch, orderBy, limit, where, doc, getDoc, Timestamp } from "firebase/firestore";
 import { db, AuditService, DailyImageService, SystemAdminService, DEFAULT_FIREBASE_CONFIG } from '../services/firebase';
 import { APP_ID } from '../constants';
-import { useAuth, DEFAULT_PERMISSIONS } from '../context/AuthContext';
+import { useAuth, DEFAULT_PERMISSIONS, PERMISSION_MODULES } from '../context/AuthContext';
 import Card from '../components/Card';
 import Loading from '../components/Loading';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
@@ -245,15 +245,6 @@ const SystemAdmin: React.FC = () => {
     const [aclPermissions, setAclPermissions] = useState<string[]>([]);
     const [isSavingACL, setIsSavingACL] = useState(false);
 
-    const PERMISSION_MODULES = {
-        REPERTORY: 'repertory',
-        LITURGY: 'liturgy',
-        SCALES: 'scales',
-        USERS: 'users',
-        ATTENDANCE: 'attendance',
-        SYSTEM: 'system'
-    };
-
     const PERMISSION_ACTIONS = {
         VIEW: 'view',
         CREATE: 'create',
@@ -262,11 +253,18 @@ const SystemAdmin: React.FC = () => {
     };
 
     const PERMISSION_MODULES_LABELS: Record<string, string> = {
+        dashboard: 'Dashboard',
         repertory: 'Repertório',
         liturgy: 'Liturgia',
         scales: 'Escalas',
         users: 'Usuários',
         attendance: 'Frequência',
+        rehearsals: 'Ensaios',
+        playlists: 'Playlists',
+        polls: 'Votações',
+        justifications: 'Justificativas',
+        creative: 'Estúdio Criativo',
+        monitoring: 'Monitoramento',
         system: 'Sistema'
     };
 
