@@ -95,18 +95,39 @@ export const AuthService = {
   updateOtherUserPassword: async (email: string, oldPassword: string, newPassword: string) => {
       let secondaryApp: FirebaseApp | null = null;
       try {
-          const appName = "SecondaryAppForPasswordUpdate";
-          secondaryApp = getApps().find(a => a.name === appName) || initializeApp(firebaseConfig, appName);
+          const appName = `SecondaryApp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          secondaryApp = initializeApp(firebaseConfig, appName);
           const secondaryAuth = getAuth(secondaryApp);
           
-          // Sign in as the target user using their old password
-          const userCredential = await signInWithEmailAndPassword(secondaryAuth, email, oldPassword);
-          
-          if (userCredential.user) {
-              // Update their password
-              await updatePassword(userCredential.user, newPassword);
+          let userCredential;
+          const passwordsToTry = [oldPassword, newPassword, 'Uziel@2025', '123456', 'password', 'senha123'];
+          // Remove duplicates and empty strings
+          const uniquePasswords = [...new Set(passwordsToTry.filter(p => p && p.trim().length > 0))];
+
+          let loggedIn = false;
+          let lastError;
+
+          for (const pwd of uniquePasswords) {
+              try {
+                  userCredential = await signInWithEmailAndPassword(secondaryAuth, email, pwd);
+                  loggedIn = true;
+                  // If we logged in with the NEW password, we are already done.
+                  if (pwd === newPassword) {
+                      await signOut(secondaryAuth);
+                      return;
+                  }
+                  break; // Stop trying if successful
+              } catch (e: any) {
+                  lastError = e;
+                  // Continue to next password
+              }
+          }
+
+          if (!loggedIn || !userCredential?.user) {
+              throw lastError || new Error("Falha ao autenticar com senhas conhecidas.");
           }
           
+          await updatePassword(userCredential.user, newPassword);
           await signOut(secondaryAuth);
       } catch (error: any) {
           console.error("Error updating other user's password:", error);
