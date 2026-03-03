@@ -288,7 +288,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                           await AuthService.updateOtherUserPassword(updatedUser.username, targetUserOldData.password, updatedUser.password);
                       } catch (error: any) {
                           console.error("Failed to update other user's password in Auth:", error);
-                          throw new Error(`Não foi possível alterar a senha no sistema de login. O usuário precisará redefinir a senha via email ou o Admin deve recriar o usuário. Erro: ${error.message}`);
+                          if (error.message && error.message.includes("email de redefinição")) {
+                              alert("AVISO: " + error.message);
+                              // We swallow the error here to allow the Firestore update to proceed.
+                              // The user will reset their password via email.
+                          } else {
+                              throw new Error(`Não foi possível alterar a senha no sistema de login. O usuário precisará redefinir a senha via email ou o Admin deve recriar o usuário. Erro: ${error.message}`);
+                          }
                       }
                   } else {
                       // If we don't have the old password, we can't update Auth.

@@ -19,10 +19,10 @@ export const getApiKey = () => {
     } catch (e) {}
 
     try {
-        if (typeof process !== 'undefined' && process.env) {
-            key = process.env.API_KEY || null;
-            if (key) return key;
-        }
+        // AI Studio injects process.env.GEMINI_API_KEY
+        // @ts-ignore
+        key = process.env.GEMINI_API_KEY;
+        if (key) return key;
     } catch (e) {}
 
     return "MISSING_API_KEY";

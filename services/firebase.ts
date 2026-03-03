@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, deleteApp, FirebaseApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail } from "firebase/auth";
 import { 
   getFirestore, 
   initializeFirestore,
@@ -95,40 +95,32 @@ export const AuthService = {
   updateOtherUserPassword: async (email: string, oldPassword: string, newPassword: string) => {
       let secondaryApp: FirebaseApp | null = null;
       try {
+          // Create a secondary app instance to avoid logging out the current admin user
           const appName = `SecondaryApp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           secondaryApp = initializeApp(firebaseConfig, appName);
           const secondaryAuth = getAuth(secondaryApp);
           
-          let userCredential;
-          const passwordsToTry = [oldPassword, newPassword, 'Uziel@2025', '123456', 'password', 'senha123'];
-          // Remove duplicates and empty strings
-          const uniquePasswords = [...new Set(passwordsToTry.filter(p => p && p.trim().length > 0))];
-
-          let loggedIn = false;
-          let lastError;
-
-          for (const pwd of uniquePasswords) {
-              try {
-                  userCredential = await signInWithEmailAndPassword(secondaryAuth, email, pwd);
-                  loggedIn = true;
-                  // If we logged in with the NEW password, we are already done.
-                  if (pwd === newPassword) {
-                      await signOut(secondaryAuth);
-                      return;
+          // Try to sign in with the provided OLD password (from Firestore)
+          try {
+              const userCredential = await signInWithEmailAndPassword(secondaryAuth, email, oldPassword);
+              
+              // If successful, update to the NEW password
+              await updatePassword(userCredential.user, newPassword);
+              await signOut(secondaryAuth);
+          } catch (loginError: any) {
+              if (loginError.code === 'auth/wrong-password' || loginError.code === 'auth/invalid-credential') {
+                  // Fallback: Send password reset email automatically
+                  try {
+                      await sendPasswordResetEmail(auth, email);
+                      throw new Error("A senha antiga não confere (dessincronização). Um email de redefinição de senha foi enviado automaticamente para o usuário.");
+                  } catch (emailErr) {
+                      throw new Error("A senha antiga não confere e não foi possível enviar o email de redefinição. Exclua e recrie o usuário.");
                   }
-                  break; // Stop trying if successful
-              } catch (e: any) {
-                  lastError = e;
-                  // Continue to next password
+              } else if (loginError.code === 'auth/too-many-requests') {
+                  throw new Error("Muitas tentativas. Aguarde alguns minutos ou use a redefinição por email.");
               }
+              throw loginError;
           }
-
-          if (!loggedIn || !userCredential?.user) {
-              throw lastError || new Error("Falha ao autenticar com senhas conhecidas.");
-          }
-          
-          await updatePassword(userCredential.user, newPassword);
-          await signOut(secondaryAuth);
       } catch (error: any) {
           console.error("Error updating other user's password:", error);
           throw error;

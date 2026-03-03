@@ -5,6 +5,9 @@ export default defineConfig({
   plugins: [react()],
   // 'base' needs to be '/' for Vercel to handle client-side routing correctly
   base: '/', 
+  define: {
+    'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '')
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

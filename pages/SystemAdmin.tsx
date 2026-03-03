@@ -454,7 +454,7 @@ const SystemAdmin: React.FC = () => {
         } else {
             let envKey = "";
             try { envKey = import.meta.env.VITE_GEMINI_API_KEY || ""; } catch(e) {}
-            if (!envKey) { try { if(typeof process !== 'undefined' && process.env) envKey = process.env.API_KEY || ""; } catch(e) {} }
+            if (!envKey) { try { envKey = process.env.GEMINI_API_KEY || ""; } catch(e) {} }
             
             setCustomGeminiKey(envKey);
             setGeminiSource('env');
@@ -588,7 +588,7 @@ const SystemAdmin: React.FC = () => {
             
             let envKey = "";
             try { envKey = import.meta.env.VITE_GEMINI_API_KEY || ""; } catch(e) {}
-            if (!envKey) { try { if(typeof process !== 'undefined' && process.env) envKey = process.env.API_KEY || ""; } catch(e) {} }
+            if (!envKey) { try { envKey = process.env.GEMINI_API_KEY || ""; } catch(e) {} }
 
             setCustomGeminiKey(envKey);
             setGeminiSource('env');
