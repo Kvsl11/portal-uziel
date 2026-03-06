@@ -149,6 +149,61 @@ const Rota: React.FC = () => {
   const [isPsalmLoading, setIsPsalmLoading] = useState(false);
   const [psalmModalDate, setPsalmModalDate] = useState<Date | null>(null);
 
+  const [swapModal, setSwapModal] = useState<{isOpen: boolean, sourceDate: Date | null}>({isOpen: false, sourceDate: null});
+  const [targetSwapDate, setTargetSwapDate] = useState<string>('');
+
+  const handleSwapClick = (date: Date) => {
+      setSwapModal({ isOpen: true, sourceDate: date });
+      setTargetSwapDate('');
+  };
+
+  const confirmSwap = async () => {
+      if (!swapModal.sourceDate || !targetSwapDate) return;
+      
+      const sourceDateStr = swapModal.sourceDate.toISOString();
+      const targetDateStr = new Date(targetSwapDate).toISOString();
+
+      const newSchedule = [...schedule];
+      const sourceIdx = newSchedule.findIndex(s => s.fullDate.toISOString() === sourceDateStr);
+      const targetIdx = newSchedule.findIndex(s => s.fullDate.toISOString() === targetDateStr);
+
+      if (sourceIdx === -1 || targetIdx === -1) {
+          alert("Erro ao encontrar datas para troca.");
+          return;
+      }
+
+      // Swap teams
+      const tempSalmista = newSchedule[sourceIdx].salmista;
+      const tempSubstituto = newSchedule[sourceIdx].substituto;
+
+      newSchedule[sourceIdx].salmista = newSchedule[targetIdx].salmista;
+      newSchedule[sourceIdx].substituto = newSchedule[targetIdx].substituto;
+
+      newSchedule[targetIdx].salmista = tempSalmista;
+      newSchedule[targetIdx].substituto = tempSubstituto;
+
+      setSchedule(newSchedule);
+      setSwapModal({ isOpen: false, sourceDate: null });
+      
+      // Save to backend
+      try {
+          // Format back for saving
+          const toSave = newSchedule.map(s => ({
+              date: s.date,
+              fullDate: s.fullDate.toISOString(),
+              salmista: s.salmista,
+              substituto: s.substituto
+          }));
+          await ScheduleService.save(toSave);
+          if (currentUser) {
+              await AuditService.log(currentUser.username, 'Rota', 'UPDATE', `Trocou escala do dia ${swapModal.sourceDate.toLocaleDateString('pt-BR')} com ${new Date(targetSwapDate).toLocaleDateString('pt-BR')}`, currentUser.role, currentUser.name);
+          }
+      } catch (e) {
+          console.error("Erro ao salvar troca", e);
+          alert("Erro ao salvar a troca na nuvem.");
+      }
+  };
+
   const getContextKey = () => {
       const hour = new Date().getHours();
       let period = 'morning';
@@ -342,57 +397,106 @@ const Rota: React.FC = () => {
         </div>
 
         {nextSchedule && (
-            <div className="relative overflow-hidden rounded-[3rem] shadow-2xl shadow-brand-500/20 group animate-fade-in-up delay-100">
+            <div className="relative overflow-hidden rounded-[3rem] shadow-2xl group animate-fade-in-up delay-100 border border-slate-200/50 dark:border-white/10">
                 {heroImageUrl ? <div className="absolute inset-0 bg-cover bg-center animate-breathing" style={{ backgroundImage: `url('${heroImageUrl}')` }}></div> : <PremiumBackground variant="holy" />}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-800/80 to-slate-900/20 mix-blend-multiply"></div>
-                <div className="relative z-10 p-8 md:p-14 text-white grid md:grid-cols-2 gap-10 items-center">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> {selectedMember === 'all' ? 'Próxima Escala Geral' : `Próxima de ${selectedMember.split(' ')[0]}`}</div>
-                        <h3 className="text-5xl lg:text-7xl font-display font-bold mb-2 capitalize leading-tight">{nextSchedule.date}</h3>
-                        <div className="flex flex-wrap items-center gap-3 mt-8">
-                            <p className="text-brand-100 text-lg font-medium opacity-90 hidden md:block border-l-2 border-brand-500 pl-4">Prepare-se para ministrar.</p>
-                            <button onClick={() => handleShowPsalm(nextSchedule.fullDate)} className="px-8 py-4 rounded-2xl bg-white text-slate-900 text-xs font-bold uppercase tracking-widest hover:bg-blue-50 transition-colors shadow-lg flex items-center gap-2 hover:scale-105 transform duration-300"><i className="fas fa-book-open"></i> Ver Salmo do Dia</button>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
+                <div className="relative z-10 p-8 md:p-16 text-white flex flex-col md:flex-row gap-12 items-center justify-between">
+                    <div className="flex-1 w-full">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> 
+                            {selectedMember === 'all' ? 'Próxima Escala Geral' : `Próxima de ${selectedMember.split(' ')[0]}`}
+                        </div>
+                        <h3 className="text-5xl lg:text-8xl font-display font-bold mb-4 capitalize leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70">
+                            {nextSchedule.date}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-4 mt-8">
+                            <button onClick={() => handleShowPsalm(nextSchedule.fullDate)} className="px-8 py-4 rounded-full bg-brand-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-400 transition-all shadow-[0_0_20px_rgba(41,170,226,0.4)] flex items-center gap-2 hover:scale-105 transform duration-300">
+                                <i className="fas fa-book-open"></i> Ver Salmo do Dia
+                            </button>
+                            {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin') && (
+                                <button onClick={() => handleSwapClick(nextSchedule.fullDate)} className="px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-all shadow-lg flex items-center gap-2 hover:scale-105 transform duration-300">
+                                    <i className="fas fa-exchange-alt"></i> Trocar
+                                </button>
+                            )}
+                            <p className="text-slate-300 text-sm font-medium opacity-90 hidden md:block border-l border-white/20 pl-4">
+                                Prepare-se para ministrar a Palavra.
+                            </p>
                         </div>
                     </div>
-                    <div className="flex gap-6 justify-center md:justify-end">
-                        <div className={`text-center relative group/avatar transition-all duration-300 ${(filterType === 'reserva' && selectedMember !== 'all') ? 'opacity-40 scale-90 blur-sm' : 'opacity-100'}`}>
-                            <div className="w-32 h-32 rounded-[2.5rem] bg-white text-brand-600 flex items-center justify-center text-5xl font-bold shadow-2xl mb-4 border-4 border-white/10 group-hover/avatar:scale-105 transition-transform overflow-hidden">{getUserProfile(nextSchedule.salmista)?.photoURL ? <img src={getUserProfile(nextSchedule.salmista)?.photoURL} className="w-full h-full object-cover" /> : nextSchedule.salmista.charAt(0)}</div>
-                            <div className="bg-black/30 backdrop-blur-md rounded-xl py-2 px-4 inline-block border border-white/10"><p className="font-bold text-xl">{nextSchedule.salmista}</p><p className="text-[10px] uppercase tracking-widest text-brand-200 font-bold">Titular</p></div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto justify-center md:justify-end">
+                        <div className={`flex flex-col items-center p-6 rounded-[2rem] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl transition-all duration-300 ${(filterType === 'reserva' && selectedMember !== 'all') ? 'opacity-40 scale-95 blur-[2px]' : 'opacity-100 hover:-translate-y-2'}`}>
+                            <div className="w-28 h-28 rounded-full bg-white text-brand-600 flex items-center justify-center text-4xl font-bold shadow-inner mb-4 border-4 border-white/30 overflow-hidden">
+                                {getUserProfile(nextSchedule.salmista)?.photoURL ? <img src={getUserProfile(nextSchedule.salmista)?.photoURL} className="w-full h-full object-cover" /> : nextSchedule.salmista.charAt(0)}
+                            </div>
+                            <p className="font-bold text-xl text-white text-center">{nextSchedule.salmista}</p>
+                            <p className="text-[10px] uppercase tracking-widest text-brand-300 font-bold mt-1 bg-brand-900/50 px-3 py-1 rounded-full">Titular</p>
                         </div>
-                        <div className={`text-center relative group/avatar transition-all duration-300 ${(filterType === 'titular' && selectedMember !== 'all') ? 'opacity-40 scale-90 blur-sm' : 'opacity-100'}`}>
-                            <div className="w-28 h-28 rounded-[2rem] bg-slate-900/50 backdrop-blur-sm text-white flex items-center justify-center text-3xl font-bold mb-4 border border-white/20 overflow-hidden">{getUserProfile(nextSchedule.substituto)?.photoURL ? <img src={getUserProfile(nextSchedule.substituto)?.photoURL} className="w-full h-full object-cover" /> : nextSchedule.substituto.charAt(0)}</div>
-                            <div className="bg-black/30 backdrop-blur-md rounded-xl py-2 px-4 inline-block border border-white/10"><p className="font-bold text-lg">{nextSchedule.substituto}</p><p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Reserva</p></div>
+                        
+                        <div className={`flex flex-col items-center p-6 rounded-[2rem] bg-black/20 backdrop-blur-md border border-white/10 shadow-lg transition-all duration-300 ${(filterType === 'titular' && selectedMember !== 'all') ? 'opacity-40 scale-95 blur-[2px]' : 'opacity-100 hover:-translate-y-2'}`}>
+                            <div className="w-24 h-24 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-3xl font-bold mb-4 border-2 border-white/20 overflow-hidden">
+                                {getUserProfile(nextSchedule.substituto)?.photoURL ? <img src={getUserProfile(nextSchedule.substituto)?.photoURL} className="w-full h-full object-cover" /> : nextSchedule.substituto.charAt(0)}
+                            </div>
+                            <p className="font-bold text-lg text-slate-200 text-center">{nextSchedule.substituto}</p>
+                            <p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold mt-1 bg-amber-900/30 px-3 py-1 rounded-full">Reserva</p>
                         </div>
                     </div>
                 </div>
             </div>
         )}
 
-        <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-4 md:ml-10 space-y-10 pl-6 md:pl-10 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pt-8">
             {displayedSchedule.map((row, idx) => {
-                const isPassed = row.fullDate < new Date(new Date().setHours(0,0,0,0)); const isNext = row === nextSchedule;
+                const isPassed = row.fullDate < new Date(new Date().setHours(0,0,0,0)); 
+                const isNext = row === nextSchedule;
+                if (isNext) return null; // Skip next schedule as it's in the hero
+
                 const highlightMain = selectedMember !== 'all' && row.salmista === selectedMember;
                 const highlightSub = selectedMember !== 'all' && row.substituto === selectedMember;
-                const salmistaUser = getUserProfile(row.salmista); const substitutoUser = getUserProfile(row.substituto);
+                const salmistaUser = getUserProfile(row.salmista); 
+                const substitutoUser = getUserProfile(row.substituto);
+                
                 return (
-                    <div key={idx} className={`relative transition-all duration-500`}>
-                        <div className={`absolute -left-[2.1rem] md:-left-[3.25rem] top-8 w-6 h-6 rounded-full border-4 border-white dark:border-slate-900 shadow-md z-10 transition-all ${isNext ? 'bg-brand-600 scale-125' : isPassed ? 'bg-slate-300 dark:bg-slate-700' : 'bg-white dark:bg-slate-800 border-brand-200'}`}></div>
-                        <div className={`bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 md:p-8 shadow-sm hover:shadow-xl border transition-all duration-300 ${isNext ? 'border-brand-500/50 ring-4 ring-brand-500/5 shadow-2xl scale-[1.02]' : 'border-slate-100 dark:border-slate-700'}`}>
-                            <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 mb-6 border-b border-slate-50 dark:border-slate-700/50 pb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-700 flex flex-col items-center justify-center text-slate-800 dark:text-white border border-slate-100 shrink-0"><span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{row.fullDate.toLocaleDateString('pt-BR', {month:'short'}).replace('.', '')}</span><span className="text-2xl font-bold leading-none">{row.fullDate.getDate()}</span></div>
-                                    <div><h4 className="font-bold text-xl text-slate-800 dark:text-white capitalize leading-tight">{row.date.split(' de ')[0]}</h4><button onClick={() => handleShowPsalm(row.fullDate)} className="text-xs text-brand-500 hover:text-brand-600 font-bold uppercase tracking-widest flex items-center gap-1 mt-1 group w-fit"><i className="fas fa-book-open group-hover:scale-110 transition-transform"></i> Ver Salmo do Dia</button></div>
+                    <div key={idx} className={`bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 shadow-sm hover:shadow-xl border transition-all duration-300 flex flex-col ${isPassed ? 'opacity-60 grayscale hover:grayscale-0' : ''} border-slate-200 dark:border-white/5 hover:-translate-y-1`}>
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-900/20 flex flex-col items-center justify-center text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 shrink-0">
+                                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">{row.fullDate.toLocaleDateString('pt-BR', {month:'short'}).replace('.', '')}</span>
+                                    <span className="text-xl font-black leading-none">{row.fullDate.getDate()}</span>
                                 </div>
-                                {isNext && <span className="px-3 py-1 rounded-full bg-brand-100 text-brand-600 text-xs font-bold uppercase tracking-widest animate-pulse w-fit">Próximo</span>}
+                                <div>
+                                    <h4 className="font-bold text-lg text-slate-800 dark:text-white capitalize leading-tight">{row.date.split(' de ')[0]}</h4>
+                                    <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{row.fullDate.getFullYear()}</span>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${highlightMain ? 'bg-brand-50 dark:bg-brand-900/30 border-brand-200' : 'bg-slate-50 dark:bg-white/5 border-slate-100'}`}>
-                                    <div className="w-12 h-12 rounded-full bg-white dark:bg-brand-800 flex items-center justify-center text-brand-600 font-bold text-lg overflow-hidden">{salmistaUser?.photoURL ? <img src={salmistaUser.photoURL} className="w-full h-full object-cover" /> : row.salmista.charAt(0)}</div>
-                                    <div><p className="text-[10px] text-brand-400 uppercase font-bold tracking-widest">Titular</p><p className="font-bold text-slate-700 dark:text-slate-200">{row.salmista}</p></div>
+                            <button onClick={() => handleShowPsalm(row.fullDate)} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 flex items-center justify-center transition-all" title="Ver Salmo">
+                                <i className="fas fa-book-open"></i>
+                            </button>
+                            {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin') && !isPassed && (
+                                <button onClick={() => handleSwapClick(row.fullDate)} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center transition-all" title="Trocar Salmistas">
+                                    <i className="fas fa-exchange-alt"></i>
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="space-y-3 mt-auto">
+                            <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${highlightMain ? 'bg-brand-50 dark:bg-brand-900/30 border-brand-200 dark:border-brand-500/30' : 'bg-slate-50 dark:bg-white/5 border-transparent'}`}>
+                                <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center text-brand-600 font-bold text-sm shadow-sm overflow-hidden shrink-0">
+                                    {salmistaUser?.photoURL ? <img src={salmistaUser.photoURL} className="w-full h-full object-cover" /> : row.salmista.charAt(0)}
                                 </div>
-                                <div className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${highlightSub ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200' : 'bg-white dark:bg-transparent border-slate-100'}`}>
-                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-600 flex items-center justify-center text-slate-500 font-bold text-sm overflow-hidden">{substitutoUser?.photoURL ? <img src={substitutoUser.photoURL} className="w-full h-full object-cover" /> : row.substituto.charAt(0)}</div>
-                                    <div><p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Reserva</p><p className="font-bold text-slate-600 dark:text-slate-300 text-sm">{row.substituto}</p></div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[9px] text-brand-500 uppercase font-black tracking-widest mb-0.5">Titular</p>
+                                    <p className="font-bold text-slate-700 dark:text-slate-200 text-sm truncate">{row.salmista}</p>
+                                </div>
+                            </div>
+                            
+                            <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${highlightSub ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-500/30' : 'bg-transparent border-slate-100 dark:border-white/5'}`}>
+                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 overflow-hidden">
+                                    {substitutoUser?.photoURL ? <img src={substitutoUser.photoURL} className="w-full h-full object-cover" /> : row.substituto.charAt(0)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Reserva</p>
+                                    <p className="font-bold text-slate-600 dark:text-slate-400 text-xs truncate">{row.substituto}</p>
                                 </div>
                             </div>
                         </div>
@@ -402,6 +506,52 @@ const Rota: React.FC = () => {
         </div>
       </div>
       {psalmModalDate && <PsalmModal date={psalmModalDate} liturgy={liturgyData} loading={isPsalmLoading} onClose={closePsalmModal} />}
+      
+      {swapModal.isOpen && swapModal.sourceDate && createPortal(
+          <div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+              <div className="w-full max-w-md bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-amber-100 dark:border-amber-500/20">
+                      <i className="fas fa-exchange-alt"></i>
+                  </div>
+                  <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2 text-center">Trocar Salmistas</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium text-center">
+                      Selecione uma data futura para trocar a dupla de salmistas com o dia <strong>{swapModal.sourceDate.toLocaleDateString('pt-BR')}</strong>.
+                  </p>
+                  
+                  <div className="mb-8">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Data para Troca</label>
+                      <div className="relative">
+                          <select 
+                              value={targetSwapDate} 
+                              onChange={(e) => setTargetSwapDate(e.target.value)}
+                              className="w-full px-4 py-4 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-700 dark:text-white focus:border-brand-500 outline-none transition-colors appearance-none cursor-pointer"
+                          >
+                              <option value="" disabled>Selecione uma data...</option>
+                              {schedule
+                                  .filter(s => s.fullDate > new Date(new Date().setHours(0,0,0,0)) && s.fullDate.toISOString() !== swapModal.sourceDate?.toISOString())
+                                  .map(s => (
+                                      <option key={s.fullDate.toISOString()} value={s.fullDate.toISOString()}>
+                                          {s.date} - {s.salmista} & {s.substituto}
+                                      </option>
+                                  ))
+                              }
+                          </select>
+                          <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                      </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                      <button onClick={() => setSwapModal({isOpen: false, sourceDate: null})} className="flex-1 py-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                          Cancelar
+                      </button>
+                      <button onClick={confirmSwap} disabled={!targetSwapDate} className="flex-1 py-4 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/30">
+                          Confirmar Troca
+                      </button>
+                  </div>
+              </div>
+          </div>,
+          document.body
+      )}
     </>
   );
 };
