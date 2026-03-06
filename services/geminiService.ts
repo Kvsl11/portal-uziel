@@ -163,8 +163,8 @@ const compressForFirestore = (base64Str: string): Promise<string> => {
   });
 };
 
-const TEXT_MODELS_FALLBACK = ['gemini-3-pro-preview', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
-const FAST_MODELS_FALLBACK = ['gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-3-pro-preview'];
+const TEXT_MODELS_FALLBACK = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+const FAST_MODELS_FALLBACK = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-3-pro-preview'];
 const IMAGE_MODELS_FALLBACK = ['gemini-2.5-flash-image', 'gemini-3-pro-image-preview'];
 
 export const getCachedImage = (contextKey: string): string | null => {
@@ -192,7 +192,8 @@ const saveToLocal = (contextKey: string, data: string) => {
 async function runWithFallback<T>(
   operation: (model: string) => Promise<T>, 
   modelsList: string[], 
-  preferredModel?: string
+  preferredModel?: string,
+  timeoutMs: number = 20000 // Default 20s timeout
 ): Promise<T> {
   if (globalQuotaExceeded) throw new Error("QUOTA_EXHAUSTED_CIRCUIT_BREAKER");
   let modelsToTry = modelsList;
@@ -201,15 +202,25 @@ async function runWithFallback<T>(
     modelsToTry = [preferredModel, ...others];
   }
   let lastError: any;
+  
+  const timeoutPromise = (ms: number) => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), ms));
+
   for (const model of modelsToTry) {
     let attempts = 0;
     const maxRetries = 1; 
     while (attempts <= maxRetries) {
         try {
-            return await operation(model);
+            // Race against timeout
+            return await Promise.race([operation(model), timeoutPromise(timeoutMs)]);
         } catch (error: any) {
             lastError = error;
             const msg = error.toString().toLowerCase();
+            
+            if (msg.includes("timeout")) {
+                console.warn(`[Gemini Service] Timeout (${timeoutMs}ms) no modelo ${model}. Tentando próximo...`);
+                break; // Break retry loop, try next model
+            }
+
             if (msg.includes("429") || msg.includes("quota") || msg.includes("resource_exhausted")) {
                 console.warn(`[Gemini Service] Cota atingida para modelo ${model}.`);
                 if (modelsList === IMAGE_MODELS_FALLBACK && model === modelsToTry[modelsToTry.length - 1]) {
@@ -261,7 +272,7 @@ const extractJson = (text: string): string | null => {
 
 export const fetchLyrics = async (songTitle: string, artist: string, key: string, customPrompt: string, includeChords: boolean, complexity: 'simple' | 'complete'): Promise<{ content: string, videoUrl?: string, originalKey?: string }> => {
   // Use a highly capable model for search & formatting accuracy
-  const preferredModel = 'gemini-3-pro-preview'; 
+  const preferredModel = 'gemini-3-flash-preview'; 
   
   const systemInstruction = `
   Você é um especialista em repertório musical católico e secular brasileiro.
@@ -585,7 +596,7 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore') =
   }
 };
 
-export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf'): Promise<string[] | string> => {
+export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf', expandChorus: boolean = true): Promise<string[] | string> => {
   if (!lyrics) return format === 'pptx' ? [] : "";
   
   const systemInstruction = `
@@ -596,12 +607,12 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   
   TAREFA GERAL:
   - Identifique o REFRÃO (geralmente em negrito ou cor).
-  - EXPANDA O REFRÃO: Repita-o integralmente após CADA estrofe, se ainda não estiver repetido.
   - CORRIJA: Erros de digitação, pontuação excessiva, e padronize maiúsculas no início das frases.
   - PROIBIDO ADICIONAR CIFRAS: Se a letra original NÃO contiver cifras (acordes entre colchetes como [A], [G]), VOCÊ NÃO DEVE INVENTAR OU ADICIONAR NENHUMA CIFRA. Mantenha o texto exatamente sem cifras.
   
   ${format === 'pptx' ? `
   REGRAS ESPECÍFICAS PARA PPTX (PROJEÇÃO):
+  - EXPANDA O REFRÃO: Repita-o integralmente após CADA estrofe, se ainda não estiver repetido.
   - REMOVA COMPLETAMENTE todas as cifras (ex: [A], [Bm7]).
   - REMOVA tags de formatação visual (**, <c:..>).
   - ESTRUTURA: Divida o texto em slides de MÁXIMO 5 LINHAS.
@@ -609,6 +620,7 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
   - FORMATAÇÃO: Use caixa alta/baixa corretamente (Sentence case).
   ` : `
   REGRAS ESPECÍFICAS PARA PDF (IMPRESSÃO):
+  ${expandChorus ? '- EXPANDA O REFRÃO: Repita-o integralmente após CADA estrofe, se ainda não estiver repetido.' : '- NÃO EXPANDA O REFRÃO: Mantenha o refrão APENAS onde ele aparece originalmente. NÃO o repita entre estrofes.'}
   - MANTENHA todas as cifras (ex: [A]) e tags de formatação (**, <c:..>) SE ELAS JÁ EXISTIREM no texto original.
   - NUNCA, SOB NENHUMA HIPÓTESE, ADICIONE CIFRAS SE O TEXTO ORIGINAL NÃO TIVER CIFRAS.
   - ESTRUTURA: Garanta quebras de linha claras entre estrofes.
@@ -652,7 +664,7 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
               contents: prompt, 
               config
           });
-      }, TEXT_MODELS_FALLBACK, 'gemini-3-flash-preview');
+      }, TEXT_MODELS_FALLBACK, 'gemini-3-flash-preview', 30000);
 
       const text = response.text || "";
 
@@ -700,7 +712,7 @@ export const smartProcessLyrics = async (lyrics: string, format: 'pptx' | 'pdf')
           return cleanText.trim();
       }
   } catch (error) {
-      console.error("Error processing lyrics:", error);
+      console.warn("Error processing lyrics (fallback used):", error);
       // Fallback
       if (format === 'pptx') {
           let clean = lyrics.replace(/\[.*?\]/g, '').replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '').replace(/\*\*/g, '').replace(/\*/g, '');

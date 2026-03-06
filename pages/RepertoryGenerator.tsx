@@ -411,12 +411,27 @@ const RepertoryGenerator: React.FC = () => {
   const [isSaveSuccess, setIsSaveSuccess] = useState(false);
   const [pdfChoiceModal, setPdfChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
   const [pdfHeaderTitle, setPdfHeaderTitle] = useState("Ministério de Música Uziel");
+  const [pdfExpandChorus, setPdfExpandChorus] = useState(false);
   const [pptxChoiceModal, setPptxChoiceModal] = useState<{ isOpen: boolean, rep: Repertory | null }>({ isOpen: false, rep: null });
+  const [pptxHeaderTitle, setPptxHeaderTitle] = useState("Ministério de Música Uziel");
   const [isGeneratingPPTX, setIsGeneratingPPTX] = useState(false);
   const [pptxProgress, setPptxProgress] = useState({ current: 0, total: 0 });
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ current: 0, total: 0 });
   const activeGenerationRef = useRef<string | null>(null);
+  const abortController = useRef<AbortController | null>(null);
+
+  const cancelGeneration = () => {
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+    // Force reset states immediately
+    setIsGeneratingPDF(false);
+    setIsGeneratingPPTX(false);
+    setPdfProgress({ current: 0, total: 0 });
+    setPptxProgress({ current: 0, total: 0 });
+    abortController.current = null;
+  };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 10 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const handleDragEnd = (event: DragEndEvent) => {
@@ -509,10 +524,11 @@ const RepertoryGenerator: React.FC = () => {
   };
 
   const getLogoGeometry = (x: number, y: number, size: number) => { const s = size / 100; return [ { type: 'rect', x: x + 44*s, y: y + 2*s, w: 12*s, h: 96*s }, { type: 'rect', x: x + 18*s, y: y + 22*s, w: 64*s, h: 12*s }, { type: 'rect', x: x + 30*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 16*s, y: y + 50*s, w: 10*s, h: 20*s }, { type: 'rect', x: x + 60*s, y: y + 38*s, w: 10*s, h: 40*s }, { type: 'rect', x: x + 74*s, y: y + 50*s, w: 10*s, h: 20*s }, ]; };
-  const generatePDF = async (repSongs: Song[], repTheme: string, repDate: string, creatorName: string, columns: 1 | 2 | 3 = 1, headerTitle: string = "Ministério de Música Uziel") => {
+  const generatePDF = async (repSongs: Song[], repTheme: string, repDate: string, creatorName: string, columns: 1 | 2 | 3 = 1, headerTitle: string = "Ministério de Música Uziel", expandChorus: boolean = false) => {
     try {
       setIsGeneratingPDF(true);
       setPdfProgress({ current: 0, total: repSongs.length });
+      abortController.current = new AbortController();
 
       const doc = new jsPDF();
       const margin = 15; // Slightly reduced margin for 3 columns
@@ -533,26 +549,26 @@ const RepertoryGenerator: React.FC = () => {
 
 
       // Header (Only on first page, spans all columns)
-      doc.setFontSize(22);
+      doc.setFontSize(18); // Reduced from 22
       doc.setFont("helvetica", "bold");
       doc.setTextColor(41, 170, 226); // Brand Blue
       doc.text(headerTitle, pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
+      yPos += 8; // Reduced from 10
       
-      doc.setFontSize(16);
+      doc.setFontSize(14); // Reduced from 16
       doc.setFont("helvetica", "normal");
       doc.setTextColor(0);
       doc.text(`Repertório: ${repTheme}`, pageWidth / 2, yPos, { align: "center" });
-      yPos += 8;
+      yPos += 6; // Reduced from 8
       
-      doc.setFontSize(12);
+      doc.setFontSize(10); // Reduced from 12
       doc.setTextColor(100);
       const formattedDate = new Date(repDate + 'T12:00:00').toLocaleDateString('pt-BR');
       doc.text(`Data: ${formattedDate} | Criado por: ${creatorName}`, pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
+      yPos += 8; // Reduced from 10
       doc.setDrawColor(200);
       doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 15;
+      yPos += 10; // Reduced from 15
 
       const startYFirstPage = yPos;
 
@@ -613,7 +629,7 @@ const RepertoryGenerator: React.FC = () => {
         // Process Lyrics with AI for PDF (Chorus expansion, formatting)
         let processedLyrics = song.lyrics;
         try {
-            const result = await smartProcessLyrics(song.lyrics, 'pdf');
+            const result = await smartProcessLyrics(song.lyrics, 'pdf', expandChorus);
             if (typeof result === 'string') {
                 processedLyrics = result;
             }
@@ -768,10 +784,11 @@ const RepertoryGenerator: React.FC = () => {
     }
   };
 
-  const generatePPTX = async (repSongs: Song[], repTheme: string, repDate: string, creatorName?: string, ratio: '16:9' | '4:3' = '16:9') => {
+  const generatePPTX = async (repSongs: Song[], repTheme: string, repDate: string, creatorName?: string, ratio: '16:9' | '4:3' = '16:9', headerTitle: string = "Ministério de Música Uziel") => {
     try {
       setIsGeneratingPPTX(true);
       setPptxProgress({ current: 0, total: repSongs.length });
+      abortController.current = new AbortController();
 
       const pptx = new pptxgen();
       pptx.layout = ratio === '16:9' ? 'LAYOUT_16x9' : 'LAYOUT_4x3';
@@ -780,7 +797,7 @@ const RepertoryGenerator: React.FC = () => {
       let slide = pptx.addSlide();
       slide.background = { color: "0B1221" };
       
-      slide.addText("MINISTÉRIO DE MÚSICA UZIEL", {
+      slide.addText(headerTitle.toUpperCase(), {
         x: 0, y: "30%", w: "100%", align: "center",
         fontSize: 24, color: "29AAE2", bold: true
       });
@@ -805,22 +822,90 @@ const RepertoryGenerator: React.FC = () => {
         
         // Always use Gemini for intelligent processing (Chorus expansion, formatting, splitting)
         try {
-            const result = await smartProcessLyrics(song.lyrics, 'pptx');
-            if (Array.isArray(result)) {
-                chunks = result;
-            } else if (typeof result === 'string') {
-                // Fallback if it returns a string (shouldn't happen for pptx mode but safe to handle)
-                chunks = [result];
+            // Check abort before async call
+            if (abortController.current?.signal.aborted) throw new Error("Cancelled");
+
+            let rawText = "";
+            try {
+                const result = await smartProcessLyrics(song.lyrics, 'pptx');
+                if (Array.isArray(result)) {
+                    rawText = result.join('\n');
+                } else if (typeof result === 'string') {
+                    rawText = result;
+                }
+            } catch (geminiError) {
+                console.warn("Gemini PPTX processing failed, using raw lyrics", geminiError);
+                rawText = song.lyrics;
             }
-        } catch (e) {
-            console.warn("Gemini PPTX processing failed, falling back to simple split", e);
-            // Fallback logic
+
+            // ROBUST POST-PROCESSING: Enforce max 5 VISUAL lines per slide, respecting stanzas
+            // 1. Clean text (remove chords and tags if any remained)
+            let clean = rawText.replace(/\[.*?\]/g, '')
+                .replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '')
+                .replace(/\*\*/g, '').replace(/\*/g, '');
+
+            // 2. Normalize newlines and split into Stanzas
+            clean = clean.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const stanzas = clean.split(/\n\s*\n/).filter(s => s.trim().length > 0);
+            
+            chunks = [];
+
+            for (const stanza of stanzas) {
+                // Process each stanza
+                const lines = stanza.split('\n').map(l => l.trim()).filter(l => l);
+                
+                // Convert to visual lines (handling wrapping)
+                const visualLines: string[] = [];
+                const MAX_CHARS = 50; // Approx limit for font size 32-36 on 16:9 slide
+
+                lines.forEach(line => {
+                    if (line.length <= MAX_CHARS) {
+                        visualLines.push(line);
+                    } else {
+                        // Split long line intelligently (by words)
+                        const words = line.split(' ');
+                        let currentLine = '';
+                        
+                        words.forEach(word => {
+                            if (!currentLine) {
+                                currentLine = word;
+                            } else {
+                                if ((currentLine + ' ' + word).length <= MAX_CHARS) {
+                                    currentLine += ' ' + word;
+                                } else {
+                                    visualLines.push(currentLine);
+                                    currentLine = word;
+                                }
+                            }
+                        });
+                        if (currentLine) visualLines.push(currentLine);
+                    }
+                });
+
+                // Chunk this stanza into slides of max 5 lines
+                // This ensures we don't merge separate stanzas, but we do split long ones
+                for (let j = 0; j < visualLines.length; j += 5) {
+                    chunks.push(visualLines.slice(j, j + 5).join('\n'));
+                }
+            }
+
+        } catch (e: any) {
+            if (e.message === "Cancelled" || abortController.current?.signal.aborted) throw new Error("Geração cancelada pelo usuário.");
+            console.warn("PPTX processing failed completely", e);
+            // Fallback logic (simple split by stanzas)
             let clean = song.lyrics.replace(/\[.*?\]/g, '')
                 .replace(/<c:#[a-fA-F0-9]{3,6}>|<\/c>/g, '')
                 .replace(/\*\*/g, '').replace(/\*/g, '');
-            const lines = clean.split('\n').filter(l => l.trim());
-            for (let j = 0; j < lines.length; j += 5) {
-                chunks.push(lines.slice(j, j + 5).join('\n'));
+            
+            clean = clean.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const stanzas = clean.split(/\n\s*\n/).filter(s => s.trim().length > 0);
+            
+            chunks = [];
+            for (const stanza of stanzas) {
+                 const lines = stanza.split('\n').filter(l => l.trim());
+                 for (let j = 0; j < lines.length; j += 5) {
+                    chunks.push(lines.slice(j, j + 5).join('\n'));
+                }
             }
         }
 
@@ -861,9 +946,13 @@ const RepertoryGenerator: React.FC = () => {
             fontSize: 14, color: "8E8E93", align: "left", bold: true, wrap: true
           });
 
+          // Dynamic font size based on line count
+          const lineCount = chunk.split('\n').length;
+          const fontSize = lineCount >= 5 ? 32 : 38;
+
           s.addText(chunk, {
             x: "5%", y: "18%", w: "90%", h: "70%",
-            fontSize: 36, color: "FFFFFF", align: "center", valign: "middle",
+            fontSize: fontSize, color: "FFFFFF", align: "center", valign: "middle",
             bold: true, wrap: true
           });
 
@@ -960,6 +1049,9 @@ const RepertoryGenerator: React.FC = () => {
                         Processando música {pdfProgress.current} de {pdfProgress.total}...
                     </p>
                     <p className="text-xs text-slate-400 mt-2">Expandindo refrões e formatando...</p>
+                    <button onClick={cancelGeneration} className="mt-6 px-4 py-2 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors">
+                        Cancelar
+                    </button>
                 </div>
             </div>
         </div>, document.body
@@ -975,17 +1067,41 @@ const RepertoryGenerator: React.FC = () => {
           className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-700 dark:text-white focus:border-brand-500 outline-none transition-colors"
           placeholder="Ex: Ministério de Música Uziel"
         />
+        <div className="mt-4 flex items-center gap-3">
+            <div 
+                onClick={() => setPdfExpandChorus(!pdfExpandChorus)}
+                className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors ${pdfExpandChorus ? 'bg-brand-500' : 'bg-slate-200 dark:bg-white/10'}`}
+            >
+                <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${pdfExpandChorus ? 'translate-x-4' : 'translate-x-0'}`}></div>
+            </div>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer select-none" onClick={() => setPdfExpandChorus(!pdfExpandChorus)}>
+                Repetir refrão entre estrofes
+            </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
-            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 1, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">1 Coluna (Padrão)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Letras grandes, fácil leitura</span></div><i className="fas fa-file-alt text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 2, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">2 Colunas (Equilibrado)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bom equilíbrio entre espaço e tamanho</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 3, pdfHeaderTitle); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">3 Colunas (Compacto)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Economiza papel, estilo livreto</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 1, pdfHeaderTitle, pdfExpandChorus); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">1 Coluna (Padrão)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Letras grandes, fácil leitura</span></div><i className="fas fa-file-alt text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 2, pdfHeaderTitle, pdfExpandChorus); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">2 Colunas (Equilibrado)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bom equilíbrio entre espaço e tamanho</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pdfChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pdfChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pdfChoiceModal.rep?.createdBy ? pdfChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePDF(pdfChoiceModal.rep.songs, pdfChoiceModal.rep.theme, pdfChoiceModal.rep.date, creatorName, 3, pdfHeaderTitle, pdfExpandChorus); setPdfChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">3 Colunas (Compacto)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Economiza papel, estilo livreto</span></div><i className="fas fa-columns text-slate-300 group-hover:text-brand-500"></i></button>
             <button onClick={() => setPdfChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
         </div>
       </div></div>, document.body)}
       {pptxChoiceModal.isOpen && createPortal(<div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"><div className="w-full max-w-sm bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in text-center"><div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm border border-orange-100 dark:border-orange-500/20"><i className="fas fa-file-powerpoint"></i></div><h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">Exportar PowerPoint</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium">Escolha a proporção ideal para a projeção da sua igreja.</p>
       
+      {!isGeneratingPPTX && (
+      <div className="mb-6 text-left">
+        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Título do Cabeçalho</label>
+        <input 
+          type="text" 
+          value={pptxHeaderTitle} 
+          onChange={(e) => setPptxHeaderTitle(e.target.value)} 
+          className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-700 dark:text-white focus:border-brand-500 outline-none transition-colors"
+          placeholder="Ex: Ministério de Música Uziel"
+        />
+      </div>
+      )}
+
       {isGeneratingPPTX ? (
         <div className="flex flex-col items-center justify-center py-4 animate-fade-in">
             <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-4"></div>
@@ -993,11 +1109,14 @@ const RepertoryGenerator: React.FC = () => {
                 Processando música {pptxProgress.current} de {pptxProgress.total}...
             </p>
             <p className="text-xs text-slate-400 mt-2">Utilizando IA para otimizar quebras de linha...</p>
+            <button onClick={cancelGeneration} className="mt-6 px-4 py-2 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors">
+                Cancelar
+            </button>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '16:9'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button>
-            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '4:3'); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '16:9', pptxHeaderTitle); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Widescreen (16:9)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para TVs e LEDs modernos</span></div><i className="fas fa-desktop text-slate-300 group-hover:text-brand-500"></i></button>
+            <button onClick={async () => { if(pptxChoiceModal.rep) { const creatorUser = usersList.find(u => u.username === pptxChoiceModal.rep?.createdBy); const creatorName = creatorUser ? creatorUser.name.split(' ')[0] : (pptxChoiceModal.rep?.createdBy ? pptxChoiceModal.rep.createdBy.split('@')[0] : 'Uziel'); await generatePPTX(pptxChoiceModal.rep.songs, pptxChoiceModal.rep.theme, pptxChoiceModal.rep.date, creatorName, '4:3', pptxHeaderTitle); setPptxChoiceModal({ isOpen: false, rep: null }); } }} className="w-full py-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all flex items-center justify-between px-6 group"><div className="flex flex-col items-start"><span className="text-sm font-bold text-slate-700 dark:text-white group-hover:text-brand-600 transition-colors">Padrão (4:3)</span><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ideal para projetores antigos</span></div><i className="fas fa-square text-slate-300 group-hover:text-brand-500"></i></button>
             <button onClick={() => setPptxChoiceModal({ isOpen: false, rep: null })} className="mt-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors">Cancelar</button>
         </div>
       )}
