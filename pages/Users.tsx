@@ -8,7 +8,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const Users: React.FC = () => {
-  const { usersList, removeUser, currentUser } = useAuth();
+  const { usersList, removeUser, currentUser, checkPermission } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'member' | 'admin' | 'super-admin'>('all');
@@ -31,11 +31,21 @@ const Users: React.FC = () => {
   const isAdmin = currentUser?.role === 'admin';
   const isMember = currentUser?.role === 'member';
 
+  const canCreate = checkPermission('users', 'create');
+  const canEdit = checkPermission('users', 'edit');
+  const canDelete = checkPermission('users', 'delete');
+
   const canManageUser = (targetUser: User) => {
       if (currentUser?.username === targetUser.username) return true;
       if (isSuperAdmin) return true;
-      if (isAdmin) return targetUser.role === 'member';
-      return false;
+      
+      // Proteção de Hierarquia
+      if (targetUser.role === 'super-admin') return false; // Ninguém mexe em Super Admin
+      if (targetUser.role === 'admin') return false; // Apenas Super Admin mexe em Admin (por segurança)
+      
+      // Resto (Membros)
+      // Se eu sou Admin ou Membro (com permissão ACL), posso mexer em Membros.
+      return targetUser.role === 'member';
   };
 
   const filteredUsers = useMemo(() => {
@@ -147,7 +157,7 @@ const Users: React.FC = () => {
                 Adicione, edite ou remova membros do ministério.
              </p>
           </div>
-          {(isAdmin || isSuperAdmin) && (
+          {(canCreate) && (
               <button type="button" onClick={handleCreate} className="bg-brand-600 text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-brand-500/20 hover:bg-brand-500 transition-all flex items-center gap-2 uppercase text-xs tracking-widest hover:scale-105">
                 <i className="fas fa-user-plus"></i> Novo Membro
               </button>
@@ -230,13 +240,15 @@ const Users: React.FC = () => {
 
                                 {isAllowed ? (
                                     <>
-                                        <button 
-                                            onClick={() => handleEdit(user)}
-                                            className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 py-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-bold text-xs uppercase tracking-wider"
-                                        >
-                                            <i className="fas fa-pen"></i> Editar
-                                        </button>
-                                        {!isSelf && (
+                                        {canEdit && (
+                                            <button 
+                                                onClick={() => handleEdit(user)}
+                                                className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 py-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-400 transition-colors font-bold text-xs uppercase tracking-wider"
+                                            >
+                                                <i className="fas fa-pen"></i> Editar
+                                            </button>
+                                        )}
+                                        {!isSelf && canDelete && (
                                             <button 
                                                 onClick={(e) => requestDelete(e, user)}
                                                 className="flex items-center justify-center gap-2 bg-red-50 dark:bg-red-900/10 text-red-500 dark:text-red-400 py-2.5 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors font-bold text-xs uppercase tracking-wider"

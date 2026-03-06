@@ -244,35 +244,35 @@ const SystemAdmin: React.FC = () => {
     const [selectedUserForACL, setSelectedUserForACL] = useState<string | null>(null);
     const [aclPermissions, setAclPermissions] = useState<string[]>([]);
     const [isSavingACL, setIsSavingACL] = useState(false);
+    const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-    const PERMISSION_ACTIONS = {
-        VIEW: 'view',
-        CREATE: 'create',
-        EDIT: 'edit',
-        DELETE: 'delete'
-    };
-
-    const PERMISSION_MODULES_LABELS: Record<string, string> = {
-        dashboard: 'Dashboard',
-        repertory: 'Repertório',
-        liturgy: 'Liturgia',
-        scales: 'Escalas',
-        users: 'Usuários',
-        attendance: 'Frequência',
-        rehearsals: 'Ensaios',
-        playlists: 'Playlists',
-        polls: 'Votações',
-        justifications: 'Justificativas',
-        creative: 'Estúdio Criativo',
-        monitoring: 'Monitoramento',
-        system: 'Sistema'
-    };
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
 
     const PERMISSION_ACTIONS_LABELS: Record<string, string> = {
         view: 'Visualizar',
         create: 'Criar',
         edit: 'Editar',
         delete: 'Excluir'
+    };
+
+    const MODULE_CONFIG: Record<string, { label: string, actions: string[] }> = {
+        dashboard: { label: 'Dashboard', actions: ['view'] },
+        repertory: { label: 'Repertório', actions: ['view', 'create', 'edit', 'delete'] },
+        liturgy: { label: 'Liturgia', actions: ['view'] },
+        scales: { label: 'Salmistas', actions: ['view', 'create', 'edit'] },
+        users: { label: 'Equipe', actions: ['view', 'create', 'edit', 'delete'] },
+        attendance: { label: 'Presença', actions: ['view', 'create', 'edit'] },
+        rehearsals: { label: 'Agenda', actions: ['view', 'create', 'edit', 'delete'] },
+        playlists: { label: 'Playlists', actions: ['view', 'create', 'edit', 'delete'] },
+        polls: { label: 'Enquetes', actions: ['view', 'create', 'edit', 'delete'] },
+        justifications: { label: 'Justificativas', actions: ['view', 'create', 'edit'] },
+        monitoring: { label: 'Comando', actions: ['view'] },
+        system: { label: 'Engine Room', actions: ['view', 'edit', 'delete'] }
     };
 
     const handleSelectUserACL = (userId: string) => {
@@ -313,10 +313,10 @@ const SystemAdmin: React.FC = () => {
             const user = usersList.find(u => u.username === selectedUserForACL);
             if (user) {
                 await updateUser({ ...user, customPermissions: aclPermissions });
-                alert("Permissões atualizadas com sucesso!");
+                setNotification({ message: "Permissões atualizadas com sucesso!", type: 'success' });
             }
         } catch (e) {
-            alert("Erro ao salvar permissões.");
+            setNotification({ message: "Erro ao salvar permissões.", type: 'error' });
         } finally {
             setIsSavingACL(false);
         }
@@ -331,10 +331,10 @@ const SystemAdmin: React.FC = () => {
                 if (user) {
                     await updateUser({ ...user, customPermissions: [] }); // Empty array or undefined to reset
                     setAclPermissions([]);
-                    alert("Permissões resetadas para o padrão do cargo.");
+                    setNotification({ message: "Permissões resetadas para o padrão do cargo.", type: 'success' });
                 }
             } catch (e) {
-                alert("Erro ao resetar permissões.");
+                setNotification({ message: "Erro ao resetar permissões.", type: 'error' });
             } finally {
                 setIsSavingACL(false);
             }
@@ -645,13 +645,13 @@ const SystemAdmin: React.FC = () => {
             <AnimatePresence mode="wait">
                 {activeTab === 'acl' && (
                     <motion.div key="acl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                             {/* User List */}
-                            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 border border-slate-100 dark:border-white/5 shadow-xl h-96 lg:h-[80vh] flex flex-col">
+                            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col">
                                 <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] mb-4 flex items-center gap-2">
                                     <i className="fas fa-users text-brand-500"></i> Selecione um Usuário
                                 </h3>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                <div className="space-y-2 pr-2">
                                     {usersList.map(user => (
                                         <button
                                             key={user.username}
@@ -662,10 +662,14 @@ const SystemAdmin: React.FC = () => {
                                                 : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-slate-100 dark:hover:bg-white/10'
                                             }`}
                                         >
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ${
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden ${
                                                 user.role === 'super-admin' ? 'bg-purple-500' : user.role === 'admin' ? 'bg-blue-500' : 'bg-slate-400'
                                             }`}>
-                                                {user.name.charAt(0)}
+                                                {user.photoURL ? (
+                                                    <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    user.name.charAt(0)
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-bold truncate ${selectedUserForACL === user.username ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-200'}`}>
@@ -673,9 +677,6 @@ const SystemAdmin: React.FC = () => {
                                                 </p>
                                                 <p className="text-[10px] text-slate-400 uppercase tracking-wider">{user.role}</p>
                                             </div>
-                                            {user.customPermissions && user.customPermissions.length > 0 && (
-                                                <i className="fas fa-asterisk text-[8px] text-orange-500" title="Permissões Personalizadas"></i>
-                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -713,46 +714,44 @@ const SystemAdmin: React.FC = () => {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20 max-h-[60vh] lg:max-h-none">
-                                            {Object.entries(PERMISSION_MODULES).map(([modKey, modValue]) => (
+                                            {Object.entries(PERMISSION_MODULES).map(([modKey, modValue]) => {
+                                                const config = MODULE_CONFIG[modValue];
+                                                if (!config) return null;
+
+                                                return (
                                                 <div key={modKey} className="bg-slate-50 dark:bg-black/20 rounded-2xl p-5 border border-slate-100 dark:border-white/5">
                                                     <div className="flex items-center gap-3 mb-4">
                                                         <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-400 shadow-sm">
                                                             <i className={`fas ${
                                                                 modValue === 'dashboard' ? 'fa-chart-pie' :
                                                                 modValue === 'repertory' ? 'fa-music' :
-                                                                modValue === 'liturgy' ? 'fa-book-bible' :
+                                                                modValue === 'liturgy' ? 'fa-calendar-check' :
                                                                 modValue === 'scales' ? 'fa-calendar-alt' :
-                                                                modValue === 'users' ? 'fa-users' :
-                                                                modValue === 'attendance' ? 'fa-clipboard-check' :
-                                                                modValue === 'rehearsals' ? 'fa-microphone-lines' :
-                                                                modValue === 'playlists' ? 'fa-circle-play' :
-                                                                modValue === 'polls' ? 'fa-square-poll-vertical' :
-                                                                modValue === 'justifications' ? 'fa-file-signature' :
-                                                                modValue === 'creative' ? 'fa-palette' :
-                                                                modValue === 'monitoring' ? 'fa-desktop' :
+                                                                modValue === 'users' ? 'fa-users-cog' :
+                                                                modValue === 'attendance' ? 'fa-clipboard-user' :
+                                                                modValue === 'rehearsals' ? 'fa-calendar-day' :
+                                                                modValue === 'playlists' ? 'fab fa-spotify' :
+                                                                modValue === 'polls' ? 'fa-poll' :
+                                                                modValue === 'justifications' ? 'fa-envelope-open-text' :
+                                                                modValue === 'monitoring' ? 'fa-terminal' :
+                                                                modValue === 'system' ? 'fa-microchip' :
                                                                 'fa-cogs'
                                                             }`}></i>
                                                         </div>
                                                         <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-xs tracking-widest">
-                                                            {PERMISSION_MODULES_LABELS[modValue] || modKey}
+                                                            {config.label}
                                                         </h4>
                                                     </div>
                                                     
                                                     <div className="space-y-2">
-                                                        {Object.entries(PERMISSION_ACTIONS).map(([actKey, actValue]) => {
-                                                            const permString = `${modValue}:${actValue}`;
+                                                        {config.actions.map((action) => {
+                                                            const permString = `${modValue}:${action}`;
                                                             const isGlobalWildcard = aclPermissions.includes('*');
                                                             const isModuleWildcard = aclPermissions.includes(`${modValue}:*`);
                                                             const isChecked = isGlobalWildcard || isModuleWildcard || aclPermissions.includes(permString);
                                                             
-                                                            // Disable if covered by a wildcard (either global or module-level)
-                                                            // Actually, if global wildcard is set, everything should be checked and disabled?
-                                                            // Or just checked. Let's make it checked.
-                                                            // If we uncheck a box while global wildcard is on, we should probably remove global wildcard and add all others? That's complex.
-                                                            // For now, just display state.
-                                                            
                                                             return (
-                                                                <label key={actKey} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-white/5 cursor-pointer transition-colors group select-none">
+                                                                <label key={action} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-white/5 cursor-pointer transition-colors group select-none">
                                                                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${
                                                                         isChecked 
                                                                         ? 'bg-brand-500 border-brand-500 text-white' 
@@ -764,18 +763,23 @@ const SystemAdmin: React.FC = () => {
                                                                         type="checkbox" 
                                                                         className="hidden"
                                                                         checked={isChecked}
-                                                                        onChange={() => togglePermission(modValue, actValue)}
-                                                                        disabled={(isGlobalWildcard || isModuleWildcard) && actValue !== '*'} 
+                                                                        onChange={() => togglePermission(modValue, action)}
+                                                                        disabled={(isGlobalWildcard || isModuleWildcard)} 
                                                                     />
                                                                     <span className={`text-xs font-medium ${isChecked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
-                                                                        {PERMISSION_ACTIONS_LABELS[actValue] || actKey}
+                                                                        {PERMISSION_ACTIONS_LABELS[action] || action}
+                                                                        {modValue === 'users' && (action === 'delete' || action === 'edit') && (
+                                                                            <span className="block text-[9px] text-brand-500 font-bold uppercase tracking-wider mt-0.5">
+                                                                                *Exceto outros Admins
+                                                                            </span>
+                                                                        )}
                                                                     </span>
                                                                 </label>
                                                             );
                                                         })}
                                                     </div>
                                                 </div>
-                                            ))}
+                                            )})}
                                         </div>
                                     </>
                                 ) : (
@@ -1208,6 +1212,28 @@ const SystemAdmin: React.FC = () => {
                     description={purgeModal.desc} 
                     isProcessing={isCleaning} 
                 />
+            )}
+
+            {notification && createPortal(
+                <div className="fixed bottom-6 right-6 z-[10000] animate-fade-in-up">
+                    <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border ${
+                        notification.type === 'success' 
+                        ? 'bg-green-500 text-white border-green-400' 
+                        : 'bg-red-500 text-white border-red-400'
+                    }`}>
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg">
+                            <i className={`fas ${notification.type === 'success' ? 'fa-check' : 'fa-exclamation-triangle'}`}></i>
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm uppercase tracking-wider">{notification.type === 'success' ? 'Sucesso' : 'Erro'}</p>
+                            <p className="text-xs font-medium opacity-90">{notification.message}</p>
+                        </div>
+                        <button onClick={() => setNotification(null)} className="ml-4 opacity-60 hover:opacity-100 transition-opacity">
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

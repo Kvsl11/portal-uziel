@@ -198,58 +198,58 @@ const DayDetailsModal = ({ day, onClose, onCacheChange }: { day: LiturgicalDay, 
     const formattedDate = day.date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-0 md:p-4 animate-fade-in">
-            <div className="w-full h-full md:h-[90vh] md:max-w-4xl bg-white dark:bg-[#0b1221] md:rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden">
+        <div className="fixed inset-0 z-[9999] bg-white dark:bg-[#0b1221] animate-fade-in flex flex-col">
+            <div className="w-full h-full flex flex-col relative overflow-hidden">
                 
                 <button onClick={onClose} className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center backdrop-blur-md transition-colors border border-white/20">
                     <i className="fas fa-times text-xl"></i>
                 </button>
 
-                <div className="h-64 relative shrink-0">
+                <div className="relative shrink-0 h-auto min-h-[180px] md:min-h-[240px] flex flex-col justify-end">
                     {bgImage ? (
                         <img src={bgImage} className="absolute inset-0 w-full h-full object-cover animate-breathing" alt="Liturgia" />
                     ) : (
                         <PremiumBackground variant="holy" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0b1221] via-[#0b1221]/60 to-transparent"></div>
-                    <div className="absolute bottom-8 left-8 right-8 text-white">
-                        <div className="flex flex-wrap items-center gap-3 mb-4">
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest bg-white/10 backdrop-blur-md border border-white/20 shadow-lg`}>
+                    <div className="relative z-10 p-6 md:p-8 text-white">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/10 backdrop-blur-md border border-white/20 shadow-lg`}>
                                 {day.season === 'Ordinary' ? 'Tempo Comum' : day.season === 'Lent' ? 'Quaresma' : day.season === 'Advent' ? 'Advento' : day.season === 'Easter' ? 'Páscoa' : 'Natal'}
                             </span>
-                            {day.isSolemnity && <span className="px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-500/30 flex items-center gap-2"><i className="fas fa-star"></i> Solenidade</span>}
+                            {day.isSolemnity && <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-500/30 flex items-center gap-2"><i className="fas fa-star"></i> Solenidade</span>}
                             
                             {!loading && content && (
                                 isSaved ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest bg-green-500/80 text-white shadow-lg backdrop-blur-md flex items-center gap-2 border border-green-400/30 animate-scale-in">
-                                            <i className="fas fa-cloud-download-alt"></i> Salvo (48h)
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-green-500/80 text-white shadow-lg backdrop-blur-md flex items-center gap-2 border border-green-400/30 animate-scale-in">
+                                            <i className="fas fa-cloud-download-alt"></i> Salvo
                                         </span>
                                         <button 
                                             onClick={handleDelete}
                                             disabled={saving}
-                                            className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center backdrop-blur-md border border-red-500/30 disabled:opacity-50"
+                                            className="w-7 h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center backdrop-blur-md border border-red-500/30 disabled:opacity-50"
                                             title="Excluir Cache"
                                         >
-                                            {saving ? <i className="fas fa-circle-notch fa-spin text-xs"></i> : <i className="fas fa-trash text-xs"></i>}
+                                            {saving ? <i className="fas fa-circle-notch fa-spin text-[10px]"></i> : <i className="fas fa-trash text-[10px]"></i>}
                                         </button>
                                     </div>
                                 ) : (
                                     <button 
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest bg-white/20 hover:bg-white/30 text-white shadow-lg backdrop-blur-md flex items-center gap-2 border border-white/30 animate-scale-in transition-colors disabled:opacity-50"
+                                        className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/20 hover:bg-white/30 text-white shadow-lg backdrop-blur-md flex items-center gap-2 border border-white/30 animate-scale-in transition-colors disabled:opacity-50"
                                     >
                                         {saving ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>}
-                                        Salvar Offline
+                                        Salvar
                                     </button>
                                 )
                             )}
                         </div>
-                        <h2 className="text-3xl md:text-5xl font-display font-bold leading-tight drop-shadow-lg mb-2 line-clamp-2 text-white">
+                        <h2 className="text-2xl md:text-4xl font-display font-bold leading-tight drop-shadow-lg mb-1 text-white">
                             {content?.title || day.title || 'Féria'}
                         </h2>
-                        <p className="text-sm md:text-lg font-medium opacity-90 capitalize flex items-center gap-2 text-brand-300">
+                        <p className="text-xs md:text-sm font-medium opacity-90 capitalize flex items-center gap-2 text-brand-300">
                             <i className="fas fa-calendar-day"></i> {formattedDate}
                         </p>
                     </div>
@@ -292,7 +292,8 @@ const DayDetailsModal = ({ day, onClose, onCacheChange }: { day: LiturgicalDay, 
                                         [&>p:first-child]:text-brand-600 dark:[&>p:first-child]:text-brand-400 [&>p:first-child]:font-bold
                                         [&>p>strong]:block [&>p>strong]:w-full [&>p>strong]:text-center [&>p>strong]:bg-brand-50 dark:[&>p>strong]:bg-brand-900/20 [&>p>strong]:p-4 [&>p>strong]:rounded-xl [&>p>strong]:my-6 [&>p>strong]:border [&>p>strong]:border-brand-100 dark:[&>p>strong]:border-brand-500/20 [&>p>strong]:text-brand-700 dark:[&>p>strong]:text-brand-300
                                         [&>sup]:text-brand-500 [&>sup]:font-bold [&>sup]:mr-1
-                                        [&>p]:mb-6"
+                                        [&>p]:mb-6
+                                        [&_span]:!text-brand-600 dark:[&_span]:!text-brand-400 [&_font]:!text-brand-600 dark:[&_font]:!text-brand-400"
                                         dangerouslySetInnerHTML={{ __html: content[activeTab] }}
                                     />
                                     

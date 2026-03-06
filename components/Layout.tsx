@@ -76,7 +76,7 @@ const BottomNavItem = ({ to, icon, label, badgeCount = 0 }: any) => (
 );
 
 const Layout: React.FC = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, checkPermission } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(false); 
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); 
   const [verse, setVerse] = useState(HOURLY_VERSES[0]);
@@ -172,26 +172,53 @@ const Layout: React.FC = () => {
 
             <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-2 pb-6">
               <SidebarItem to="/" icon="fa-home" label="Início" />
-              <SidebarItem to="/dashboard" icon="fa-chart-pie" label="Dashboard" />
+              
+              {checkPermission('dashboard', 'view') && (
+                <SidebarItem to="/dashboard" icon="fa-chart-pie" label="Dashboard" />
+              )}
               
               <SidebarSection title="Liturgia & Louvor" />
-              <SidebarItem to="/repertory" icon="fa-music" label="Repertório" />
-              <SidebarItem to="/calendar" icon="fa-calendar-check" label="Liturgia" />
-              <SidebarItem to="/rehearsals" icon="fa-calendar-day" label="Agenda" />
-              <SidebarItem to="/rota" icon="fa-calendar-alt" label="Salmistas" />
-              <SidebarItem to="/playlists" icon="fab fa-spotify" label="Playlists" />
+              
+              {checkPermission('repertory', 'view') && (
+                <SidebarItem to="/repertory" icon="fa-music" label="Repertório" />
+              )}
+              {checkPermission('liturgy', 'view') && (
+                <SidebarItem to="/calendar" icon="fa-calendar-check" label="Liturgia" />
+              )}
+              {checkPermission('rehearsals', 'view') && (
+                <SidebarItem to="/rehearsals" icon="fa-calendar-day" label="Agenda" />
+              )}
+              {checkPermission('scales', 'view') && (
+                <SidebarItem to="/rota" icon="fa-calendar-alt" label="Salmistas" />
+              )}
+              {checkPermission('playlists', 'view') && (
+                <SidebarItem to="/playlists" icon="fab fa-spotify" label="Playlists" />
+              )}
 
               <SidebarSection title="Gestão" />
-              <SidebarItem to="/justifications" icon="fa-envelope-open-text" label="Justificativas" badgeCount={pendingAbsences.length} />
-              <SidebarItem to="/polls" icon="fa-poll" label="Enquetes" />
-              {isAdmin && <SidebarItem to="/attendance" icon="fa-clipboard-user" label="Presença" />}
-              {isAdmin && <SidebarItem to="/users" icon="fa-users-cog" label="Equipe" />}
+              
+              {checkPermission('justifications', 'view') && (
+                <SidebarItem to="/justifications" icon="fa-envelope-open-text" label="Justificativas" badgeCount={pendingAbsences.length} />
+              )}
+              {checkPermission('polls', 'view') && (
+                <SidebarItem to="/polls" icon="fa-poll" label="Enquetes" />
+              )}
+              {isAdmin && checkPermission('attendance', 'view') && (
+                <SidebarItem to="/attendance" icon="fa-clipboard-user" label="Presença" />
+              )}
+              {isAdmin && checkPermission('users', 'view') && (
+                <SidebarItem to="/users" icon="fa-users-cog" label="Equipe" />
+              )}
 
               {isSuperAdmin && (
                 <>
                   <SidebarSection title="Desenvolvedor" />
-                  <SidebarItem to="/monitoring" icon="fa-terminal" label="Comando" isDev />
-                  <SidebarItem to="/system" icon="fa-microchip" label="Engine Room" isDev />
+                  {checkPermission('monitoring', 'view') && (
+                    <SidebarItem to="/monitoring" icon="fa-terminal" label="Comando" isDev />
+                  )}
+                  {checkPermission('system', 'view') && (
+                    <SidebarItem to="/system" icon="fa-microchip" label="Engine Room" isDev />
+                  )}
                 </>
               )}
             </nav>
@@ -249,26 +276,52 @@ const Layout: React.FC = () => {
 
       <div className={`xl:hidden fixed bottom-0 left-0 w-full glass-panel rounded-t-[1.5rem] rounded-b-none px-2 py-1 pb-5 z-[100] flex justify-between items-center shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 ${isSidebarOpen ? 'translate-y-[150%] opacity-0' : 'translate-y-0 opacity-100'}`}>
           <BottomNavItem to="/" icon="fa-home" label="Home" />
-          <BottomNavItem to="/justifications" icon="fa-envelope-open-text" label="Justificar" badgeCount={pendingAbsences.length} />
+          
+          {checkPermission('justifications', 'view') && (
+            <BottomNavItem to="/justifications" icon="fa-envelope-open-text" label="Justificar" badgeCount={pendingAbsences.length} />
+          )}
           
           <div className="relative -top-5 mx-1">
-            <NavLink 
-                to={isAdmin ? "/attendance" : "/dashboard"} 
-                className={({ isActive }) => `
-                    w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
-                    transition-all duration-500 transform active:scale-90
-                    border-[4px] border-white dark:border-[#020617]
-                    ${isActive 
-                        ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
-                        : ''
-                    }
-                `}
-            >
-               <i className={`fas ${isAdmin ? 'fa-clipboard-user' : 'fa-chart-pie'} text-xl`}></i>
-            </NavLink>
+            {isAdmin ? (
+                checkPermission('attendance', 'view') && (
+                    <NavLink 
+                        to="/attendance" 
+                        className={({ isActive }) => `
+                            w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
+                            transition-all duration-500 transform active:scale-90
+                            border-[4px] border-white dark:border-[#020617]
+                            ${isActive 
+                                ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
+                                : ''
+                            }
+                        `}
+                    >
+                       <i className="fas fa-clipboard-user text-xl"></i>
+                    </NavLink>
+                )
+            ) : (
+                checkPermission('dashboard', 'view') && (
+                    <NavLink 
+                        to="/dashboard" 
+                        className={({ isActive }) => `
+                            w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
+                            transition-all duration-500 transform active:scale-90
+                            border-[4px] border-white dark:border-[#020617]
+                            ${isActive 
+                                ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
+                                : ''
+                            }
+                        `}
+                    >
+                       <i className="fas fa-chart-pie text-xl"></i>
+                    </NavLink>
+                )
+            )}
           </div>
 
-          <BottomNavItem to="/rota" icon="fa-calendar-alt" label="Escala" />
+          {checkPermission('scales', 'view') && (
+            <BottomNavItem to="/rota" icon="fa-calendar-alt" label="Escala" />
+          )}
           
           <button 
             onClick={() => setSidebarOpen(true)} 

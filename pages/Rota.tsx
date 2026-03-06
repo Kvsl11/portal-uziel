@@ -64,20 +64,21 @@ const PsalmModal = ({ date, liturgy, loading, onClose }: { date: Date, liturgy: 
     const titleRegex = new RegExp(`^<[^>]*>${liturgy.title.split('(')[0]}[^<]*</[^>]*>`, 'i');
     cleanContent = cleanContent.replace(titleRegex, '');
     return (
-        <div className="space-y-8 animate-fade-in-up">
-            <div className="text-center border-b border-slate-100 dark:border-white/5 pb-6">
-                <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm border border-brand-100 dark:border-brand-500/20">
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center border-b border-slate-100 dark:border-white/5 pb-4">
+                <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xl mx-auto mb-3 shadow-sm border border-brand-100 dark:border-brand-500/20">
                     <i className="fas fa-book-bible"></i>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-slate-800 dark:text-white leading-tight mb-2 px-4">{liturgy.title.replace(/–|-/g, ' — ')}</h3>
-                <p className="text-xs md:text-sm font-bold text-brand-500 dark:text-brand-400 uppercase tracking-widest">Liturgia da Palavra</p>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-slate-800 dark:text-white leading-tight mb-1 px-4">{liturgy.title.replace(/–|-/g, ' — ')}</h3>
+                <p className="text-[10px] md:text-xs font-bold text-brand-500 dark:text-brand-400 uppercase tracking-widest">Liturgia da Palavra</p>
             </div>
-            <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-slate-100 dark:border-white/5">
+            <div className="bg-white dark:bg-slate-800/50 rounded-[2rem] p-4 md:p-8 shadow-sm border border-slate-100 dark:border-white/5">
                 <div 
-                    className="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 font-serif text-lg md:text-xl leading-loose
+                    className="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 font-serif text-base md:text-lg leading-relaxed
                     [&>strong]:block [&>strong]:w-full [&>strong]:text-center [&>strong]:text-brand-600 dark:[&>strong]:text-brand-400 [&>strong]:font-sans [&>strong]:font-black [&>strong]:text-base md:[&>strong]:text-lg [&>strong]:uppercase [&>strong]:tracking-wider [&>strong]:my-8 [&>strong]:py-6 [&>strong]:px-4 [&>strong]:bg-brand-50 dark:[&>strong]:bg-brand-900/20 [&>strong]:rounded-2xl [&>strong]:border [&>strong]:border-brand-100 dark:[&>strong]:border-brand-500/30 [&>strong]:shadow-sm
                     [&>h3]:text-brand-600 dark:[&>h3]:text-brand-400 [&>h3]:font-black [&>h3]:text-xl
-                    [&>p]:mb-8 [&>p]:pl-4 [&>p]:border-l-4 [&>p]:border-slate-200 dark:[&>p]:border-slate-700"
+                    [&>p]:mb-8 [&>p]:pl-4 [&>p]:border-l-4 [&>p]:border-slate-200 dark:[&>p]:border-slate-700
+                    [&_span]:!text-brand-600 dark:[&_span]:!text-brand-400 [&_font]:!text-brand-600 dark:[&_font]:!text-brand-400"
                     dangerouslySetInnerHTML={{ __html: cleanContent }} 
                 />
                 <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 text-center">
@@ -90,11 +91,11 @@ const PsalmModal = ({ date, liturgy, loading, onClose }: { date: Date, liturgy: 
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-lg flex items-center justify-center p-0 md:p-4 animate-fade-in">
-        <div className="w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl bg-white dark:bg-[#0b1221] md:rounded-[3rem] shadow-2xl border-none md:border border-white/20 dark:border-slate-700 animate-scale-in relative overflow-hidden flex flex-col">
-            <div className="p-6 md:p-8 flex justify-between items-center bg-white/80 dark:bg-[#0b1221]/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100 dark:border-white/5">
+    <div className="fixed inset-0 z-[9999] bg-white dark:bg-[#0b1221] animate-fade-in flex flex-col">
+        <div className="w-full h-full flex flex-col relative overflow-hidden">
+            <div className="p-3 md:p-4 flex justify-between items-center bg-white/80 dark:bg-[#0b1221]/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100 dark:border-white/5">
                  <div className="flex items-center gap-2">
-                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest border border-slate-200 dark:border-white/10">
+                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest border border-slate-200 dark:border-white/10">
                         <i className="fas fa-calendar-day text-brand-500"></i>
                         {date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
                      </div>
@@ -102,10 +103,10 @@ const PsalmModal = ({ date, liturgy, loading, onClose }: { date: Date, liturgy: 
                         isSaved ? (
                             <div className="flex items-center gap-2">
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/80 text-white text-[10px] font-bold uppercase tracking-widest border border-green-400/30 animate-scale-in shadow-md">
-                                    <i className="fas fa-cloud-download-alt"></i> Salvo (48h)
+                                    <i className="fas fa-cloud-download-alt"></i> Salvo
                                 </div>
-                                <button onClick={handleDelete} disabled={saving} className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center backdrop-blur-md border border-red-500/30 disabled:opacity-50">
-                                    {saving ? <i className="fas fa-circle-notch fa-spin text-xs"></i> : <i className="fas fa-trash text-xs"></i>}
+                                <button onClick={handleDelete} disabled={saving} className="w-7 h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center backdrop-blur-md border border-red-500/30 disabled:opacity-50">
+                                    {saving ? <i className="fas fa-circle-notch fa-spin text-[10px]"></i> : <i className="fas fa-trash text-[10px]"></i>}
                                 </button>
                             </div>
                         ) : (
@@ -117,12 +118,12 @@ const PsalmModal = ({ date, liturgy, loading, onClose }: { date: Date, liturgy: 
                  </div>
                 <div className="flex gap-2">
                     {liturgy && !loading && (
-                        <button onClick={handleCopy} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border ${copied ? 'bg-green-500 text-white border-green-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-brand-600 hover:bg-white border-slate-100 dark:border-slate-700'}`}><i className={copied ? "fas fa-check" : "fas fa-copy"}></i></button>
+                        <button onClick={handleCopy} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border ${copied ? 'bg-green-500 text-white border-green-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-brand-600 hover:bg-white border-slate-100 dark:border-slate-700'}`}><i className={copied ? "fas fa-check text-xs" : "fas fa-copy text-xs"}></i></button>
                     )}
-                    <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-all border border-slate-100 dark:border-slate-700"><i className="fas fa-times"></i></button>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-all border border-slate-100 dark:border-slate-700"><i className="fas fa-times text-xs"></i></button>
                 </div>
             </div>
-            <div className="p-6 md:p-10 overflow-y-auto custom-scrollbar flex-1 relative bg-slate-50/30 dark:bg-black/20">
+            <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 relative bg-slate-50/30 dark:bg-black/20">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-full py-12 space-y-6">
                         <div className="relative"><div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-800 rounded-full"></div><div className="absolute inset-0 border-4 border-t-brand-500 border-r-transparent border-b-brand-300 border-l-transparent rounded-full animate-spin"></div><i className="fas fa-book-open absolute inset-0 flex items-center justify-center text-slate-300 text-xl animate-pulse"></i></div>
@@ -140,7 +141,7 @@ const PsalmModal = ({ date, liturgy, loading, onClose }: { date: Date, liturgy: 
 
 
 const Rota: React.FC = () => {
-  const { usersList, currentUser } = useAuth();
+  const { usersList, currentUser, checkPermission } = useAuth();
   const [schedule, setSchedule] = useState<{date: string, salmista: string, substituto: string, fullDate: Date}[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<string>('all');
@@ -151,6 +152,9 @@ const Rota: React.FC = () => {
 
   const [swapModal, setSwapModal] = useState<{isOpen: boolean, sourceDate: Date | null}>({isOpen: false, sourceDate: null});
   const [targetSwapDate, setTargetSwapDate] = useState<string>('');
+
+  const canEdit = checkPermission('scales', 'edit');
+  const canCreate = checkPermission('scales', 'create');
 
   const handleSwapClick = (date: Date) => {
       setSwapModal({ isOpen: true, sourceDate: date });
@@ -368,7 +372,7 @@ const Rota: React.FC = () => {
               <h1 className="text-4xl md:text-6xl font-display font-bold text-slate-900 dark:text-white leading-[0.9] tracking-tight">Escala de <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-sky-500">Salmistas</span></h1>
               <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium max-w-md">Planejamento anual dos ministros do salmo e suas substituições.</p>
             </div>
-            {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin') && (
+            {(canCreate) && (
                 <button onClick={() => generateSchedule(true)} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-2xl font-bold hover:bg-brand-600 transition-all shadow-lg hover:scale-105 flex items-center gap-2 text-xs uppercase tracking-widest"><i className="fas fa-magic"></i><span>Gerar Nova Escala</span></button>
             )}
         </div>
@@ -413,7 +417,7 @@ const Rota: React.FC = () => {
                             <button onClick={() => handleShowPsalm(nextSchedule.fullDate)} className="px-8 py-4 rounded-full bg-brand-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-brand-400 transition-all shadow-[0_0_20px_rgba(41,170,226,0.4)] flex items-center gap-2 hover:scale-105 transform duration-300">
                                 <i className="fas fa-book-open"></i> Ver Salmo do Dia
                             </button>
-                            {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin') && (
+                            {(canEdit) && (
                                 <button onClick={() => handleSwapClick(nextSchedule.fullDate)} className="px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-all shadow-lg flex items-center gap-2 hover:scale-105 transform duration-300">
                                     <i className="fas fa-exchange-alt"></i> Trocar
                                 </button>
@@ -472,7 +476,7 @@ const Rota: React.FC = () => {
                             <button onClick={() => handleShowPsalm(row.fullDate)} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 flex items-center justify-center transition-all" title="Ver Salmo">
                                 <i className="fas fa-book-open"></i>
                             </button>
-                            {(currentUser?.role === 'admin' || currentUser?.role === 'super-admin') && !isPassed && (
+                            {(canEdit) && !isPassed && (
                                 <button onClick={() => handleSwapClick(row.fullDate)} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center transition-all" title="Trocar Salmistas">
                                     <i className="fas fa-exchange-alt"></i>
                                 </button>

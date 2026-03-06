@@ -40,11 +40,14 @@ const SpotifyPlayerOverlay = ({ url, onClose }: { url: string, onClose: () => vo
 };
 
 const Playlists: React.FC = () => {
-  const { currentUser, usersList } = useAuth();
+  const { currentUser, usersList, checkPermission } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [activeMedia, setActiveMedia] = useState<Playlist | null>(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  const canCreate = checkPermission('playlists', 'create');
+  const canDelete = checkPermission('playlists', 'delete');
   
   const getContextKey = () => {
       const hour = new Date().getHours();
@@ -152,7 +155,7 @@ const Playlists: React.FC = () => {
                    <h1 className="text-4xl md:text-6xl font-display font-bold text-white leading-[0.9] mb-4 text-shadow-lg tracking-tight">Spotify <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1DB954] to-emerald-300">Oficial</span></h1>
                    <p className="text-slate-300 font-medium max-w-lg">Acervo de playlists, álbuns e referências musicais do ministério.</p>
                 </div>
-                {isAdmin && <button onClick={() => setShowAddModal(true)} className="bg-white text-slate-900 px-6 py-4 rounded-2xl font-bold hover:bg-[#1DB954] hover:text-white transition-all shadow-lg flex items-center gap-2 uppercase text-xs tracking-wider"><i className="fas fa-plus-circle"></i><span>Adicionar Link</span></button>}
+                {canCreate && <button onClick={() => setShowAddModal(true)} className="bg-white text-slate-900 px-6 py-4 rounded-2xl font-bold hover:bg-[#1DB954] hover:text-white transition-all shadow-lg flex items-center gap-2 uppercase text-xs tracking-wider"><i className="fas fa-plus-circle"></i><span>Adicionar Link</span></button>}
            </div>
       </div>
       <Card noPadding className="flex flex-col md:flex-row gap-4 justify-between items-center p-2"><div className="relative group w-full"><i className="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1DB954] transition-colors"></i><input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar na biblioteca..." className="pl-12 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border-none outline-none focus:ring-2 focus:ring-[#1DB954]/20 w-full transition-all font-medium text-slate-700 dark:text-slate-200 text-center md:text-left" /></div></Card>
@@ -166,7 +169,7 @@ const Playlists: React.FC = () => {
                           {item.image ? <img src={item.image} alt={item.title || 'Cover'} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 animate-breathing" /> : <div className="w-full h-full bg-gradient-to-br from-[#1DB954] to-[#0f172a] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"><i className="fab fa-spotify text-6xl text-white drop-shadow-lg"></i></div>}
                           <div className="absolute top-3 left-3 z-10"><span className="text-[10px] text-white/90 font-bold uppercase tracking-widest bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">{typeLabel}</span></div>
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]"><div className="w-16 h-16 bg-[#1DB954] text-white rounded-full flex items-center justify-center text-2xl shadow-lg border-4 border-white/20 transform scale-50 group-hover:scale-100"><i className="fas fa-play pl-1"></i></div></div>
-                          {isAdmin && <button onClick={(e) => requestDelete(e, item.id)} className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-700"><i className="fas fa-trash text-xs"></i></button>}
+                          {canDelete && <button onClick={(e) => requestDelete(e, item.id)} className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-700"><i className="fas fa-trash text-xs"></i></button>}
                       </div>
                       <div className="px-5 pb-5 flex-1 flex flex-col justify-between">
                          <div className="mb-4"><p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#1DB954] transition-colors">{item.title || `Spotify ${typeLabel}`}</p></div>
