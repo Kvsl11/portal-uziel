@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: AttendanceSettings = {
 };
 
 const Attendance: React.FC = () => {
-  const { currentUser, usersList } = useAuth();
+  const { currentUser, usersList, checkPermission } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'register' | 'history'>('register');
   
@@ -367,7 +367,7 @@ const Attendance: React.FC = () => {
   };
 
   const handleToggleHistoryStatus = async (record: AttendanceRecord) => {
-      if (!isAdmin) return;
+      if (!checkPermission('attendance', 'edit')) return;
       const newStatus = record.status === 'Presente' ? 'Ausente' : 'Presente';
       setIsProcessing(true);
       try {
@@ -576,9 +576,11 @@ const Attendance: React.FC = () => {
                           </div>
                       </div>
 
-                      <button onClick={handleStartSession} className="w-full sm:w-auto px-10 py-5 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:scale-105 hover:bg-brand-500 transition-all flex items-center justify-center gap-3">
-                          <span>Iniciar Chamada</span> <i className="fas fa-arrow-right"></i>
-                      </button>
+                      {checkPermission('attendance', 'create') && (
+                        <button onClick={handleStartSession} className="w-full sm:w-auto px-10 py-5 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:scale-105 hover:bg-brand-500 transition-all flex items-center justify-center gap-3">
+                            <span>Iniciar Chamada</span> <i className="fas fa-arrow-right"></i>
+                        </button>
+                      )}
                   </div>
               </div>
               <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-white/5 min-h-[300px] flex flex-col">
@@ -621,7 +623,9 @@ const Attendance: React.FC = () => {
 
                        <div className="flex gap-2 w-full lg:w-auto justify-end">
                            <button onClick={toggleAutoNotify} className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all ${autoNotify ? 'bg-green-500 text-white shadow-lg' : 'bg-slate-200 dark:bg-white/10 text-slate-400 grayscale'}`} title="Aviso WhatsApp Automático"><i className="fab fa-whatsapp"></i></button>
-                           <button onClick={handleResetSession} className="px-4 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"><i className="fas fa-eraser"></i></button>
+                           {checkPermission('attendance', 'delete') && (
+                             <button onClick={handleResetSession} className="px-4 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"><i className="fas fa-eraser"></i></button>
+                           )}
                        </div>
                    </div>
                    
@@ -706,7 +710,7 @@ const Attendance: React.FC = () => {
                                           </p>
                                       </div>
                                   </div>
-                                  {isAdmin && (
+                                  {checkPermission('attendance', 'create') && (
                                       <div className="flex gap-2">
                                           {hasPendingJustification ? (
                                               <button onClick={() => navigate('/justifications')} className="px-4 py-2 rounded-xl bg-amber-500 text-white font-bold text-[10px] uppercase tracking-wider hover:bg-amber-600 transition-colors shadow-sm"><i className="fas fa-gavel mr-1"></i> Resolver</button>
@@ -735,7 +739,7 @@ const Attendance: React.FC = () => {
                                       </p>
                                   </div>
                               </div>
-                              {isAdmin && (
+                              {checkPermission('attendance', 'create') && (
                                   <div className="flex gap-3 mt-auto">
                                       {hasPendingJustification ? (
                                           <button onClick={() => navigate('/justifications')} className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center justify-center gap-2">
@@ -781,10 +785,14 @@ const Attendance: React.FC = () => {
                           
                           {isExpanded && (
                               <div className="border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 p-6 animate-fade-in-up">
-                                  {isAdmin && (
+                                  {(checkPermission('attendance', 'edit') || checkPermission('attendance', 'delete')) && (
                                       <div className="mb-6 flex justify-end gap-2">
-                                          <button onClick={(e) => openEditEventModal(e, event.date, event.type, event.records)} className="text-xs font-bold text-brand-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-brand-50 dark:bg-brand-900/10 hover:bg-brand-500 rounded-xl transition-all border border-brand-200 dark:border-brand-900/30">Editar Evento</button>
-                                          <button onClick={(e) => requestDeleteEvent(e, event.records)} className="text-xs font-bold text-red-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-red-50 dark:bg-red-900/10 hover:bg-red-500 rounded-xl transition-all border border-red-200 dark:border-red-900/30">Excluir Tudo</button>
+                                          {checkPermission('attendance', 'edit') && (
+                                            <button onClick={(e) => openEditEventModal(e, event.date, event.type, event.records)} className="text-xs font-bold text-brand-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-brand-50 dark:bg-brand-900/10 hover:bg-brand-500 rounded-xl transition-all border border-brand-200 dark:border-brand-900/30">Editar Evento</button>
+                                          )}
+                                          {checkPermission('attendance', 'delete') && (
+                                            <button onClick={(e) => requestDeleteEvent(e, event.records)} className="text-xs font-bold text-red-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-red-50 dark:bg-red-900/10 hover:bg-red-500 rounded-xl transition-all border border-red-200 dark:border-red-900/30">Excluir Tudo</button>
+                                          )}
                                       </div>
                                   )}
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -800,7 +808,7 @@ const Attendance: React.FC = () => {
                                                       {r.points < 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600">{r.points}</span>}
                                                   </div>
                                                   <div className="flex items-center gap-3 shrink-0">
-                                                      {isAdmin ? (
+                                                      {checkPermission('attendance', 'edit') ? (
                                                           <button onClick={() => handleToggleHistoryStatus(r)} className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all border-2 border-transparent ${itemStyle}`}>
                                                               {r.status === 'Presente' ? 'Presente' : hasPendingJustification ? 'Em Análise' : isJustified ? 'Justificado' : 'Falta'} <i className="fas fa-sync-alt ml-1 opacity-50 group-hover/row:opacity-100 transition-opacity"></i>
                                                           </button>
@@ -809,7 +817,7 @@ const Attendance: React.FC = () => {
                                                               {r.status === 'Presente' ? 'Presente' : hasPendingJustification ? 'Em Análise' : isJustified ? 'Justificado' : 'Falta'}
                                                           </span>
                                                       )}
-                                                      {isAdmin && <button onClick={(e) => requestDeleteRecord(e, r.id, r.memberId, r.points)} className="text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center transition-colors"><i className="fas fa-times"></i></button>}
+                                                      {checkPermission('attendance', 'delete') && <button onClick={(e) => requestDeleteRecord(e, r.id, r.memberId, r.points)} className="text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center transition-colors"><i className="fas fa-times"></i></button>}
                                                   </div>
                                               </div>
                                           );
