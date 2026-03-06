@@ -203,7 +203,7 @@ const Users: React.FC = () => {
                                 {user.name}
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mb-3 truncate w-full px-4 opacity-80">
-                                @{user.username}
+                                {user.username}
                             </p>
                             
                             <div className="mb-6">
