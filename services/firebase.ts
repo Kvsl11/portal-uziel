@@ -201,9 +201,10 @@ export const AttendanceService = {
             callback(records);
         });
     },
-    getSettings: async () => {
-        const snap = await getDoc(getDocRef('settings', 'attendance_rules'));
-        return snap.exists() ? snap.data() : { pointsMissa: 5, pointsEnsaio: 4, pointsEvento: 10, pointsJustifiedAbsence: 0, pointsUnjustifiedAbsence: 0 };
+    subscribeSettings: (callback: (settings: any) => void) => {
+        return onSnapshot(getDocRef('settings', 'attendance_rules'), (snap) => {
+            callback(snap.exists() ? snap.data() : { pointsMissa: -5, pointsEnsaio: -4, pointsGeral: -10, pointsCompromisso: -3, pointsGravissima: -15 });
+        });
     },
     saveSettings: async (settings: any) => {
         await setDoc(getDocRef('settings', 'attendance_rules'), settings, { merge: true });

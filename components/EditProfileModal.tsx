@@ -278,22 +278,21 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, us
                  {canEditRole && (
                      <div>
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block ml-1">Nível de Acesso</label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className={`grid gap-2 ${isLoggedInUserSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             {[
                                 { id: 'member', label: 'Membro', icon: 'fa-user' },
                                 { id: 'admin', label: 'Admin', icon: 'fa-shield-alt' },
                                 { id: 'super-admin', label: 'Dev', icon: 'fa-code' }
-                            ].map(opt => (
+                            ].filter(opt => isLoggedInUserSuperAdmin || opt.id !== 'super-admin').map(opt => (
                                 <button 
                                     key={opt.id}
                                     type="button"
                                     onClick={() => setFormData({ ...formData, role: opt.id as any })}
-                                    disabled={!isLoggedInUserSuperAdmin && opt.id === 'super-admin'} // Only SuperAdmin can create SuperAdmins
                                     className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all ${
                                         formData.role === opt.id 
                                         ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 text-brand-600 dark:text-brand-400' 
                                         : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
-                                    } ${(!isLoggedInUserSuperAdmin && opt.id === 'super-admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    }`}
                                 >
                                     <i className={`fas ${opt.icon} text-sm`}></i>
                                     <span className="text-[9px] font-bold uppercase">{opt.label}</span>

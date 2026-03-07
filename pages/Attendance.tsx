@@ -41,6 +41,10 @@ const Attendance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+      setToast(msg);
+      setTimeout(() => setToast(null), 3000);
+  };
   const [isProcessing, setIsProcessing] = useState(false);
   const [autoNotify, setAutoNotify] = useState(() => localStorage.getItem('uziel_auto_notify') === 'true');
 
@@ -62,6 +66,10 @@ const Attendance: React.FC = () => {
       title: string;
       description: string;
       onConfirm: () => Promise<void>;
+      confirmText?: string;
+      processingText?: string;
+      iconClass?: string;
+      colorTheme?: 'red' | 'brand' | 'green';
   }>({ isOpen: false, title: '', description: '', onConfirm: async () => {} });
 
   const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
@@ -74,29 +82,33 @@ const Attendance: React.FC = () => {
     const unsubR = AttendanceService.subscribe((data) => setRecords(data));
     const unsubJ = JustificationService.subscribe((data) => setJustifications(data as Justification[]));
     const unsubE = RehearsalService.subscribe((data) => setScheduledEvents(data as Rehearsal[]));
-    
-    AttendanceService.getSettings().then((data) => {
-        if (data) {
-            const loaded = data as any;
-            setSettings({
-                pointsMissa: loaded.pointsMissa ?? -5,
-                pointsEnsaio: loaded.pointsEnsaio ?? -4,
-                pointsGeral: loaded.pointsGeral ?? -10,
-                pointsCompromisso: loaded.pointsCompromisso ?? -3,
-                pointsGravissima: loaded.pointsGravissima ?? -15
-            });
-        }
+    const unsubS = AttendanceService.subscribeSettings((data: any) => {
+        setSettings({
+            pointsMissa: data.pointsMissa ?? -5,
+            pointsEnsaio: data.pointsEnsaio ?? -4,
+            pointsGeral: data.pointsGeral ?? -10,
+            pointsCompromisso: data.pointsCompromisso ?? -3,
+            pointsGravissima: data.pointsGravissima ?? -15
+        });
         setInitialLoading(false);
     });
-    return () => { unsubM(); unsubR(); unsubJ(); unsubE(); };
+    
+    // Fallback timeout to prevent infinite loading if snapshot takes too long
+    const loadingTimeout = setTimeout(() => {
+        setInitialLoading(false);
+    }, 2000);
+
+    return () => { 
+        unsubM(); unsubR(); unsubJ(); unsubE(); unsubS();
+        clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const toggleAutoNotify = () => {
       const newState = !autoNotify;
       setAutoNotify(newState);
       localStorage.setItem('uziel_auto_notify', String(newState));
-      setToast(newState ? "Notificação Automática ATIVADA" : "Notificação Automática DESATIVADA");
-      setTimeout(() => setToast(null), 2000);
+      showToast(newState ? "Notificação Automática ATIVADA" : "Notificação Automática DESATIVADA");
   };
 
   const calculatePoints = (typeStr: string, currentSettings: AttendanceSettings, specificType?: string) => {
@@ -246,12 +258,11 @@ const Attendance: React.FC = () => {
               await AuditService.log(currentUser.username, 'Attendance', 'UPDATE', 'Atualizou regras de penalidade', currentUser.role, currentUser.name);
           }
           setShowSettingsModal(false);
-          setToast("Regras salvas!");
+          showToast("Regras salvas!");
       } catch (e) {
           alert("Erro ao salvar configurações.");
       } finally {
           setIsProcessing(false);
-          setTimeout(() => setToast(null), 3000);
       }
   };
 
@@ -283,6 +294,17 @@ const Attendance: React.FC = () => {
           return;
       }
 
+      // CHECK FOR TOGGLE (Double click logic)
+      const existingRecord = sessionRecords.find(r => r.memberId === memberId);
+      if (existingRecord && existingRecord.status === status) {
+          // User clicked the same status again -> Remove it (Toggle off)
+          await AttendanceService.delete(existingRecord.id, existingRecord.memberId, existingRecord.points);
+          if (currentUser) {
+              AuditService.log(currentUser.username, 'Attendance', 'DELETE', `Removeu presença de ${memberName} em ${eventType} (${date})`, currentUser.role, currentUser.name);
+          }
+          return;
+      }
+
       let points = 0;
       if (status === 'Presente') {
           points = 0;
@@ -301,7 +323,7 @@ const Attendance: React.FC = () => {
           AuditService.log(currentUser.username, 'Attendance', 'CREATE', `Registrou ${status} para ${memberName} em ${eventType} (${date})`, currentUser.role, currentUser.name);
       }
     } catch (error) {
-      setToast("Erro ao registrar");
+      showToast("Erro ao registrar");
     }
   };
 
@@ -318,6 +340,13 @@ const Attendance: React.FC = () => {
           return;
       }
 
+      // Check for toggle (If already absent, just toggle off via handleAttendance and return)
+      const existingRecord = sessionRecords.find(r => r.memberId === id);
+      if (existingRecord && existingRecord.status === 'Ausente') {
+          handleAttendance(id, name, 'Ausente');
+          return;
+      }
+
       // 2. Auto-handle Accepted
       const acceptedJustification = justifications.find(j => 
           j.userId.toLowerCase() === id.toLowerCase() && 
@@ -328,7 +357,7 @@ const Attendance: React.FC = () => {
       if (acceptedJustification) {
           const autoReason = `Justificado (${acceptedJustification.reason}): ${acceptedJustification.description.substring(0, 30)}...`;
           handleAttendance(id, name, 'Ausente', autoReason, 0);
-          setToast(`Ausência justificada automaticamente.`);
+          showToast(`Ausência justificada automaticamente.`);
           return;
       }
       
@@ -338,6 +367,50 @@ const Attendance: React.FC = () => {
       
       handleAttendance(id, name, 'Ausente', 'Falta lançada (Aguardando justificativa)', pts);
       if (autoNotify) notifyPenalty(id, name, eventType, date, pts);
+  };
+
+  const handleBulkAttendance = async (targetStatus: 'Presente' | 'Ausente') => {
+      setDeleteModal({
+          isOpen: true,
+          title: `Marcar todos como ${targetStatus}?`,
+          description: `Isso aplicará o status de ${targetStatus} para todos os membros listados atualmente.`,
+          confirmText: targetStatus === 'Presente' ? 'Marcar Presentes' : 'Marcar Ausentes',
+          processingText: 'Processando...',
+          iconClass: targetStatus === 'Presente' ? 'fas fa-check-double' : 'fas fa-times-circle',
+          colorTheme: targetStatus === 'Presente' ? 'green' : 'red',
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  const updates = [];
+                  for (const member of processedMembers) {
+                      // Skip if pending justification
+                      const hasPending = justifications.some(j => j.userId === member.id && j.eventDate === date && j.status === 'PENDING');
+                      if (hasPending) continue;
+
+                      // Skip if already has the same status
+                      const existing = sessionRecords.find(r => r.memberId === member.id);
+                      if (existing && existing.status === targetStatus) continue;
+
+                      let points = 0;
+                      if (targetStatus === 'Ausente') {
+                          const eventObj = scheduledEvents.find(e => e.id === selectedEventId);
+                          points = calculatePoints(eventType, settings, eventObj?.type);
+                      }
+
+                      const recordId = `${date}_${eventType}_${member.id}`.replace(/\s+/g, '-');
+                      updates.push(AttendanceService.register(recordId, member.id, member.name, eventType, date, targetStatus, targetStatus === 'Ausente' ? 'Falta em massa' : '', points, selectedEventId));
+                  }
+                  
+                  await Promise.all(updates);
+                  showToast(`Atualizado para ${updates.length} membros!`);
+              } catch (e) {
+                  alert("Erro ao processar em massa.");
+              } finally {
+                  setIsProcessing(false);
+                  setDeleteModal(prev => ({ ...prev, isOpen: false }));
+              }
+          }
+      });
   };
 
   const handleStartSession = () => {
@@ -355,7 +428,7 @@ const Attendance: React.FC = () => {
                 setIsProcessing(true);
                 try {
                     await AttendanceService.deleteBatch(sessionRecords.map(r => ({ id: r.id, memberId: r.memberId, points: r.points })));
-                    setToast("Lista reiniciada!");
+                    showToast("Lista reiniciada!");
                 } catch (e) {
                     alert("Erro ao limpar.");
                 } finally {
@@ -383,12 +456,11 @@ const Attendance: React.FC = () => {
           
           const currentEventId = record.eventId;
           await AttendanceService.register(record.id, record.memberId, record.memberName, record.eventType, record.date, newStatus, newStatus === 'Ausente' ? 'Alterado no histórico' : '', newPoints, currentEventId);
-          setToast(`Status alterado para ${newStatus}`);
+          showToast(`Status alterado para ${newStatus}`);
       } catch (e) {
           alert("Erro ao alterar status.");
       } finally {
           setIsProcessing(false);
-          setTimeout(() => setToast(null), 3000);
       }
   };
 
@@ -411,7 +483,7 @@ const Attendance: React.FC = () => {
               };
           });
           await AttendanceService.updateBatch(updates);
-          setToast("Evento atualizado!");
+          showToast("Evento atualizado!");
           setEditEventModal({ ...editEventModal, isOpen: false });
       } catch (error: any) {
           alert("Erro ao atualizar evento.");
@@ -428,7 +500,7 @@ const Attendance: React.FC = () => {
               setIsProcessing(true);
               try {
                   await AttendanceService.deleteBatch(eventRecords.map(r => ({id: r.id, memberId: r.memberId, points: r.points})));
-                  setToast("Evento excluído!");
+                  showToast("Evento excluído!");
               } catch (err: any) {
                   alert("Erro ao excluir.");
               } finally {
@@ -447,7 +519,7 @@ const Attendance: React.FC = () => {
               setIsProcessing(true);
               try {
                   await AttendanceService.delete(recordId, memberId, points);
-                  setToast("Registro excluído!");
+                  showToast("Registro excluído!");
               } catch (err: any) {
                   alert("Erro ao excluir.");
               } finally {
@@ -507,68 +579,78 @@ const Attendance: React.FC = () => {
 
       {activeTab === 'register' && !isSessionActive && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
-              <div className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-slate-800 text-white p-8 md:p-12 flex flex-col justify-between group border border-white/10 shadow-2xl">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+              <div className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-800 p-8 md:p-12 flex flex-col justify-between group border border-slate-100 dark:border-white/5 shadow-xl">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                   <div className="relative z-10">
-                      <h2 className="text-3xl md:text-4xl font-display font-bold mb-6 flex items-center gap-3"><span className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl"><i className="fas fa-play text-brand-400"></i></span>Painel de Controle</h2>
+                      <h2 className="text-3xl md:text-4xl font-display font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white">
+                          <span className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-white/5 flex items-center justify-center text-2xl shadow-inner border border-brand-100 dark:border-white/10">
+                              <i className="fas fa-play text-brand-500"></i>
+                          </span>
+                          Painel de Controle
+                      </h2>
                       
-                      <div className="space-y-6 max-w-xl mb-10">
+                      <div className="space-y-8 max-w-xl mb-12">
                           {/* Date Selector */}
-                          <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Data do Evento</label>
-                              <input type="text" value={dateInput} onChange={handleDateInputChange} placeholder="DD/MM/AAAA" maxLength={10} className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white font-bold outline-none focus:border-brand-500 transition-colors" />
+                          <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Data do Evento</label>
+                              <div className="relative">
+                                  <input type="text" value={dateInput} onChange={handleDateInputChange} placeholder="DD/MM/AAAA" maxLength={10} className="w-full pl-12 pr-4 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm" />
+                                  <i className="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                              </div>
                           </div>
 
                           {/* Dynamic Event Selector based on Date */}
                           <div>
-                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-3">Selecione o Evento</label>
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Selecione o Evento</label>
                               {eventsForSelectedDate.length > 0 ? (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                                       {eventsForSelectedDate.map(ev => (
                                           <button 
                                             key={ev.id} 
                                             onClick={() => selectScheduledEvent(ev)}
-                                            className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${selectedEventId === ev.id ? 'bg-brand-500 border-brand-500 text-white shadow-lg scale-[1.02]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:border-brand-500/50'}`}
+                                            className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${selectedEventId === ev.id ? 'bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/20 scale-[1.02]' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-brand-300 dark:hover:border-brand-500/50 text-slate-700 dark:text-slate-300 shadow-sm hover:shadow-md'}`}
                                           >
-                                              <div className="flex justify-between items-start mb-2">
-                                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedEventId === ev.id ? 'bg-white/20' : 'bg-black/20'}`}>
-                                                      <i className="fas fa-calendar-check text-sm"></i>
+                                              <div className="flex justify-between items-start mb-3">
+                                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedEventId === ev.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400'}`}>
+                                                      <i className="fas fa-calendar-check text-lg"></i>
                                                   </div>
-                                                  {selectedEventId === ev.id && <div className="bg-white text-brand-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Selecionado</div>}
+                                                  {selectedEventId === ev.id && <div className="bg-white text-brand-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-sm">Selecionado</div>}
                                               </div>
                                               <div>
-                                                  <p className="font-bold text-sm leading-tight mb-1 truncate">{ev.topic || 'Evento Sem Nome'}</p>
-                                                  <div className="flex flex-col gap-0.5">
-                                                      <p className={`text-[10px] font-bold uppercase ${selectedEventId === ev.id ? 'text-brand-100' : 'text-slate-500'}`}>{ev.time} • {ev.location || 'Sede'}</p>
-                                                      {ev.type && <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded w-fit ${selectedEventId === ev.id ? 'bg-white/20 text-white' : 'bg-black/20 text-slate-400'}`}>{ev.type}</span>}
+                                                  <p className="font-bold text-base leading-tight mb-1.5 truncate">{ev.topic || 'Evento Sem Nome'}</p>
+                                                  <div className="flex flex-col gap-1">
+                                                      <p className={`text-[11px] font-bold uppercase ${selectedEventId === ev.id ? 'text-brand-100' : 'text-slate-500 dark:text-slate-400'}`}><i className="far fa-clock mr-1"></i> {ev.time} • <i className="fas fa-map-marker-alt mx-1"></i> {ev.location || 'Sede'}</p>
+                                                      {ev.type && <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-md w-fit mt-1 ${selectedEventId === ev.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400'}`}>{ev.type}</span>}
                                                   </div>
                                               </div>
                                           </button>
                                       ))}
                                   </div>
                               ) : (
-                                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-slate-400 text-sm italic mb-4 flex items-center gap-3">
-                                      <i className="fas fa-info-circle"></i> Nenhum agendamento para hoje. Use a opção manual abaixo.
+                                  <div className="p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 text-slate-500 dark:text-slate-400 text-sm font-medium mb-5 flex items-center gap-3 shadow-sm">
+                                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center shrink-0"><i className="fas fa-info text-slate-500 dark:text-slate-300"></i></div>
+                                      Nenhum agendamento para hoje. Use a opção manual abaixo.
                                   </div>
                               )}
 
                               <button 
                                 onClick={() => { setSelectedEventId(''); setIsManualEventType(!isManualEventType); setEventType('Missa'); }}
-                                className={`text-xs font-bold uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2 ${!selectedEventId || isManualEventType ? 'text-brand-400' : 'text-slate-500'}`}
+                                className={`text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 rounded-lg ${!selectedEventId || isManualEventType ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}
                               >
                                   <i className={`fas ${isManualEventType ? 'fa-check-square' : 'fa-square'}`}></i> Criar Evento Avulso / Manual
                               </button>
 
                               {/* Manual Input Fallback */}
                               {(isManualEventType || eventsForSelectedDate.length === 0) && (
-                                  <div className="animate-fade-in-up mt-4 bg-white/5 p-4 rounded-2xl border border-white/10">
-                                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Tipo do Evento</label>
+                                  <div className="animate-fade-in-up mt-5 bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
+                                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Tipo do Evento</label>
                                       <div className="relative">
-                                          <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full pl-4 pr-10 py-3 bg-black/20 border border-white/10 rounded-xl text-white font-bold outline-none appearance-none cursor-pointer hover:border-brand-500 transition-colors">
+                                          <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full pl-12 pr-10 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none appearance-none cursor-pointer focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm">
                                               <option className="text-slate-900" value="Missa">Santa Missa</option>
                                               <option className="text-slate-900" value="Ensaio">Ensaio Geral</option>
                                               <option className="text-slate-900" value="Evento">Evento Extra</option>
                                           </select>
+                                          <i className="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                                           <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                                       </div>
                                   </div>
@@ -577,8 +659,8 @@ const Attendance: React.FC = () => {
                       </div>
 
                       {checkPermission('attendance', 'create') && (
-                        <button onClick={handleStartSession} className="w-full sm:w-auto px-10 py-5 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:scale-105 hover:bg-brand-500 transition-all flex items-center justify-center gap-3">
-                            <span>Iniciar Chamada</span> <i className="fas fa-arrow-right"></i>
+                        <button onClick={handleStartSession} className="w-full sm:w-auto px-10 py-5 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-brand-500/30 hover:scale-105 hover:bg-brand-500 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+                            <span>Iniciar Chamada</span> <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                         </button>
                       )}
                   </div>
@@ -595,74 +677,92 @@ const Attendance: React.FC = () => {
       )}
       
       {activeTab === 'register' && isSessionActive && (
-          <div className="animate-scale-in space-y-6">
+          <div className="animate-scale-in space-y-4 md:space-y-6">
               {/* STICKY HEADER WITH PROGRESS BAR */}
-              <div className="sticky top-4 z-40 bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-5 rounded-[2.5rem] shadow-2xl flex flex-col gap-5 transition-all">
-                   <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-                       <div className="flex items-center gap-4 w-full lg:w-auto">
-                           <button onClick={() => setIsSessionActive(false)} className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 text-slate-500 flex items-center justify-center shadow-sm hover:bg-slate-200 transition-colors"><i className="fas fa-arrow-left"></i></button>
-                           <div>
-                               <h3 className="font-bold text-xl text-slate-800 dark:text-white leading-none">{eventType}</h3>
-                               <p className="text-xs text-brand-600 font-bold uppercase mt-1">{formatDateBR(date)}</p>
+              <div className="sticky top-2 md:top-4 z-40 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] shadow-xl flex flex-col gap-3 md:gap-5 transition-all">
+                   <div className="flex justify-between items-center gap-2 md:gap-4">
+                       <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                           <button onClick={() => setIsSessionActive(false)} className="w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-slate-100 dark:bg-white/5 text-slate-500 flex items-center justify-center shadow-sm hover:bg-slate-200 transition-colors shrink-0"><i className="fas fa-arrow-left text-sm md:text-base"></i></button>
+                           <div className="min-w-0">
+                               <h3 className="font-bold text-base md:text-xl text-slate-800 dark:text-white leading-none truncate">{eventType}</h3>
+                               <p className="text-[9px] md:text-xs text-brand-600 font-bold uppercase mt-0.5 md:mt-1 truncate">{formatDateBR(date)}</p>
                            </div>
                        </div>
                        
-                       {/* STATS & PROGRESS BAR */}
-                       <div className="flex-1 w-full lg:mx-8">
-                           <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">
-                               <span>Presentes: <span className="text-brand-600 dark:text-brand-400">{stats.present}</span></span>
-                               <span>Ausentes: <span className="text-red-500">{stats.absent}</span></span>
-                           </div>
-                           <div className="h-4 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden flex">
-                               <div className="h-full bg-gradient-to-r from-brand-500 to-purple-600 transition-all duration-500 ease-out relative group" style={{ width: `${progressPercent}%` }}>
-                                   <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                               </div>
-                               <div className="h-full bg-red-500 transition-all duration-500 ease-out relative group" style={{ width: `${absencePercent}%` }}></div>
-                           </div>
-                       </div>
-
-                       <div className="flex gap-2 w-full lg:w-auto justify-end">
-                           <button onClick={toggleAutoNotify} className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all ${autoNotify ? 'bg-green-500 text-white shadow-lg' : 'bg-slate-200 dark:bg-white/10 text-slate-400 grayscale'}`} title="Aviso WhatsApp Automático"><i className="fab fa-whatsapp"></i></button>
+                       <div className="flex gap-1.5 md:gap-2 shrink-0">
+                           <button onClick={toggleAutoNotify} className={`w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-sm md:text-xl transition-all ${autoNotify ? 'bg-green-500 text-white shadow-md' : 'bg-slate-200 dark:bg-white/10 text-slate-400 grayscale'}`} title="Aviso WhatsApp Automático"><i className="fab fa-whatsapp"></i></button>
                            {checkPermission('attendance', 'delete') && (
-                             <button onClick={handleResetSession} className="px-4 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"><i className="fas fa-eraser"></i></button>
+                             <button onClick={handleResetSession} className="w-8 h-8 md:w-auto md:px-4 md:py-2 rounded-xl md:rounded-2xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center"><i className="fas fa-eraser text-sm md:text-base"></i></button>
                            )}
                        </div>
                    </div>
                    
+                   {/* STATS & PROGRESS BAR */}
+                   <div className="w-full">
+                       <div className="flex justify-between text-[9px] md:text-xs font-bold uppercase tracking-wider mb-1.5 md:mb-2 text-slate-500 dark:text-slate-400">
+                           <span>Presentes: <span className="text-brand-600 dark:text-brand-400">{stats.present}</span></span>
+                           <span>Ausentes: <span className="text-red-500">{stats.absent}</span></span>
+                       </div>
+                       <div className="h-2 md:h-4 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden flex">
+                           <div className="h-full bg-gradient-to-r from-brand-500 to-purple-600 transition-all duration-500 ease-out relative group" style={{ width: `${progressPercent}%` }}>
+                               <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                           </div>
+                           <div className="h-full bg-red-500 transition-all duration-500 ease-out relative group" style={{ width: `${absencePercent}%` }}></div>
+                       </div>
+                   </div>
+                   
                    {/* Search Bar & Filters */}
-                   <div className="flex flex-col md:flex-row gap-4">
-                       <div className="relative group flex-1">
-                           <i className="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
-                           <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar membro..." className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-2xl text-sm font-bold text-slate-700 dark:text-white outline-none focus:border-brand-500 transition-all" />
+                   <div className="flex flex-col gap-2 md:gap-4">
+                       <div className="relative group w-full">
+                           <i className="fas fa-search absolute left-3 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 text-xs md:text-base group-focus-within:text-brand-500 transition-colors"></i>
+                           <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar membro..." className="w-full pl-8 md:pl-12 pr-3 md:pr-4 py-2 md:py-3.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold text-slate-700 dark:text-white outline-none focus:border-brand-500 transition-all" />
                        </div>
                        
-                       <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                       <div className="flex flex-wrap md:flex-nowrap gap-1.5 md:gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0 items-center justify-between md:justify-start">
                            {/* Status Filters */}
-                           {[
-                               { id: 'all', label: 'Todos', icon: 'fa-users' },
-                               { id: 'pending', label: 'Pendentes', icon: 'fa-hourglass-half' },
-                               { id: 'present', label: 'Presentes', icon: 'fa-check' },
-                               { id: 'absent', label: 'Ausentes', icon: 'fa-times' }
-                           ].map(f => (
-                               <button 
-                                key={f.id} 
-                                onClick={() => setFilterStatus(f.id as any)}
-                                className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 whitespace-nowrap transition-all border ${filterStatus === f.id ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-transparent hover:bg-white dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/10'}`}
-                               >
-                                   <i className={`fas ${f.icon}`}></i> {f.label}
-                               </button>
-                           ))}
+                           <div className="flex gap-1.5 md:gap-2 shrink-0">
+                               {[
+                                   { id: 'all', label: 'Todos', icon: 'fa-users' },
+                                   { id: 'pending', label: 'Pendentes', icon: 'fa-hourglass-half' },
+                                   { id: 'present', label: 'Presentes', icon: 'fa-check' },
+                                   { id: 'absent', label: 'Ausentes', icon: 'fa-times' }
+                               ].map(f => (
+                                   <button 
+                                    key={f.id} 
+                                    onClick={() => setFilterStatus(f.id as any)}
+                                    className={`w-8 h-8 md:w-auto md:px-4 md:py-3 rounded-lg md:rounded-2xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center md:justify-start gap-2 whitespace-nowrap transition-all border ${filterStatus === f.id ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-transparent hover:bg-white dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/10'}`}
+                                    title={f.label}
+                                   >
+                                       <i className={`fas ${f.icon} text-xs md:text-sm`}></i> <span className="hidden md:inline">{f.label}</span>
+                                   </button>
+                               ))}
+                           </div>
                            
                            {/* Divider */}
-                           <div className="w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
+                           <div className="w-px bg-slate-200 dark:bg-white/10 mx-0.5 md:mx-1 h-6 md:h-8 self-center hidden md:block"></div>
+
+                           {/* Bulk Actions */}
+                           {checkPermission('attendance', 'create') && (
+                               <div className="flex gap-1.5 md:gap-2 shrink-0">
+                                   <button onClick={() => handleBulkAttendance('Presente')} className="px-2 md:px-4 py-1.5 md:py-3 rounded-lg md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 md:gap-2 whitespace-nowrap transition-all bg-green-100 text-green-700 hover:bg-green-200">
+                                       <i className="fas fa-check-double text-[10px] md:text-sm"></i> <span className="hidden sm:inline">Todos Presentes</span><span className="sm:hidden">Presentes</span>
+                                   </button>
+                                   <button onClick={() => handleBulkAttendance('Ausente')} className="px-2 md:px-4 py-1.5 md:py-3 rounded-lg md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 md:gap-2 whitespace-nowrap transition-all bg-red-100 text-red-700 hover:bg-red-200">
+                                       <i className="fas fa-times-circle text-[10px] md:text-sm"></i> <span className="hidden sm:inline">Todos Ausentes</span><span className="sm:hidden">Ausentes</span>
+                                   </button>
+                                   <div className="w-px bg-slate-200 dark:bg-white/10 mx-0.5 md:mx-1 h-6 md:h-8 self-center"></div>
+                               </div>
+                           )}
 
                            {/* View Toggles */}
-                           <button onClick={() => setViewMode('grid')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-brand-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
-                               <i className="fas fa-th-large"></i>
-                           </button>
-                           <button onClick={() => setViewMode('list')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-brand-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
-                               <i className="fas fa-list"></i>
-                           </button>
+                           <div className="flex gap-1.5 md:gap-2 shrink-0 ml-auto md:ml-0">
+                               <button onClick={() => setViewMode('grid')} className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl flex items-center justify-center transition-all ${viewMode === 'grid' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
+                                   <i className="fas fa-th-large text-xs md:text-base"></i>
+                               </button>
+                               <button onClick={() => setViewMode('list')} className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-2xl flex items-center justify-center transition-all ${viewMode === 'list' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
+                                   <i className="fas fa-list text-xs md:text-base"></i>
+                               </button>
+                           </div>
                        </div>
                    </div>
               </div>
@@ -769,17 +869,17 @@ const Attendance: React.FC = () => {
                   const day = event.date.split('-')[2];
 
                   return (
-                      <div key={idx} className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden group">
-                          <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-6 cursor-pointer" onClick={() => { const n = new Set(expandedEvents); if(isExpanded) n.delete(idx); else n.add(idx); setExpandedEvents(n); }}>
-                              <div className="flex items-center gap-5 w-full md:w-auto">
-                                  <div className="w-20 h-20 rounded-[1.5rem] bg-slate-50 dark:bg-slate-700 flex flex-col items-center justify-center border border-slate-200 text-slate-600 shadow-inner group-hover:scale-105 transition-transform"><span className="text-[10px] font-bold uppercase tracking-widest text-brand-500">{month}</span><span className="text-3xl font-display font-bold leading-none text-slate-800 dark:text-white">{day}</span></div>
-                                  <div><h3 className="text-xl font-bold text-slate-800 dark:text-white">{event.type}</h3><p className="text-xs text-slate-400 font-bold uppercase"><i className="fas fa-calendar-day mr-1"></i> {formatDateBR(event.date)}</p></div>
+                      <div key={idx} className="bg-white dark:bg-slate-800 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden group">
+                          <div className="p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 cursor-pointer" onClick={() => { const n = new Set(expandedEvents); if(isExpanded) n.delete(idx); else n.add(idx); setExpandedEvents(n); }}>
+                              <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
+                                  <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-[1.5rem] bg-slate-50 dark:bg-slate-700 flex flex-col items-center justify-center border border-slate-200 text-slate-600 shadow-inner group-hover:scale-105 transition-transform shrink-0"><span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-brand-500">{month}</span><span className="text-xl md:text-3xl font-display font-bold leading-none text-slate-800 dark:text-white">{day}</span></div>
+                                  <div className="min-w-0"><h3 className="text-base md:text-xl font-bold text-slate-800 dark:text-white truncate">{event.type}</h3><p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase truncate"><i className="fas fa-calendar-day mr-1"></i> {formatDateBR(event.date)}</p></div>
                               </div>
-                              <div className="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end">
-                                  <div className="text-center"><span className="block text-2xl font-bold text-green-500">{presentCount}</span><span className="text-[9px] font-bold uppercase text-slate-400">Presentes</span></div>
-                                  <div className="w-px h-10 bg-slate-100 dark:bg-white/10"></div>
-                                  <div className="text-center"><span className="block text-2xl font-bold text-red-400">{event.records.length - presentCount}</span><span className="text-[9px] font-bold uppercase text-slate-400">Ausentes</span></div>
-                                  <div className={`w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center transition-transform ${isExpanded ? 'rotate-180 bg-slate-200' : ''}`}><i className="fas fa-chevron-down"></i></div>
+                              <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto justify-between md:justify-end">
+                                  <div className="text-center flex-1 md:flex-none"><span className="block text-lg md:text-2xl font-bold text-green-500">{presentCount}</span><span className="text-[8px] md:text-[9px] font-bold uppercase text-slate-400">Presentes</span></div>
+                                  <div className="w-px h-8 md:h-10 bg-slate-200 dark:bg-white/10"></div>
+                                  <div className="text-center flex-1 md:flex-none"><span className="block text-lg md:text-2xl font-bold text-red-400">{event.records.length - presentCount}</span><span className="text-[8px] md:text-[9px] font-bold uppercase text-slate-400">Ausentes</span></div>
+                                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center transition-transform shrink-0 ${isExpanded ? 'rotate-180 bg-slate-200' : ''}`}><i className="fas fa-chevron-down"></i></div>
                               </div>
                           </div>
                           
@@ -802,12 +902,12 @@ const Attendance: React.FC = () => {
                                           const itemStyle = r.status === 'Presente' ? 'bg-green-100 text-green-700' : hasPendingJustification ? 'bg-amber-100 text-amber-700 border-amber-300' : isJustified ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700';
 
                                           return (
-                                              <div key={r.id} className="flex justify-between items-center p-3 px-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm group/row relative overflow-hidden">
+                                              <div key={r.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 p-3 px-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm group/row relative overflow-hidden">
                                                   <div className="flex items-center gap-2 truncate">
                                                       <span className="font-bold text-sm text-slate-700 dark:text-slate-300 truncate">{r.memberName}</span>
-                                                      {r.points < 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600">{r.points}</span>}
+                                                      {r.points < 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 shrink-0">{r.points}</span>}
                                                   </div>
-                                                  <div className="flex items-center gap-3 shrink-0">
+                                                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                                                       {checkPermission('attendance', 'edit') ? (
                                                           <button onClick={() => handleToggleHistoryStatus(r)} className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all border-2 border-transparent ${itemStyle}`}>
                                                               {r.status === 'Presente' ? 'Presente' : hasPendingJustification ? 'Em Análise' : isJustified ? 'Justificado' : 'Falta'} <i className="fas fa-sync-alt ml-1 opacity-50 group-hover/row:opacity-100 transition-opacity"></i>
@@ -817,7 +917,7 @@ const Attendance: React.FC = () => {
                                                               {r.status === 'Presente' ? 'Presente' : hasPendingJustification ? 'Em Análise' : isJustified ? 'Justificado' : 'Falta'}
                                                           </span>
                                                       )}
-                                                      {checkPermission('attendance', 'delete') && <button onClick={(e) => requestDeleteRecord(e, r.id, r.memberId, r.points)} className="text-slate-300 hover:text-red-500 w-6 h-6 flex items-center justify-center transition-colors"><i className="fas fa-times"></i></button>}
+                                                      {checkPermission('attendance', 'delete') && <button onClick={(e) => requestDeleteRecord(e, r.id, r.memberId, r.points)} className="text-slate-300 hover:text-red-500 w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center transition-colors bg-slate-50 dark:bg-white/5 sm:bg-transparent rounded-lg sm:rounded-none"><i className="fas fa-times"></i></button>}
                                                   </div>
                                               </div>
                                           );
@@ -866,7 +966,18 @@ const Attendance: React.FC = () => {
           </div>, document.body
       )}
 
-      <DeleteConfirmationModal isOpen={deleteModal.isOpen} onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} onConfirm={deleteModal.onConfirm} title={deleteModal.title} description={deleteModal.description} isProcessing={isProcessing} />
+      <DeleteConfirmationModal 
+        isOpen={deleteModal.isOpen} 
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))} 
+        onConfirm={deleteModal.onConfirm} 
+        title={deleteModal.title} 
+        description={deleteModal.description} 
+        isProcessing={isProcessing} 
+        confirmText={deleteModal.confirmText}
+        processingText={deleteModal.processingText}
+        iconClass={deleteModal.iconClass}
+        colorTheme={deleteModal.colorTheme}
+      />
     </div>
   );
 };
