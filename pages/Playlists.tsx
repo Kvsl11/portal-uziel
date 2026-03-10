@@ -197,9 +197,9 @@ const Playlists: React.FC = () => {
               const info = MediaUtils.parseUrl(item.url); const addedByUser = usersList.find(u => u.username === item.addedBy);
               const typeLabel = info.subType === 'track' ? 'Faixa' : info.subType === 'playlist' ? 'Playlist' : info.subType === 'album' ? 'Álbum' : info.subType === 'artist' ? 'Artista' : 'Spotify';
               return (
-                  <Card key={item.id} hover noPadding onClick={() => setActiveMedia(item)} className="flex flex-col group h-full bg-white dark:bg-[#181818] hover:bg-slate-50 dark:hover:bg-[#282828] border border-slate-200 dark:border-transparent transition-all duration-300 cursor-pointer rounded-md p-4 shadow-sm dark:shadow-none">
-                      <div className={`aspect-square bg-slate-100 dark:bg-[#282828] relative overflow-hidden shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)] mb-4 ${info.subType === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
-                          {item.image ? <img src={item.image} alt={item.title || 'Cover'} className="absolute inset-0 w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-[#333] dark:to-[#111] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"><i className="fab fa-spotify text-4xl text-slate-400 dark:text-white/50"></i></div>}
+                  <Card key={item.id} hover noPadding onClick={() => setActiveMedia(item)} className="flex flex-col group h-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5 transition-all duration-300 cursor-pointer rounded-md p-4 shadow-sm dark:shadow-none">
+                      <div className={`aspect-square bg-slate-100 dark:bg-slate-800 relative overflow-hidden shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)] mb-4 ${info.subType === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
+                          {item.image ? <img src={item.image} alt={item.title || 'Cover'} className="absolute inset-0 w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"><i className="fab fa-spotify text-4xl text-slate-400 dark:text-white/50"></i></div>}
                           
                           {/* Play Button Overlay (Spotify Style) */}
                           <div className="absolute bottom-2 right-2 z-20 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
@@ -212,7 +212,7 @@ const Playlists: React.FC = () => {
                       </div>
                       <div className="flex-1 flex flex-col">
                          <p className="text-base font-bold text-slate-900 dark:text-white line-clamp-1 mb-1" title={item.title || `Spotify ${typeLabel}`}>{item.title || `Spotify ${typeLabel}`}</p>
-                         <p className="text-sm text-slate-500 dark:text-[#b3b3b3] line-clamp-2 font-medium">
+                         <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 font-medium">
                             {typeLabel} • {addedByUser ? addedByUser.name : item.addedBy.split('@')[0]}
                          </p>
                       </div>
@@ -224,28 +224,28 @@ const Playlists: React.FC = () => {
       {activeMedia && <SpotifyPlayerOverlay url={activeMedia.url} onClose={() => setActiveMedia(null)} />}
       {showAddModal && createPortal(
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-             <div className="w-full max-w-lg bg-white dark:bg-[#181818] p-8 rounded-[1rem] shadow-2xl border border-slate-200 dark:border-white/10 animate-scale-in relative overflow-hidden">
+             <div className="w-full max-w-lg bg-white dark:bg-slate-900 p-8 rounded-[1rem] shadow-2xl border border-slate-200 dark:border-white/10 animate-scale-in relative overflow-hidden">
                  <div className="relative z-10">
                      <div className="flex justify-between items-start mb-8"><div><h2 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Adicionar ao Spotify</h2></div><button onClick={() => { setShowAddModal(false); setNewUrl(''); setPreviewData(null); }} className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 dark:text-white/70 dark:hover:text-white"><i className="fas fa-times"></i></button></div>
                      <form onSubmit={handleAdd} className="space-y-6">
                         <div className="group">
                             <label className="text-xs font-bold text-slate-500 dark:text-white/70 mb-2 block ml-1">Link do Spotify</label>
                             <div className="relative">
-                                <input type="text" className="w-full px-5 py-4 rounded-md bg-slate-100 dark:bg-[#282828] border border-transparent outline-none focus:border-[#1DB954] focus:bg-white dark:focus:bg-[#333] focus:shadow-sm transition-all font-medium text-slate-900 dark:text-white pl-12" placeholder="https://open.spotify.com/..." value={newUrl} onChange={e => setNewUrl(e.target.value)} autoFocus />
+                                <input type="text" className="w-full px-5 py-4 rounded-md bg-slate-100 dark:bg-slate-800 border border-transparent outline-none focus:border-[#1DB954] focus:bg-white dark:focus:bg-slate-700 focus:shadow-sm transition-all font-medium text-slate-900 dark:text-white pl-12" placeholder="https://open.spotify.com/..." value={newUrl} onChange={e => setNewUrl(e.target.value)} autoFocus />
                                 <i className="fas fa-link absolute left-5 top-1/2 -translate-y-1/2 text-lg text-slate-400 dark:text-white/50 group-focus-within:text-[#1DB954] transition-colors"></i>
                             </div>
                         </div>
                         
                         {/* Preview Section */}
                         {(isPreviewLoading || previewData) && (
-                            <div className="bg-slate-50 dark:bg-[#282828] border border-slate-200 dark:border-transparent p-4 rounded-md flex items-center gap-4 animate-fade-in">
+                            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 p-4 rounded-md flex items-center gap-4 animate-fade-in">
                                 {isPreviewLoading ? (
                                     <div className="w-full flex items-center justify-center py-4 text-[#1DB954]">
                                         <i className="fas fa-circle-notch fa-spin text-2xl"></i>
                                     </div>
                                 ) : previewData ? (
                                     <>
-                                        <div className={`w-16 h-16 shrink-0 bg-slate-200 dark:bg-[#333] overflow-hidden ${previewData.type === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
+                                        <div className={`w-16 h-16 shrink-0 bg-slate-200 dark:bg-slate-700 overflow-hidden ${previewData.type === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
                                             {previewData.thumbnail_url ? (
                                                 <img src={previewData.thumbnail_url} alt="Preview" className="w-full h-full object-cover" />
                                             ) : (
@@ -254,7 +254,7 @@ const Playlists: React.FC = () => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-slate-900 dark:text-white font-bold truncate">{previewData.title || 'Item do Spotify'}</p>
-                                            <p className="text-slate-500 dark:text-[#b3b3b3] text-sm capitalize">{previewData.type === 'track' ? 'Faixa' : previewData.type === 'playlist' ? 'Playlist' : previewData.type === 'album' ? 'Álbum' : previewData.type === 'artist' ? 'Artista' : 'Spotify'}</p>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm capitalize">{previewData.type === 'track' ? 'Faixa' : previewData.type === 'playlist' ? 'Playlist' : previewData.type === 'album' ? 'Álbum' : previewData.type === 'artist' ? 'Artista' : 'Spotify'}</p>
                                         </div>
                                     </>
                                 ) : null}
