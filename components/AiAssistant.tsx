@@ -201,6 +201,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const [messages, setMessages] = useState<{
       role: 'user' | 'model', 
@@ -752,10 +753,13 @@ INSTRUÇÕES ADICIONAIS:
   };
 
   const containerClasses = embedded 
-    ? "relative w-full h-full bg-white dark:bg-[#0f172a] rounded-[2rem] flex flex-col shadow-none border-0 overflow-hidden"
-    : `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up
-       inset-0 w-full h-full rounded-none
-       md:bottom-8 md:right-8 md:w-[420px] md:h-[650px] md:max-h-[80vh] md:rounded-3xl md:left-auto md:top-auto md:origin-bottom-right`;
+    ? "relative w-full h-full bg-white dark:bg-[#0f172a] rounded-[2rem] flex flex-col shadow-none border-0 overflow-hidden transition-all duration-300"
+    : isExpanded
+        ? `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up transition-all duration-300
+           inset-0 w-full h-full rounded-none`
+        : `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up transition-all duration-300
+           inset-0 w-full h-full rounded-none
+           md:bottom-8 md:right-8 md:w-[420px] md:h-[650px] md:max-h-[80vh] md:rounded-3xl md:left-auto md:top-auto md:origin-bottom-right`;
 
   const assistantContent = (
     <>
@@ -764,6 +768,7 @@ INSTRUÇÕES ADICIONAIS:
       <div className={`${containerClasses} ${embedded ? 'fixed z-[160] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-[85vh] md:w-[800px] md:h-[700px] shadow-2xl !rounded-3xl' : ''}`}>
             
             <div className="flex justify-between items-center p-5 pt-6 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100 dark:border-white/5">
+                <div className={`${isExpanded ? 'max-w-4xl mx-auto w-full' : 'w-full'} flex justify-between items-center`}>
                 <div className="flex items-center gap-3">
                     <div className="relative w-8 h-8 flex items-center justify-center">
                          <GeminiLogo className="w-8 h-8 text-brand-600 dark:text-brand-400" />
@@ -777,6 +782,11 @@ INSTRUÇÕES ADICIONAIS:
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                     {!embedded && (
+                         <button onClick={() => setIsExpanded(!isExpanded)} className="hidden md:flex w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-brand-500 items-center justify-center transition-colors" title={isExpanded ? "Restaurar" : "Tela Cheia"}>
+                             <i className={`fas ${isExpanded ? 'fa-compress' : 'fa-expand'}`}></i>
+                         </button>
+                     )}
                      <button onClick={requestClear} className="w-9 h-9 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors">
                         <i className="fas fa-trash-alt"></i>
                      </button>
@@ -784,9 +794,11 @@ INSTRUÇÕES ADICIONAIS:
                         <i className={`fas ${embedded ? 'fa-times' : 'fa-chevron-down'}`}></i>
                      </button>
                 </div>
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 relative bg-white dark:bg-[#0f172a]" ref={scrollRef}>
+                 <div className={`${isExpanded ? 'max-w-4xl mx-auto w-full' : 'w-full'} flex flex-col h-full`}>
                  {activeMedia && createPortal(
                     <div className="fixed inset-0 z-[10001] flex flex-col items-center justify-center bg-black/95 backdrop-blur-3xl animate-fade-in-up p-4">
                         <button type="button" onClick={() => setActiveMedia(null)} className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all z-50"><i className="fas fa-times text-lg md:text-xl"></i></button>
@@ -899,9 +911,11 @@ INSTRUÇÕES ADICIONAIS:
                         </div>
                     )}
                  </AnimatePresence>
+                 </div>
             </div>
 
             <div className="p-4 bg-white dark:bg-[#0f172a] border-t border-slate-100 dark:border-white/5">
+                <div className={`${isExpanded ? 'max-w-4xl mx-auto w-full' : 'w-full'}`}>
                 {/* TOOLBAR FIX: Separate scrolling tools from fixed settings button */}
                 <div className="flex items-center justify-between mb-3 px-1">
                     
@@ -1004,6 +1018,7 @@ INSTRUÇÕES ADICIONAIS:
                 <p className="text-[10px] text-center text-slate-400 mt-3 font-medium opacity-60">
                     O Gemini pode cometer erros. Verifique as informações importantes.
                 </p>
+                </div>
             </div>
 
             {viewingImage && (

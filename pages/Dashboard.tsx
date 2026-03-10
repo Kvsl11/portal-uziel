@@ -372,17 +372,17 @@ const Dashboard: React.FC = () => {
 
           {/* RIGHT: Leaderboard / Personal Stats */}
           <div className="xl:col-span-1">
-              <Card variant="custom" className="bg-slate-900 dark:bg-[#0b1221] text-white rounded-[2.5rem] shadow-premium h-full relative overflow-hidden flex flex-col" noPadding>
+              <Card variant="custom" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 h-full relative overflow-hidden flex flex-col" noPadding>
                   <div className="p-8 h-full flex flex-col">
                       {/* Background Effects */}
                       <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[100px] opacity-20 -mr-10 -mt-10 animate-pulse-slow ${isMemberRole && isPerfect ? 'bg-green-500' : 'bg-red-600'}`}></div>
                       
                       <div className="relative z-10 mb-8">
                           <div className="flex items-center gap-3 mb-2">
-                              <i className={`fas ${isMemberRole ? 'fa-id-card' : 'fa-list-ol'} ${isMemberRole && isPerfect ? 'text-green-400' : 'text-orange-400'} text-xl`}></i>
+                              <i className={`fas ${isMemberRole ? 'fa-id-card' : 'fa-list-ol'} ${isMemberRole && isPerfect ? 'text-green-500 dark:text-green-400' : 'text-orange-500 dark:text-orange-400'} text-xl`}></i>
                               <h3 className="font-bold text-xl">{isMemberRole ? 'Meu Status' : 'Ranking de Penalidades'}</h3>
                           </div>
-                          <p className="text-slate-400 text-xs font-medium">{isMemberRole ? 'Resumo de desempenho' : 'Membros com maior número de pontos negativos.'}</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">{isMemberRole ? 'Resumo de desempenho' : 'Membros com maior número de pontos negativos.'}</p>
                       </div>
 
                       {!isMemberRole ? (
@@ -392,14 +392,14 @@ const Dashboard: React.FC = () => {
                                 {/* 2nd Worst */}
                                 {rankedMembers[1] && (
                                     <div className="flex flex-col items-center w-1/3">
-                                        <div className="w-12 h-12 rounded-full border-2 border-orange-800 mb-2 overflow-hidden bg-slate-800 flex items-center justify-center text-slate-300 font-bold">
+                                        <div className="w-12 h-12 rounded-full border-2 border-orange-200 dark:border-orange-800 mb-2 overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold">
                                             {rankedMembers[1].photoURL ? <img src={rankedMembers[1].photoURL} alt={rankedMembers[1].name} className="w-full h-full object-cover" /> : rankedMembers[1].name.charAt(0)}
                                         </div>
-                                        <div className="w-full bg-slate-700/50 rounded-t-xl h-20 flex flex-col items-center justify-end p-2 relative border-t-2 border-orange-800">
-                                            <span className="text-2xl font-display font-bold text-orange-700">2</span>
+                                        <div className="w-full bg-orange-50 dark:bg-slate-700/50 rounded-t-xl h-20 flex flex-col items-center justify-end p-2 relative border-t-2 border-orange-300 dark:border-orange-800">
+                                            <span className="text-2xl font-display font-bold text-orange-600 dark:text-orange-700">2</span>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-300 mt-2 truncate w-full text-center">{rankedMembers[1].name.split(' ')[0]}</p>
-                                        <p className="text-[9px] text-red-400 font-bold">{rankedMembers[1].totalPoints}</p>
+                                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 mt-2 truncate w-full text-center">{rankedMembers[1].name.split(' ')[0]}</p>
+                                        <p className="text-[9px] text-red-500 dark:text-red-400 font-bold">{rankedMembers[1].totalPoints}</p>
                                     </div>
                                 )}
                                 
@@ -407,43 +407,43 @@ const Dashboard: React.FC = () => {
                                 {rankedMembers[0] && (
                                     <div className="flex flex-col items-center w-1/3 z-10">
                                         <i className="fas fa-exclamation-triangle text-red-500 text-sm mb-1 animate-bounce"></i>
-                                        <div className="w-16 h-16 rounded-full border-2 border-red-600 mb-2 overflow-hidden bg-gradient-to-br from-red-900 to-slate-900 flex items-center justify-center text-white text-xl font-bold shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                                        <div className="w-16 h-16 rounded-full border-2 border-red-400 dark:border-red-600 mb-2 overflow-hidden bg-gradient-to-br from-red-100 to-white dark:from-red-900 dark:to-slate-900 flex items-center justify-center text-red-600 dark:text-white text-xl font-bold shadow-[0_0_15px_rgba(220,38,38,0.3)] dark:shadow-[0_0_15px_rgba(220,38,38,0.5)]">
                                             {rankedMembers[0].photoURL ? <img src={rankedMembers[0].photoURL} alt={rankedMembers[0].name} className="w-full h-full object-cover" /> : rankedMembers[0].name.charAt(0)}
                                         </div>
-                                        <div className="w-full bg-gradient-to-t from-red-900 to-red-600 rounded-t-xl h-28 flex flex-col items-center justify-end p-2 shadow-lg relative">
-                                            <span className="text-4xl font-display font-bold text-white">1</span>
+                                        <div className="w-full bg-gradient-to-t from-red-100 to-red-50 dark:from-red-900 dark:to-red-600 rounded-t-xl h-28 flex flex-col items-center justify-end p-2 shadow-lg relative border-t-2 border-red-300 dark:border-transparent">
+                                            <span className="text-4xl font-display font-bold text-red-600 dark:text-white">1</span>
                                         </div>
-                                        <p className="text-xs font-bold text-white mt-2 truncate w-full text-center">{rankedMembers[0].name.split(' ')[0]}</p>
-                                        <p className="text-[10px] text-red-300 font-bold">{rankedMembers[0].totalPoints} pts</p>
+                                        <p className="text-xs font-bold text-slate-800 dark:text-white mt-2 truncate w-full text-center">{rankedMembers[0].name.split(' ')[0]}</p>
+                                        <p className="text-[10px] text-red-500 dark:text-red-300 font-bold">{rankedMembers[0].totalPoints} pts</p>
                                     </div>
                                 )}
 
                                 {/* 3rd Worst */}
                                 {rankedMembers[2] && (
                                     <div className="flex flex-col items-center w-1/3">
-                                        <div className="w-12 h-12 rounded-full border-2 border-slate-600 mb-2 overflow-hidden bg-slate-800 flex items-center justify-center text-slate-400 font-bold">
+                                        <div className="w-12 h-12 rounded-full border-2 border-slate-200 dark:border-slate-600 mb-2 overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold">
                                             {rankedMembers[2].photoURL ? <img src={rankedMembers[2].photoURL} alt={rankedMembers[2].name} className="w-full h-full object-cover" /> : rankedMembers[2].name.charAt(0)}
                                         </div>
-                                        <div className="w-full bg-slate-700/30 rounded-t-xl h-14 flex flex-col items-center justify-end p-2 relative">
-                                            <span className="text-xl font-display font-bold text-slate-500">3</span>
+                                        <div className="w-full bg-slate-50 dark:bg-slate-700/30 rounded-t-xl h-14 flex flex-col items-center justify-end p-2 relative border-t-2 border-slate-200 dark:border-transparent">
+                                            <span className="text-xl font-display font-bold text-slate-400 dark:text-slate-500">3</span>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-2 truncate w-full text-center">{rankedMembers[2].name.split(' ')[0]}</p>
-                                        <p className="text-[9px] text-red-400 font-bold">{rankedMembers[2].totalPoints}</p>
+                                        <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2 truncate w-full text-center">{rankedMembers[2].name.split(' ')[0]}</p>
+                                        <p className="text-[9px] text-red-500 dark:text-red-400 font-bold">{rankedMembers[2].totalPoints}</p>
                                     </div>
                                 )}
                             </div>
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
                                 {rankedMembers.slice(3).map((member, idx) => (
-                                    <div key={member.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                                    <div key={member.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors border border-slate-100 dark:border-white/5">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xs font-bold text-slate-500 w-4">{idx + 4}</span>
-                                            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] overflow-hidden">
+                                            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-4">{idx + 4}</span>
+                                            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[10px] overflow-hidden text-slate-600 dark:text-white">
                                                 {member.photoURL ? <img src={member.photoURL} className="w-full h-full object-cover" /> : member.name.charAt(0)}
                                             </div>
-                                            <p className="text-xs font-bold text-slate-200">{member.name}</p>
+                                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{member.name}</p>
                                         </div>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${member.totalPoints < 0 ? 'text-red-400 bg-red-900/30' : 'text-green-400 bg-green-900/30'}`}>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${member.totalPoints < 0 ? 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30' : 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30'}`}>
                                             {member.totalPoints} pts
                                         </span>
                                     </div>
@@ -454,32 +454,32 @@ const Dashboard: React.FC = () => {
                           // Member View (Self Card)
                           <div className="flex-1 flex flex-col items-center justify-center p-4">
                               <div className="relative">
-                                  <div className={`w-32 h-32 rounded-full border-4 ${isPerfect ? 'border-green-500' : 'border-red-500'} bg-slate-800 flex items-center justify-center text-6xl font-bold mb-6 overflow-hidden shadow-2xl transition-colors duration-500`}>
+                                  <div className={`w-32 h-32 rounded-full border-4 ${isPerfect ? 'border-green-500' : 'border-red-500'} bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-6xl font-bold mb-6 overflow-hidden shadow-2xl transition-colors duration-500 text-slate-700 dark:text-white`}>
                                       {rankedMembers[0]?.photoURL ? <img src={rankedMembers[0].photoURL} className="w-full h-full object-cover" /> : rankedMembers[0]?.name.charAt(0)}
                                   </div>
                                   {!isPerfect && (
-                                      <div className="absolute bottom-6 right-0 w-10 h-10 bg-red-500 rounded-full border-4 border-slate-900 flex items-center justify-center text-white shadow-lg animate-bounce z-10" title="Atenção às faltas">
+                                      <div className="absolute bottom-6 right-0 w-10 h-10 bg-red-500 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center text-white shadow-lg animate-bounce z-10" title="Atenção às faltas">
                                           <i className="fas fa-exclamation text-lg"></i>
                                       </div>
                                   )}
                                   {isPerfect && (
-                                      <div className="absolute bottom-6 right-0 w-10 h-10 bg-green-500 rounded-full border-4 border-slate-900 flex items-center justify-center text-white shadow-lg z-10" title="Excelente!">
+                                      <div className="absolute bottom-6 right-0 w-10 h-10 bg-green-500 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center text-white shadow-lg z-10" title="Excelente!">
                                           <i className="fas fa-star text-lg"></i>
                                       </div>
                                   )}
                               </div>
                               
-                              <h2 className="text-2xl font-bold text-white mb-1 text-center">{rankedMembers[0]?.name}</h2>
-                              <span className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-8">Membro do Ministério</span>
+                              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 text-center">{rankedMembers[0]?.name}</h2>
+                              <span className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-8">Membro do Ministério</span>
                               
                               <div className="w-full grid grid-cols-2 gap-4">
-                                  <div className={`rounded-2xl p-4 text-center border ${isPerfect ? 'bg-green-900/20 border-green-500/20' : 'bg-red-900/20 border-red-500/20'}`}>
-                                      <p className={`text-3xl font-display font-bold mb-1 ${isPerfect ? 'text-green-400' : 'text-red-400'}`}>{myPoints}</p>
-                                      <p className="text-[10px] uppercase font-bold text-slate-400">Pontos (Saldo)</p>
+                                  <div className={`rounded-2xl p-4 text-center border ${isPerfect ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/20' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-500/20'}`}>
+                                      <p className={`text-3xl font-display font-bold mb-1 ${isPerfect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{myPoints}</p>
+                                      <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Pontos (Saldo)</p>
                                   </div>
-                                  <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                                      <p className={`text-3xl font-display font-bold mb-1 ${absenceRate > 20 ? 'text-red-400' : 'text-green-400'}`}>{100 - absenceRate}%</p>
-                                      <p className="text-[10px] uppercase font-bold text-slate-400">Frequência</p>
+                                  <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 text-center border border-slate-100 dark:border-white/5">
+                                      <p className={`text-3xl font-display font-bold mb-1 ${absenceRate > 20 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{100 - absenceRate}%</p>
+                                      <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Frequência</p>
                                   </div>
                               </div>
                           </div>

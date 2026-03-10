@@ -412,12 +412,12 @@ export const DailyImageService = {
         return snap.exists() ? snap.data() as { imageUrl: string, date: string, createdAt: any, context?: string, isActive?: boolean } : null;
     },
     saveImage: async (id: string, imageUrl: string, date: string, context?: string) => {
-        // First deactivate any existing image for this slot to ensure uniqueness
+        // First deactivate and delete any existing image for this slot to ensure uniqueness and keep only 24h
         if (context) {
-            const q = query(getColRef('daily_images'), where('context', '==', context), where('isActive', '==', true));
+            const q = query(getColRef('daily_images'), where('context', '==', context));
             const snap = await getDocs(q);
             const batch = writeBatch(db);
-            snap.docs.forEach(d => batch.update(d.ref, { isActive: false }));
+            snap.docs.forEach(d => batch.delete(d.ref));
             batch.set(getDocRef('daily_images', id), { id, imageUrl, date, context, createdAt: serverTimestamp(), isActive: true });
             await batch.commit();
         } else {

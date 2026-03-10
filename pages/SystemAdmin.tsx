@@ -615,29 +615,37 @@ const SystemAdmin: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-fade-in-up pb-32">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 dark:border-white/5 pb-8">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 dark:border-white/5 pb-8 relative">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none"></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-3">
                         <DevBadge label="Servidor Local: PR-S1" />
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Núcleo de Operações Neurais</p>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                            Núcleo de Operações Neurais
+                        </p>
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-display font-bold text-slate-900 dark:text-white leading-[0.8] tracking-tight">
+                    <h1 className="text-5xl md:text-7xl font-display font-bold text-slate-900 dark:text-white leading-[0.8] tracking-tight drop-shadow-sm">
                         Engine <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-sky-400">Room</span>
                     </h1>
                 </div>
                 
-                <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-3xl flex gap-1 shadow-inner border border-slate-200 dark:border-white/5 w-fit">
-                    <button onClick={() => setActiveTab('storage')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'storage' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Banco de Dados">
+                <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md p-1.5 rounded-[2rem] flex gap-1 shadow-inner border border-slate-200 dark:border-white/10 w-fit relative z-10">
+                    <button onClick={() => setActiveTab('storage')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'storage' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Banco de Dados">
                         <i className="fas fa-database text-lg"></i>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Storage</span>
                     </button>
-                    <button onClick={() => setActiveTab('assets')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'assets' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Assets de IA">
+                    <button onClick={() => setActiveTab('assets')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'assets' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Assets de IA">
                         <i className="fas fa-images text-lg"></i>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Assets IA</span>
                     </button>
-                    <button onClick={() => setActiveTab('config')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'config' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Infra & Cotas">
+                    <button onClick={() => setActiveTab('config')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'config' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Infra & Cotas">
                         <i className="fas fa-microchip text-lg"></i>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Infra</span>
                     </button>
-                    <button onClick={() => setActiveTab('acl')} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'acl' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500'}`} title="Controle de Acesso">
+                    <button onClick={() => setActiveTab('acl')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'acl' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Controle de Acesso">
                         <i className="fas fa-user-shield text-lg"></i>
+                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">ACL</span>
                     </button>
                 </div>
             </div>
@@ -866,7 +874,7 @@ const SystemAdmin: React.FC = () => {
                             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-[100px] -mr-32 -mt-32"></div>
                             <div className="relative z-10">
                                 <h3 className="text-3xl font-display font-bold text-white mb-2">Galeria de Ativos Neuronais</h3>
-                                <p className="text-slate-400 text-sm max-w-md leading-relaxed">Gestão central de imagens geradas por IA. Cada asset pode ser reutilizado ou trocado manualmente para qualquer menu do portal.</p>
+                                <p className="text-slate-400 text-sm max-w-md leading-relaxed">Gestão central de imagens geradas por IA. Apenas a imagem mais recente de cada contexto é mantida ativa. Imagens inativas podem ser limpas.</p>
                             </div>
                             <div className="flex gap-4 relative z-10 flex-wrap justify-center">
                                 {selectedImages.size > 0 && (
@@ -929,14 +937,14 @@ const SystemAdmin: React.FC = () => {
 
                                             {img.isActive && (
                                                 <div className="absolute top-4 right-4 bg-green-500 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded-lg shadow-lg z-20 animate-pulse border border-white/20">
-                                                    Em Uso
+                                                    Ativo (24h)
                                                 </div>
                                             )}
 
                                             <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-1 z-20 pointer-events-none">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] font-black text-white truncate drop-shadow-md bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm border border-white/10 w-fit mb-1">{cleanContext}</span>
-                                                    <span className="text-[8px] font-bold text-white/70 uppercase tracking-widest">{img.date}</span>
+                                                    <span className="text-[8px] font-bold text-white/70 uppercase tracking-widest">{img.date.split('-').reverse().join('/')}</span>
                                                 </div>
                                             </div>
                                         </div>
