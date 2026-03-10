@@ -67,6 +67,8 @@ const Playlists: React.FC = () => {
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
+  const [previewData, setPreviewData] = useState<{title?: string, thumbnail_url?: string, type?: string} | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; title: string; description: string; playlistId: string | null; }>({ isOpen: false, title: '', description: '', playlistId: null });
@@ -112,15 +114,46 @@ const Playlists: React.FC = () => {
     fetchAndSetImage();
   }, []);
 
+  useEffect(() => {
+    const fetchPreview = async () => {
+        if (!newUrl) {
+            setPreviewData(null);
+            return;
+        }
+        const info = MediaUtils.parseUrl(newUrl);
+        if (info.type !== 'spotify') {
+            setPreviewData(null);
+            return;
+        }
+        
+        setIsPreviewLoading(true);
+        try {
+            const metadata = await MediaUtils.fetchSpotifyOEmbed(newUrl);
+            setPreviewData({
+                title: metadata.title,
+                thumbnail_url: metadata.thumbnail_url,
+                type: info.subType
+            });
+        } catch (e) {
+            setPreviewData(null);
+        } finally {
+            setIsPreviewLoading(false);
+        }
+    };
+    
+    const timeoutId = setTimeout(fetchPreview, 500);
+    return () => clearTimeout(timeoutId);
+  }, [newUrl]);
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault(); if (!newUrl) return;
     const info = MediaUtils.parseUrl(newUrl); if (info.type !== 'spotify') return alert("Insira um link do Spotify.");
     setIsSubmitting(true);
     try {
-      const metadata = await MediaUtils.fetchSpotifyOEmbed(newUrl);
+      const metadata = previewData || await MediaUtils.fetchSpotifyOEmbed(newUrl);
       await PlaylistService.add(newUrl, currentUser?.username || 'unknown', metadata.title || undefined, metadata.thumbnail_url || undefined);
       if (currentUser) AuditService.log(currentUser.username, 'Playlist', 'CREATE', `Adicionou: ${metadata.title || newUrl}`, currentUser.role);
-      setNewUrl(''); setShowAddModal(false);
+      setNewUrl(''); setPreviewData(null); setShowAddModal(false);
     } catch (error) { console.error(error); alert("Erro ao adicionar."); } finally { setIsSubmitting(false); }
   };
 
@@ -159,21 +192,29 @@ const Playlists: React.FC = () => {
            </div>
       </div>
       <Card noPadding className="flex flex-col md:flex-row gap-4 justify-between items-center p-2"><div className="relative group w-full"><i className="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1DB954] transition-colors"></i><input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar na biblioteca..." className="pl-12 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border-none outline-none focus:ring-2 focus:ring-[#1DB954]/20 w-full transition-all font-medium text-slate-700 dark:text-slate-200 text-center md:text-left" /></div></Card>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredPlaylists.map((item) => {
               const info = MediaUtils.parseUrl(item.url); const addedByUser = usersList.find(u => u.username === item.addedBy);
               const typeLabel = info.subType === 'track' ? 'Faixa' : info.subType === 'playlist' ? 'Playlist' : info.subType === 'album' ? 'Álbum' : info.subType === 'artist' ? 'Artista' : 'Spotify';
               return (
-                  <Card key={item.id} hover noPadding onClick={() => setActiveMedia(item)} className="flex flex-col group h-full bg-white dark:bg-[#0b1221] border border-slate-100 dark:border-white/5">
-                      <div className="aspect-square bg-slate-900 relative overflow-hidden m-4 rounded-[1.5rem] shadow-inner group-hover:shadow-2xl transition-all duration-500">
-                          {item.image ? <img src={item.image} alt={item.title || 'Cover'} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 animate-breathing" /> : <div className="w-full h-full bg-gradient-to-br from-[#1DB954] to-[#0f172a] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"><i className="fab fa-spotify text-6xl text-white drop-shadow-lg"></i></div>}
-                          <div className="absolute top-3 left-3 z-10"><span className="text-[10px] text-white/90 font-bold uppercase tracking-widest bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10">{typeLabel}</span></div>
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]"><div className="w-16 h-16 bg-[#1DB954] text-white rounded-full flex items-center justify-center text-2xl shadow-lg border-4 border-white/20 transform scale-50 group-hover:scale-100"><i className="fas fa-play pl-1"></i></div></div>
-                          {canDelete && <button onClick={(e) => requestDelete(e, item.id)} className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-700"><i className="fas fa-trash text-xs"></i></button>}
+                  <Card key={item.id} hover noPadding onClick={() => setActiveMedia(item)} className="flex flex-col group h-full bg-white dark:bg-[#181818] hover:bg-slate-50 dark:hover:bg-[#282828] border border-slate-200 dark:border-transparent transition-all duration-300 cursor-pointer rounded-md p-4 shadow-sm dark:shadow-none">
+                      <div className={`aspect-square bg-slate-100 dark:bg-[#282828] relative overflow-hidden shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)] mb-4 ${info.subType === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
+                          {item.image ? <img src={item.image} alt={item.title || 'Cover'} className="absolute inset-0 w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-[#333] dark:to-[#111] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"><i className="fab fa-spotify text-4xl text-slate-400 dark:text-white/50"></i></div>}
+                          
+                          {/* Play Button Overlay (Spotify Style) */}
+                          <div className="absolute bottom-2 right-2 z-20 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                              <div className="w-12 h-12 bg-[#1DB954] text-white dark:text-black rounded-full flex items-center justify-center text-xl shadow-[0_8px_8px_rgba(0,0,0,0.3)] hover:scale-105 hover:bg-[#1ed760] transition-all">
+                                  <i className="fas fa-play pl-1"></i>
+                              </div>
+                          </div>
+                          
+                          {canDelete && <button onClick={(e) => requestDelete(e, item.id)} className="absolute top-2 right-2 z-30 w-8 h-8 rounded-full bg-white/90 dark:bg-black/60 text-red-600 dark:text-white/70 hover:text-red-700 dark:hover:text-white flex items-center justify-center shadow-md transition-all hover:bg-white dark:hover:bg-red-600/80"><i className="fas fa-trash text-xs"></i></button>}
                       </div>
-                      <div className="px-5 pb-5 flex-1 flex flex-col justify-between">
-                         <div className="mb-4"><p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#1DB954] transition-colors">{item.title || `Spotify ${typeLabel}`}</p></div>
-                         <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 shrink-0 overflow-hidden uppercase">{addedByUser?.photoURL ? <img src={addedByUser.photoURL} alt={item.addedBy} className="w-full h-full object-cover" /> : item.addedBy.charAt(0)}</div><div className="flex flex-col"><span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Criado por</span><span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">{addedByUser ? addedByUser.name : item.addedBy.split('@')[0]}</span></div></div>
+                      <div className="flex-1 flex flex-col">
+                         <p className="text-base font-bold text-slate-900 dark:text-white line-clamp-1 mb-1" title={item.title || `Spotify ${typeLabel}`}>{item.title || `Spotify ${typeLabel}`}</p>
+                         <p className="text-sm text-slate-500 dark:text-[#b3b3b3] line-clamp-2 font-medium">
+                            {typeLabel} • {addedByUser ? addedByUser.name : item.addedBy.split('@')[0]}
+                         </p>
                       </div>
                   </Card>
               );
@@ -183,11 +224,47 @@ const Playlists: React.FC = () => {
       {activeMedia && <SpotifyPlayerOverlay url={activeMedia.url} onClose={() => setActiveMedia(null)} />}
       {showAddModal && createPortal(
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-             <div className="w-full max-w-lg bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-white/20 animate-scale-in relative overflow-hidden">
-                 <div className="absolute top-0 left-0 w-full h-2 bg-[#1DB954]"></div>
+             <div className="w-full max-w-lg bg-white dark:bg-[#181818] p-8 rounded-[1rem] shadow-2xl border border-slate-200 dark:border-white/10 animate-scale-in relative overflow-hidden">
                  <div className="relative z-10">
-                     <div className="flex justify-between items-start mb-8"><div><div className="w-12 h-12 rounded-xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] text-2xl mb-3"><i className="fab fa-spotify"></i></div><h2 className="text-2xl font-bold text-slate-800 dark:text-white font-display">Adicionar ao Spotify</h2></div><button onClick={() => setShowAddModal(false)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 flex items-center justify-center transition-colors"><i className="fas fa-times text-slate-500"></i></button></div>
-                     <form onSubmit={handleAdd} className="space-y-6"><div className="group"><label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block ml-1">Link do Spotify</label><div className="relative"><input type="text" className="w-full px-5 py-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none focus:border-[#1DB954] transition-all font-medium text-slate-700 dark:text-white pl-12" placeholder="https://open.spotify.com/..." value={newUrl} onChange={e => setNewUrl(e.target.value)} autoFocus /><i className="fas fa-link absolute left-5 top-1/2 -translate-y-1/2 text-lg text-slate-400 group-focus-within:text-[#1DB954] transition-colors"></i></div></div><button disabled={isSubmitting || !newUrl} type="submit" className="w-full py-4 rounded-2xl bg-[#1DB954] text-white font-bold shadow-lg shadow-[#1DB954]/30 hover:bg-[#1ed760] transition-all uppercase text-xs tracking-wider flex items-center justify-center gap-2">{isSubmitting ? <><i className="fas fa-circle-notch fa-spin"></i> Buscando...</> : <><i className="fas fa-check"></i> Confirmar</>}</button></form>
+                     <div className="flex justify-between items-start mb-8"><div><h2 className="text-2xl font-bold text-slate-900 dark:text-white font-display">Adicionar ao Spotify</h2></div><button onClick={() => { setShowAddModal(false); setNewUrl(''); setPreviewData(null); }} className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 dark:text-white/70 dark:hover:text-white"><i className="fas fa-times"></i></button></div>
+                     <form onSubmit={handleAdd} className="space-y-6">
+                        <div className="group">
+                            <label className="text-xs font-bold text-slate-500 dark:text-white/70 mb-2 block ml-1">Link do Spotify</label>
+                            <div className="relative">
+                                <input type="text" className="w-full px-5 py-4 rounded-md bg-slate-100 dark:bg-[#282828] border border-transparent outline-none focus:border-[#1DB954] focus:bg-white dark:focus:bg-[#333] focus:shadow-sm transition-all font-medium text-slate-900 dark:text-white pl-12" placeholder="https://open.spotify.com/..." value={newUrl} onChange={e => setNewUrl(e.target.value)} autoFocus />
+                                <i className="fas fa-link absolute left-5 top-1/2 -translate-y-1/2 text-lg text-slate-400 dark:text-white/50 group-focus-within:text-[#1DB954] transition-colors"></i>
+                            </div>
+                        </div>
+                        
+                        {/* Preview Section */}
+                        {(isPreviewLoading || previewData) && (
+                            <div className="bg-slate-50 dark:bg-[#282828] border border-slate-200 dark:border-transparent p-4 rounded-md flex items-center gap-4 animate-fade-in">
+                                {isPreviewLoading ? (
+                                    <div className="w-full flex items-center justify-center py-4 text-[#1DB954]">
+                                        <i className="fas fa-circle-notch fa-spin text-2xl"></i>
+                                    </div>
+                                ) : previewData ? (
+                                    <>
+                                        <div className={`w-16 h-16 shrink-0 bg-slate-200 dark:bg-[#333] overflow-hidden ${previewData.type === 'artist' ? 'rounded-full' : 'rounded-md'}`}>
+                                            {previewData.thumbnail_url ? (
+                                                <img src={previewData.thumbnail_url} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center"><i className="fab fa-spotify text-2xl text-slate-400 dark:text-white/50"></i></div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-slate-900 dark:text-white font-bold truncate">{previewData.title || 'Item do Spotify'}</p>
+                                            <p className="text-slate-500 dark:text-[#b3b3b3] text-sm capitalize">{previewData.type === 'track' ? 'Faixa' : previewData.type === 'playlist' ? 'Playlist' : previewData.type === 'album' ? 'Álbum' : previewData.type === 'artist' ? 'Artista' : 'Spotify'}</p>
+                                        </div>
+                                    </>
+                                ) : null}
+                            </div>
+                        )}
+
+                        <button disabled={isSubmitting || !newUrl} type="submit" className="w-full py-4 rounded-full bg-[#1DB954] text-white dark:text-black font-bold hover:scale-105 hover:bg-[#1ed760] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-lg shadow-[#1DB954]/20">
+                            {isSubmitting ? <><i className="fas fa-circle-notch fa-spin"></i> Salvando...</> : 'Adicionar à Biblioteca'}
+                        </button>
+                     </form>
                  </div>
              </div>
         </div>, document.body

@@ -33,7 +33,7 @@ export const MediaUtils = {
       return null;
   },
 
-  // Busca metadados reais (Título e Capa) usando o endpoint oEmbed do Spotify via Proxy
+  // Busca metadados reais (Título e Capa) usando o endpoint oEmbed do Spotify
   fetchSpotifyOEmbed: async (url: string): Promise<{ title?: string, thumbnail_url?: string }> => {
       try {
           const info = MediaUtils.parseUrl(url);
@@ -44,11 +44,8 @@ export const MediaUtils = {
           const baseUrl = `https://open.spotify.com/${info.subType}/${info.id}`;
           const spotifyOembedApi = `https://open.spotify.com/oembed?url=${encodeURIComponent(baseUrl)}`;
           
-          // Usamos o allorigins.win que é mais permissivo para retornar o JSON cru
-          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(spotifyOembedApi)}`;
-          
-          const response = await fetch(proxyUrl);
-          if (!response.ok) throw new Error('Falha ao buscar metadados');
+          const response = await fetch(spotifyOembedApi);
+          if (!response.ok) throw new Error('Failed to fetch from Spotify oEmbed');
           
           const data = await response.json();
           
@@ -57,7 +54,7 @@ export const MediaUtils = {
               thumbnail_url: data.thumbnail_url
           };
       } catch (e) {
-          console.warn("Erro ao buscar metadados do Spotify via Proxy:", e);
+          console.warn("Erro ao buscar metadados do Spotify:", e);
           return {};
       }
   },
