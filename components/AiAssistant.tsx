@@ -750,6 +750,7 @@ INSTRUÇÕES ADICIONAIS:
       if (cancelRequestRef.current) return;
       let errMsg = "Desculpe, ocorreu um erro.";
       if (e.message && e.message.includes("API key")) errMsg = "Erro de chave de API. Verifique as configurações.";
+      else if (e.message) errMsg = `Erro: ${e.message}`; // Adicionado para debug
       setMessages(prev => [...prev, { role: 'model', text: errMsg, timestamp: Date.now() }]);
     } finally {
       if (!cancelRequestRef.current) {
