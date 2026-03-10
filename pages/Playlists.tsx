@@ -132,7 +132,7 @@ const Playlists: React.FC = () => {
             setPreviewData({
                 title: metadata.title,
                 thumbnail_url: metadata.thumbnail_url,
-                type: info.subType
+                type: info.subType || undefined
             });
         } catch (e) {
             setPreviewData(null);

@@ -615,37 +615,29 @@ const SystemAdmin: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-fade-in-up pb-32">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 dark:border-white/5 pb-8 relative">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none"></div>
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 dark:border-white/5 pb-8">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
                         <DevBadge label="Servidor Local: PR-S1" />
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
-                            Núcleo de Operações Neurais
-                        </p>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Núcleo de Operações Neurais</p>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-display font-bold text-slate-900 dark:text-white leading-[0.8] tracking-tight drop-shadow-sm">
+                    <h1 className="text-4xl md:text-6xl font-display font-bold text-slate-900 dark:text-white leading-[0.8] tracking-tight">
                         Engine <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-sky-400">Room</span>
                     </h1>
                 </div>
                 
-                <div className="bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md p-1.5 rounded-[2rem] flex gap-1 shadow-inner border border-slate-200 dark:border-white/10 w-fit relative z-10">
-                    <button onClick={() => setActiveTab('storage')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'storage' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Banco de Dados">
-                        <i className="fas fa-database text-lg"></i>
-                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Storage</span>
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-3xl flex flex-wrap gap-1 shadow-inner border border-slate-200 dark:border-white/5 w-full md:w-fit backdrop-blur-xl">
+                    <button onClick={() => setActiveTab('storage')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'storage' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Banco de Dados">
+                        <i className="fas fa-database text-sm"></i> <span className="hidden sm:inline">Storage</span>
                     </button>
-                    <button onClick={() => setActiveTab('assets')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'assets' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Assets de IA">
-                        <i className="fas fa-images text-lg"></i>
-                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Assets IA</span>
+                    <button onClick={() => setActiveTab('assets')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'assets' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Assets de IA">
+                        <i className="fas fa-images text-sm"></i> <span className="hidden sm:inline">Assets IA</span>
                     </button>
-                    <button onClick={() => setActiveTab('config')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'config' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Infra & Cotas">
-                        <i className="fas fa-microchip text-lg"></i>
-                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Infra</span>
+                    <button onClick={() => setActiveTab('config')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'config' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Infra & Cotas">
+                        <i className="fas fa-microchip text-sm"></i> <span className="hidden sm:inline">Infra</span>
                     </button>
-                    <button onClick={() => setActiveTab('acl')} className={`px-5 py-3 rounded-2xl flex items-center gap-2 transition-all ${activeTab === 'acl' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-white/5'}`} title="Controle de Acesso">
-                        <i className="fas fa-user-shield text-lg"></i>
-                        <span className="text-xs font-bold uppercase tracking-wider hidden md:block">ACL</span>
+                    <button onClick={() => setActiveTab('acl')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'acl' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Controle de Acesso">
+                        <i className="fas fa-user-shield text-sm"></i> <span className="hidden sm:inline">ACL</span>
                     </button>
                 </div>
             </div>
@@ -805,20 +797,23 @@ const SystemAdmin: React.FC = () => {
                 {activeTab === 'storage' && (
                     <motion.div key="storage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Card noPadding className="p-6 border-brand-500/30 border-2 relative overflow-hidden">
-                                <p className="text-[10px] uppercase font-black text-brand-400 tracking-widest mb-1">Mapeamento Total</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">{totalDocs}</p>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-brand-300/50 mt-1 uppercase tracking-wider">Documentos Registrados</p>
+                            <Card noPadding className="p-6 border-brand-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-brand-500/5 to-transparent">
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-brand-500/10 rotate-12"><i className="fas fa-database"></i></div>
+                                <p className="text-[10px] uppercase font-black text-brand-500 dark:text-brand-400 tracking-widest mb-1 relative z-10">Mapeamento Total</p>
+                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">{totalDocs}</p>
+                                <p className="text-[10px] font-bold text-slate-500 dark:text-brand-300/50 mt-1 uppercase tracking-wider relative z-10">Documentos Registrados</p>
                             </Card>
-                            <Card noPadding className="p-6 border-sky-500/30 border-2 relative overflow-hidden">
-                                <p className="text-[10px] uppercase font-black text-sky-400 tracking-widest mb-1">Consumo de Dados</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">~{estimatedUsageKB.toFixed(1)} KB</p>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-sky-300/50 mt-1 uppercase tracking-wider">Persistência Firestore</p>
+                            <Card noPadding className="p-6 border-sky-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-sky-500/5 to-transparent">
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-sky-500/10 rotate-12"><i className="fas fa-hdd"></i></div>
+                                <p className="text-[10px] uppercase font-black text-sky-500 dark:text-sky-400 tracking-widest mb-1 relative z-10">Consumo de Dados</p>
+                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">~{estimatedUsageKB.toFixed(1)} KB</p>
+                                <p className="text-[10px] font-bold text-slate-500 dark:text-sky-300/50 mt-1 uppercase tracking-wider relative z-10">Persistência Firestore</p>
                             </Card>
-                            <Card noPadding className="p-6 border-green-500/30 border-2 relative overflow-hidden">
-                                <p className="text-[10px] uppercase font-black text-green-400 tracking-widest mb-1">Estado do Cluster</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">ESTÁVEL</p>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-green-300/50 mt-1 uppercase tracking-wider">Sincronização em 16ms</p>
+                            <Card noPadding className="p-6 border-green-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-green-500/5 to-transparent">
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-green-500/10 rotate-12"><i className="fas fa-server"></i></div>
+                                <p className="text-[10px] uppercase font-black text-green-500 dark:text-green-400 tracking-widest mb-1 relative z-10">Estado do Cluster</p>
+                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">ESTÁVEL</p>
+                                <p className="text-[10px] font-bold text-slate-500 dark:text-green-300/50 mt-1 uppercase tracking-wider relative z-10">Sincronização em 16ms</p>
                             </Card>
                         </div>
 
@@ -832,16 +827,18 @@ const SystemAdmin: React.FC = () => {
                                         <div 
                                             key={key} 
                                             onClick={() => setExploringCollection(key)}
-                                            className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-white/5 flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group"
+                                            className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-[2.5rem] border border-slate-100 dark:border-white/10 flex flex-col overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 hover:border-brand-500/50 transition-all cursor-pointer group relative"
                                         >
-                                            <div className="p-5 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-black/20">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-brand-500/20"></div>
+                                            <div className="p-5 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-black/20 relative z-10">
                                                 <div>
-                                                    <p className="text-[10px] font-black uppercase text-brand-500 group-hover:text-brand-600 transition-colors">{key.replace('_', ' ')}</p>
-                                                    <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{val} docs</p>
+                                                    <p className="text-[10px] font-black uppercase text-brand-500 group-hover:text-brand-400 transition-colors tracking-widest">{key.replace('_', ' ')}</p>
+                                                    <p className="text-2xl font-mono font-bold text-slate-800 dark:text-white mt-1">{val} <span className="text-sm text-slate-400 font-sans font-medium">docs</span></p>
                                                 </div>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setPurgeModal({ isOpen: true, target: key, title: `Limpar [${key}]`, desc: `Deseja realmente apagar os ${val} documentos da coleção "${key}"?`, action: () => handlePurgeCollection(key) }) }} 
-                                                    className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                                    className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center"
+                                                    title="Limpar Coleção"
                                                 >
                                                     <i className="fas fa-eraser"></i>
                                                 </button>
@@ -874,7 +871,7 @@ const SystemAdmin: React.FC = () => {
                             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-[100px] -mr-32 -mt-32"></div>
                             <div className="relative z-10">
                                 <h3 className="text-3xl font-display font-bold text-white mb-2">Galeria de Ativos Neuronais</h3>
-                                <p className="text-slate-400 text-sm max-w-md leading-relaxed">Gestão central de imagens geradas por IA. Apenas a imagem mais recente de cada contexto é mantida ativa. Imagens inativas podem ser limpas.</p>
+                                <p className="text-slate-400 text-sm max-w-md leading-relaxed">Gestão central de imagens geradas por IA. Cada asset pode ser reutilizado ou trocado manualmente para qualquer menu do portal.</p>
                             </div>
                             <div className="flex gap-4 relative z-10 flex-wrap justify-center">
                                 {selectedImages.size > 0 && (
@@ -921,38 +918,39 @@ const SystemAdmin: React.FC = () => {
                                     <div key={img.id} className="flex flex-col gap-3 group animate-scale-in">
                                         <div 
                                             onClick={() => setViewingImage(img.imageUrl)}
-                                            className={`relative aspect-square rounded-[2rem] overflow-hidden border-2 transition-all hover:shadow-2xl cursor-zoom-in ${isSelected ? 'border-brand-500 ring-4 ring-brand-500/20' : img.isActive ? 'border-green-500 shadow-lg' : 'border-slate-200 dark:border-white/5 opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                                            className={`relative aspect-square rounded-[2rem] overflow-hidden border-2 transition-all hover:shadow-2xl cursor-zoom-in ${isSelected ? 'border-brand-500 ring-4 ring-brand-500/20' : img.isActive ? 'border-green-500 shadow-lg shadow-green-500/20' : 'border-slate-200 dark:border-white/5 opacity-70 hover:opacity-100'}`}
                                         >
-                                            <img src={img.imageUrl} className="w-full h-full object-cover animate-breathing" alt="IA Asset" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+                                            <img src={img.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="IA Asset" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 pointer-events-none"></div>
                                             
                                             <div className="absolute top-4 left-4 z-20">
                                                 <button 
                                                     onClick={(e) => toggleImageSelection(img.id, e)} 
-                                                    className={`w-9 h-9 rounded-xl flex items-center justify-center border-2 transition-all ${isSelected ? 'bg-brand-500 border-brand-500 text-white shadow-lg' : 'bg-black/30 border-white/20 text-white hover:bg-black/50'}`}
+                                                    className={`w-9 h-9 rounded-xl flex items-center justify-center border-2 transition-all backdrop-blur-md ${isSelected ? 'bg-brand-500 border-brand-500 text-white shadow-lg' : 'bg-black/30 border-white/20 text-white hover:bg-black/60'}`}
                                                 >
                                                     <i className={`fas ${isSelected ? 'fa-check' : 'fa-plus'} text-xs`}></i>
                                                 </button>
                                             </div>
 
                                             {img.isActive && (
-                                                <div className="absolute top-4 right-4 bg-green-500 text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded-lg shadow-lg z-20 animate-pulse border border-white/20">
-                                                    Ativo (24h)
+                                                <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-md text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-xl shadow-lg z-20 animate-pulse border border-green-400/50 flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                                                    Em Uso
                                                 </div>
                                             )}
 
                                             <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-1 z-20 pointer-events-none">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] font-black text-white truncate drop-shadow-md bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm border border-white/10 w-fit mb-1">{cleanContext}</span>
-                                                    <span className="text-[8px] font-bold text-white/70 uppercase tracking-widest">{img.date.split('-').reverse().join('/')}</span>
+                                                    <span className="text-[8px] font-bold text-white/70 uppercase tracking-widest">{img.date ? img.date.split('-').reverse().join('/') : ''}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => setMappingImage(img)}
-                                            className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${img.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-600 hover:bg-green-100' : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-brand-500 hover:text-white'}`}
+                                            className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2 ${img.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-500/20' : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-brand-500 hover:text-white border border-transparent'}`}
                                         >
-                                            {img.isActive ? 'Trocar Menu Ativo' : 'Ativar Manualmente'}
+                                            {img.isActive ? <><i className="fas fa-exchange-alt"></i> Trocar Menu Ativo</> : <><i className="fas fa-bolt"></i> Ativar Manualmente</>}
                                         </button>
                                     </div>
                                 );
@@ -968,58 +966,58 @@ const SystemAdmin: React.FC = () => {
                                 <i className="fas fa-chart-pie text-brand-500"></i> Consumo de Recursos de IA (24h)
                             </h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <Card noPadding className="p-5 border-indigo-500/20 border relative overflow-hidden group">
+                                <Card noPadding className="p-5 border-indigo-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-indigo-500/5 to-transparent">
                                     <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-brain text-indigo-500 text-xl"></i>
-                                        <span className="text-[9px] font-black uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">Texto (LLM)</span>
+                                        <i className="fas fa-brain text-indigo-500 text-xl drop-shadow-sm"></i>
+                                        <span className="text-[9px] font-black uppercase text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">Texto (LLM)</span>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10">
+                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
                                         {(aiUsage.textTokens >= 1000 ? (aiUsage.textTokens/1000).toFixed(1) + 'k' : aiUsage.textTokens)}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide relative z-10">
+                                    <p className="text-[10px] text-slate-500 dark:text-indigo-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
                                         Tokens Consumidos ({aiUsage.textCount} reqs)
                                     </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/5 rotate-12"><i className="fas fa-brain"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-brain"></i></div>
                                 </Card>
 
-                                <Card noPadding className="p-5 border-pink-500/20 border relative overflow-hidden group">
+                                <Card noPadding className="p-5 border-pink-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-pink-500/5 to-transparent">
                                     <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-palette text-pink-500 text-xl"></i>
-                                        <span className="text-[9px] font-black uppercase text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded">Imagem (Flash)</span>
+                                        <i className="fas fa-palette text-pink-500 text-xl drop-shadow-sm"></i>
+                                        <span className="text-[9px] font-black uppercase text-pink-500 dark:text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-md border border-pink-500/20">Imagem (Flash)</span>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10">
+                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
                                         {(aiUsage.imageTokens >= 1000 ? (aiUsage.imageTokens/1000).toFixed(1) + 'k' : aiUsage.imageTokens)}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide relative z-10">
+                                    <p className="text-[10px] text-slate-500 dark:text-pink-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
                                         Tokens Consumidos ({aiUsage.imageCount} imgs)
                                     </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/5 rotate-12"><i className="fas fa-image"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-image"></i></div>
                                 </Card>
 
-                                <Card noPadding className="p-5 border-cyan-500/20 border relative overflow-hidden group">
+                                <Card noPadding className="p-5 border-cyan-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-cyan-500/5 to-transparent">
                                     <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-volume-up text-cyan-500 text-xl"></i>
-                                        <span className="text-[9px] font-black uppercase text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">Áudio (TTS)</span>
+                                        <i className="fas fa-volume-up text-cyan-500 text-xl drop-shadow-sm"></i>
+                                        <span className="text-[9px] font-black uppercase text-cyan-500 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Áudio (TTS)</span>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10">
+                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
                                         {(aiUsage.audioTokens >= 1000 ? (aiUsage.audioTokens/1000).toFixed(1) + 'k' : aiUsage.audioTokens)}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide relative z-10">
+                                    <p className="text-[10px] text-slate-500 dark:text-cyan-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
                                         Tokens Consumidos ({aiUsage.audioCount} auds)
                                     </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/5 rotate-12"><i className="fas fa-waveform"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-waveform"></i></div>
                                 </Card>
 
-                                <Card noPadding className="p-5 border-amber-500/20 border relative overflow-hidden group">
+                                <Card noPadding className="p-5 border-amber-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-amber-500/5 to-transparent">
                                     <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-coins text-amber-500 text-xl"></i>
-                                        <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Total Estimado</span>
+                                        <i className="fas fa-coins text-amber-500 text-xl drop-shadow-sm"></i>
+                                        <span className="text-[9px] font-black uppercase text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Total Estimado</span>
                                     </div>
-                                    <p className="text-2xl font-mono font-bold text-slate-800 dark:text-white relative z-10">
+                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
                                         ~{((aiUsage.textTokens + aiUsage.imageTokens + aiUsage.audioTokens)/1000).toFixed(1)}k
                                     </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide relative z-10">Cota Diária Combinada</p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-amber-500/5 rotate-12"><i className="fas fa-coins"></i></div>
+                                    <p className="text-[10px] text-slate-500 dark:text-amber-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">Cota Diária Combinada</p>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-amber-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-coins"></i></div>
                                 </Card>
                             </div>
                         </div>

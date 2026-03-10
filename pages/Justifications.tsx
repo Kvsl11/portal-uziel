@@ -71,11 +71,10 @@ const Justifications: React.FC = () => {
       const unsubJ = JustificationService.subscribe((data) => setJustifications(data as Justification[]));
       const unsubR = RehearsalService.subscribe((data) => setRehearsals(data as Rehearsal[]));
       const unsubA = AttendanceService.subscribe((data) => setAttendance(data as AttendanceRecord[]));
-      
-      AttendanceService.getSettings().then(s => setSettings(s as AttendanceSettings));
+      const unsubS = AttendanceService.subscribeSettings((s: any) => setSettings(s as AttendanceSettings));
 
       setLoading(false);
-      return () => { unsubJ(); unsubR(); unsubA(); };
+      return () => { unsubJ(); unsubR(); unsubA(); unsubS(); };
   }, []);
 
   const showNotification = (message: string, type: 'success' | 'error') => {

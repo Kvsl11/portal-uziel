@@ -412,7 +412,7 @@ export const DailyImageService = {
         return snap.exists() ? snap.data() as { imageUrl: string, date: string, createdAt: any, context?: string, isActive?: boolean } : null;
     },
     saveImage: async (id: string, imageUrl: string, date: string, context?: string) => {
-        // First deactivate and delete any existing image for this slot to ensure uniqueness and keep only 24h
+        // Remove old images for this context to keep only the latest 24h active image
         if (context) {
             const q = query(getColRef('daily_images'), where('context', '==', context));
             const snap = await getDocs(q);

@@ -202,6 +202,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [enableTransition, setEnableTransition] = useState(false);
   
   const [messages, setMessages] = useState<{
       role: 'user' | 'model', 
@@ -318,6 +319,11 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
           stopAllAudio();
           setViewingImage(null);
           setShowVoiceSettings(false); // Close settings when closing chat
+          setEnableTransition(false);
+      } else {
+          // Enable transition after a short delay to prevent initial mount stretching
+          const timer = setTimeout(() => setEnableTransition(true), 50);
+          return () => clearTimeout(timer);
       }
   }, [isOpen]);
 
@@ -755,9 +761,9 @@ INSTRUÇÕES ADICIONAIS:
   const containerClasses = embedded 
     ? "relative w-full h-full bg-white dark:bg-[#0f172a] rounded-[2rem] flex flex-col shadow-none border-0 overflow-hidden transition-all duration-300"
     : isExpanded
-        ? `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up transition-all duration-300
+        ? `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up ${enableTransition ? 'transition-all duration-300' : ''}
            inset-0 w-full h-full rounded-none`
-        : `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up transition-all duration-300
+        : `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up ${enableTransition ? 'transition-all duration-300' : ''}
            inset-0 w-full h-full rounded-none
            md:bottom-8 md:right-8 md:w-[420px] md:h-[650px] md:max-h-[80vh] md:rounded-3xl md:left-auto md:top-auto md:origin-bottom-right`;
 
