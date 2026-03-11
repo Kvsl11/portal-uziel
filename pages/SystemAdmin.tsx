@@ -626,17 +626,17 @@ const SystemAdmin: React.FC = () => {
                     </h1>
                 </div>
                 
-                <div className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-3xl flex flex-wrap gap-1 shadow-inner border border-slate-200 dark:border-white/5 w-full md:w-fit backdrop-blur-xl">
-                    <button onClick={() => setActiveTab('storage')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'storage' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Banco de Dados">
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-3xl flex flex-wrap md:flex-nowrap gap-1 shadow-inner border border-slate-200 dark:border-white/5 w-full md:w-fit backdrop-blur-xl">
+                    <button onClick={() => setActiveTab('storage')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'storage' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Banco de Dados">
                         <i className="fas fa-database text-sm"></i> <span className="hidden sm:inline">Storage</span>
                     </button>
-                    <button onClick={() => setActiveTab('assets')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'assets' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Assets de IA">
+                    <button onClick={() => setActiveTab('assets')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'assets' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Assets de IA">
                         <i className="fas fa-images text-sm"></i> <span className="hidden sm:inline">Assets IA</span>
                     </button>
-                    <button onClick={() => setActiveTab('config')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'config' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Infra & Cotas">
+                    <button onClick={() => setActiveTab('config')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'config' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Infra & Cotas">
                         <i className="fas fa-microchip text-sm"></i> <span className="hidden sm:inline">Infra</span>
                     </button>
-                    <button onClick={() => setActiveTab('acl')} className={`px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'acl' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Controle de Acesso">
+                    <button onClick={() => setActiveTab('acl')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'acl' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Controle de Acesso">
                         <i className="fas fa-user-shield text-sm"></i> <span className="hidden sm:inline">ACL</span>
                     </button>
                 </div>
@@ -965,59 +965,114 @@ const SystemAdmin: React.FC = () => {
                             <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] mb-4 flex items-center gap-2">
                                 <i className="fas fa-chart-pie text-brand-500"></i> Consumo de Recursos de IA (24h)
                             </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                                 <Card noPadding className="p-5 border-indigo-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-indigo-500/5 to-transparent">
-                                    <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-brain text-indigo-500 text-xl drop-shadow-sm"></i>
-                                        <span className="text-[9px] font-black uppercase text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">Texto (LLM)</span>
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
+                                                <i className="fas fa-brain text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-slate-800 dark:text-white font-bold text-sm">Texto (LLM)</h4>
+                                                <p className="text-[9px] text-indigo-600 dark:text-indigo-400 uppercase tracking-widest font-black">Geração de Texto</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
-                                        {(aiUsage.textTokens >= 1000 ? (aiUsage.textTokens/1000).toFixed(1) + 'k' : aiUsage.textTokens)}
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-indigo-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
-                                        Tokens Consumidos ({aiUsage.textCount} reqs)
-                                    </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-brain"></i></div>
+                                    <div className="grid grid-cols-2 gap-2 relative z-10">
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Prompts (Reqs)</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{aiUsage.textCount}</p>
+                                        </div>
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Tokens (Est.)</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{(aiUsage.textTokens >= 1000 ? (aiUsage.textTokens/1000).toFixed(1) + 'k' : aiUsage.textTokens)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-brain"></i></div>
                                 </Card>
 
                                 <Card noPadding className="p-5 border-pink-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-pink-500/5 to-transparent">
-                                    <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-palette text-pink-500 text-xl drop-shadow-sm"></i>
-                                        <span className="text-[9px] font-black uppercase text-pink-500 dark:text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-md border border-pink-500/20">Imagem (Flash)</span>
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 dark:text-pink-400 border border-pink-500/20">
+                                                <i className="fas fa-palette text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-slate-800 dark:text-white font-bold text-sm">Imagem (Flash)</h4>
+                                                <p className="text-[9px] text-pink-600 dark:text-pink-400 uppercase tracking-widest font-black">Geração Visual</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
-                                        {(aiUsage.imageTokens >= 1000 ? (aiUsage.imageTokens/1000).toFixed(1) + 'k' : aiUsage.imageTokens)}
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-pink-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
-                                        Tokens Consumidos ({aiUsage.imageCount} imgs)
-                                    </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-image"></i></div>
+                                    <div className="grid grid-cols-2 gap-2 relative z-10">
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Prompts (Reqs)</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{aiUsage.imageCount}</p>
+                                        </div>
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Imagens</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{aiUsage.imageCount}</p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-image"></i></div>
                                 </Card>
 
                                 <Card noPadding className="p-5 border-cyan-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-cyan-500/5 to-transparent">
-                                    <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-volume-up text-cyan-500 text-xl drop-shadow-sm"></i>
-                                        <span className="text-[9px] font-black uppercase text-cyan-500 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Áudio (TTS)</span>
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500 dark:text-cyan-400 border border-cyan-500/20">
+                                                <i className="fas fa-volume-up text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-slate-800 dark:text-white font-bold text-sm">Áudio (TTS)</h4>
+                                                <p className="text-[9px] text-cyan-600 dark:text-cyan-400 uppercase tracking-widest font-black">Síntese de Voz</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
-                                        {(aiUsage.audioTokens >= 1000 ? (aiUsage.audioTokens/1000).toFixed(1) + 'k' : aiUsage.audioTokens)}
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-cyan-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">
-                                        Tokens Consumidos ({aiUsage.audioCount} auds)
-                                    </p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-waveform"></i></div>
+                                    <div className="grid grid-cols-2 gap-2 relative z-10">
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Prompts (Reqs)</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{aiUsage.audioCount}</p>
+                                        </div>
+                                        <div className="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-1">Caracteres</p>
+                                            <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{(aiUsage.audioTokens >= 1000 ? (aiUsage.audioTokens/1000).toFixed(1) + 'k' : aiUsage.audioTokens)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-waveform"></i></div>
                                 </Card>
 
-                                <Card noPadding className="p-5 border-amber-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-amber-500/5 to-transparent">
-                                    <div className="flex justify-between items-start mb-2 relative z-10">
-                                        <i className="fas fa-coins text-amber-500 text-xl drop-shadow-sm"></i>
-                                        <span className="text-[9px] font-black uppercase text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Total Estimado</span>
+                                <Card noPadding className="p-6 border-amber-500/40 border-2 relative overflow-hidden group bg-gradient-to-br from-amber-500/10 to-transparent">
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 dark:text-amber-400 border border-amber-500/20">
+                                                <i className="fas fa-chart-line text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-slate-800 dark:text-white font-bold text-sm">Cota Diária</h4>
+                                                <p className="text-[9px] text-amber-600 dark:text-amber-400 uppercase tracking-widest font-black">Limite Free Tier</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white relative z-10 mt-4">
-                                        ~{((aiUsage.textTokens + aiUsage.imageTokens + aiUsage.audioTokens)/1000).toFixed(1)}k
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 dark:text-amber-300/60 font-bold uppercase tracking-wide relative z-10 mt-1">Cota Diária Combinada</p>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-amber-500/10 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-coins"></i></div>
+                                    
+                                    <div className="relative z-10 mt-2">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <p className="text-3xl font-mono font-bold text-slate-800 dark:text-white leading-none">
+                                                {aiUsage.textCount + aiUsage.imageCount + aiUsage.audioCount}
+                                            </p>
+                                            <p className="text-xs font-bold text-slate-400 mb-1">/ 1500 <span className="text-[9px] uppercase tracking-wider">Reqs</span></p>
+                                        </div>
+                                        
+                                        <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 mt-3 overflow-hidden border border-slate-300 dark:border-slate-700 shadow-inner">
+                                            <div className="bg-gradient-to-r from-amber-400 to-amber-600 h-full rounded-full relative" style={{ width: `${Math.min(100, ((aiUsage.textCount + aiUsage.imageCount + aiUsage.audioCount) / 1500) * 100)}%` }}>
+                                                <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between mt-2">
+                                            <p className="text-[9px] text-slate-500 dark:text-amber-300/60 font-bold uppercase tracking-wide">Consumo Atual</p>
+                                            <p className="text-[9px] text-slate-500 dark:text-amber-300/60 font-bold uppercase tracking-wide">{((aiUsage.textCount + aiUsage.imageCount + aiUsage.audioCount) / 1500 * 100).toFixed(1)}%</p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute -right-6 -bottom-6 text-8xl text-amber-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-tachometer-alt"></i></div>
                                 </Card>
                             </div>
                         </div>
