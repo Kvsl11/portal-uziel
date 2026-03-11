@@ -39,6 +39,73 @@ const memoryCache = new Map<string, string>();
 
 let globalQuotaExceeded = false;
 
+export const getTimeUntilQuotaReset = (): string => {
+    const now = new Date();
+    const laTimeStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+    const laDate = new Date(laTimeStr);
+    
+    const nextMidnightLA = new Date(laDate);
+    nextMidnightLA.setHours(24, 0, 0, 0);
+    
+    const diffMs = nextMidnightLA.getTime() - laDate.getTime();
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    
+    return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+};
+
+let quotaToastElement: HTMLDivElement | null = null;
+let quotaToastInterval: NodeJS.Timeout | null = null;
+
+const showQuotaNotification = () => {
+    if (quotaToastElement) return; // Already showing
+
+    quotaToastElement = document.createElement('div');
+    quotaToastElement.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[99999] bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up font-medium text-sm border border-red-500/50 backdrop-blur-md';
+    
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-hourglass-half animate-pulse';
+    quotaToastElement.appendChild(icon);
+
+    const textSpan = document.createElement('span');
+    quotaToastElement.appendChild(textSpan);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ml-2 hover:text-red-200 transition-colors';
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.onclick = () => {
+        if (quotaToastElement) {
+            quotaToastElement.remove();
+            quotaToastElement = null;
+        }
+        if (quotaToastInterval) {
+            clearInterval(quotaToastInterval);
+            quotaToastInterval = null;
+        }
+    };
+    quotaToastElement.appendChild(closeBtn);
+
+    document.body.appendChild(quotaToastElement);
+
+    const updateText = () => {
+        textSpan.innerHTML = `Cota esgotada. Retorna em: <strong>${getTimeUntilQuotaReset()}</strong>`;
+    };
+
+    updateText();
+    quotaToastInterval = setInterval(updateText, 1000);
+
+    // Auto close after 10 seconds
+    setTimeout(() => {
+        if (quotaToastElement) {
+            quotaToastElement.style.opacity = '0';
+            quotaToastElement.style.transform = 'translate(-50%, -20px)';
+            quotaToastElement.style.transition = 'all 0.5s ease';
+            setTimeout(() => closeBtn.onclick && closeBtn.onclick(new MouseEvent('click')), 500);
+        }
+    }, 10000);
+};
+
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const getDateKey = (date: Date) => {
@@ -195,7 +262,10 @@ async function runWithFallback<T>(
   preferredModel?: string,
   timeoutMs: number = 20000 // Default 20s timeout
 ): Promise<T> {
-  if (globalQuotaExceeded) throw new Error("QUOTA_EXHAUSTED_CIRCUIT_BREAKER");
+  if (globalQuotaExceeded) {
+      showQuotaNotification();
+      throw new Error("QUOTA_EXHAUSTED_CIRCUIT_BREAKER");
+  }
   let modelsToTry = modelsList;
   if (preferredModel) {
     const others = modelsList.filter(m => m !== preferredModel);
@@ -225,6 +295,11 @@ async function runWithFallback<T>(
                 console.warn(`[Gemini Service] Cota atingida para modelo ${model}.`);
                 if (modelsList === IMAGE_MODELS_FALLBACK && model === modelsToTry[modelsToTry.length - 1]) {
                     globalQuotaExceeded = true;
+                    showQuotaNotification();
+                } else if (model === modelsToTry[modelsToTry.length - 1]) {
+                    // If it's the last model in ANY fallback list and it fails with quota, trigger global quota
+                    globalQuotaExceeded = true;
+                    showQuotaNotification();
                 }
                 break; 
             }
@@ -580,6 +655,10 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore') =
   }
 
   try {
+      if (globalQuotaExceeded) {
+          showQuotaNotification();
+          throw new Error("QUOTA_EXHAUSTED_CIRCUIT_BREAKER");
+      }
       const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
       const response = await freshAi.models.generateContent({ 
           model: "gemini-2.5-flash-preview-tts", 
@@ -590,8 +669,13 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore') =
           } 
       });
       return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
-  } catch (e) {
+  } catch (e: any) {
       console.error("Gemini TTS Error:", e);
+      const msg = e.toString().toLowerCase();
+      if (msg.includes("429") || msg.includes("quota") || msg.includes("resource_exhausted")) {
+          globalQuotaExceeded = true;
+          showQuotaNotification();
+      }
       throw e; 
   }
 };

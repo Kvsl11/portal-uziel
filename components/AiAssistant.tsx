@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { generateChatResponse, generateImageFromChat, generateSpeech } from '../services/geminiService';
+import { generateChatResponse, generateImageFromChat, generateSpeech, getTimeUntilQuotaReset } from '../services/geminiService';
 import { ContextService } from '../services/contextService'; // Import Context Service
 import ImageViewer from './ImageViewer';
 import ChordRenderer from './ChordRenderer';
@@ -10,6 +10,32 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { useAuth } from '../context/AuthContext';
 import { AuditService, ChatService, UserService } from '../services/firebase';
 import { MediaUtils } from '../utils/mediaUtils';
+
+// --- QUOTA TIMER COMPONENT ---
+const QuotaTimer = () => {
+    const [timeLeft, setTimeLeft] = useState(getTimeUntilQuotaReset());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimeLeft(getTimeUntilQuotaReset());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-500 shrink-0">
+                <i className="fas fa-hourglass-half animate-pulse"></i>
+            </div>
+            <div>
+                <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-0.5">Cota Esgotada</p>
+                <p className="text-sm text-red-600 dark:text-red-300 font-medium">
+                    O limite gratuito da API foi atingido. A cota será renovada em: <span className="font-mono font-bold bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded">{timeLeft}</span>
+                </p>
+            </div>
+        </div>
+    );
+};
 
 // --- ICONS (Monochromatic / Brand Themed) ---
 
@@ -865,7 +891,11 @@ INSTRUÇÕES ADICIONAIS:
                                                         <button onClick={(e) => { e.stopPropagation(); handleDownloadImage(m.generatedImage!, i); }} className="absolute bottom-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-md z-10" title="Baixar Imagem"><i className="fas fa-download text-xs"></i></button>
                                                     </div>
                                                 )}
-                                                <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatMessage(m.text) }}></div>
+                                                {m.text === "Erro: QUOTA_EXHAUSTED_CIRCUIT_BREAKER" || m.text.includes("429") ? (
+                                                    <QuotaTimer />
+                                                ) : (
+                                                    <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatMessage(m.text) }}></div>
+                                                )}
                                                 {youtubeId && <div className="mt-3 rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-white/10"><iframe width="100%" height="200" src={`https://www.youtube.com/embed/${youtubeId}`} title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="block"></iframe></div>}
                                             </div>
                                             {m.grounding && m.grounding.length > 0 && (
