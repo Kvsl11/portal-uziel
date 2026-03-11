@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, deleteApp, FirebaseApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { 
   getFirestore, 
   initializeFirestore,
@@ -61,6 +61,16 @@ const getColRef = (collName: string) => collection(db, `artifacts/${APP_ID}/publ
 const getDocRef = (collName: string, id: string) => doc(db, `artifacts/${APP_ID}/public/data/${collName}`, id);
 
 export const AuthService = {
+  loginWithGoogle: async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (error: any) {
+      console.error("Erro no login com Google:", error.code);
+      throw error;
+    }
+  },
   login: async (email: string, pass: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);

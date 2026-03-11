@@ -23,6 +23,7 @@ const DataExplorerModal = ({ collectionName, onClose }: { collectionName: string
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -36,6 +37,12 @@ const DataExplorerModal = ({ collectionName, onClose }: { collectionName: string
     const filtered = data.filter(item => 
         JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleCopy = (item: any) => {
+        navigator.clipboard.writeText(JSON.stringify(item, null, 2));
+        setCopiedId(item.id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
     return createPortal(
         <div className="fixed inset-0 z-[10000] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-0 md:p-6 animate-fade-in">
@@ -83,8 +90,19 @@ const DataExplorerModal = ({ collectionName, onClose }: { collectionName: string
                                             <div className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 text-xs font-black uppercase tracking-widest">Documento ID</div>
                                             <span className="font-mono text-sm font-bold text-slate-500 dark:text-slate-400 select-all bg-slate-50 dark:bg-black/20 px-3 py-1 rounded-md">{item.id}</span>
                                         </div>
-                                        <button className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-brand-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400" onClick={() => { navigator.clipboard.writeText(JSON.stringify(item, null, 2)); alert("JSON copiado!"); }}>
-                                            <i className="fas fa-copy mr-2"></i> Copiar Estrutura
+                                        <button 
+                                            className={`px-4 py-2 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
+                                                copiedId === item.id 
+                                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105' 
+                                                    : 'bg-slate-100 dark:bg-white/5 hover:bg-brand-500 hover:text-white text-slate-500 dark:text-slate-400'
+                                            }`} 
+                                            onClick={() => handleCopy(item)}
+                                        >
+                                            {copiedId === item.id ? (
+                                                <><i className="fas fa-check"></i> Copiado!</>
+                                            ) : (
+                                                <><i className="fas fa-copy"></i> Copiar Estrutura</>
+                                            )}
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-1 gap-2">
@@ -617,26 +635,30 @@ const SystemAdmin: React.FC = () => {
         <div className="space-y-8 animate-fade-in-up pb-32">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 dark:border-white/5 pb-8">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <DevBadge label="Servidor Local: PR-S1" />
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Núcleo de Operações Neurais</p>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            System Online
+                        </div>
+                        <DevBadge label="PR-S1" />
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] hidden sm:block">Núcleo de Operações Neurais</p>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-display font-bold text-slate-900 dark:text-white leading-[0.8] tracking-tight">
                         Engine <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-sky-400">Room</span>
                     </h1>
                 </div>
                 
-                <div className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-3xl flex flex-wrap md:flex-nowrap gap-1 shadow-inner border border-slate-200 dark:border-white/5 w-full md:w-fit backdrop-blur-xl">
-                    <button onClick={() => setActiveTab('storage')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'storage' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Banco de Dados">
+                <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-2xl flex flex-wrap md:flex-nowrap gap-1 shadow-inner border border-slate-200/50 dark:border-white/5 w-full md:w-fit backdrop-blur-xl">
+                    <button onClick={() => setActiveTab('storage')} className={`flex-1 md:flex-none px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-[11px] uppercase tracking-wider ${activeTab === 'storage' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-brand-400/50' : 'text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5'}`} title="Banco de Dados">
                         <i className="fas fa-database text-sm"></i> <span className="hidden sm:inline">Storage</span>
                     </button>
-                    <button onClick={() => setActiveTab('assets')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'assets' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Assets de IA">
+                    <button onClick={() => setActiveTab('assets')} className={`flex-1 md:flex-none px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-[11px] uppercase tracking-wider ${activeTab === 'assets' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-brand-400/50' : 'text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5'}`} title="Assets de IA">
                         <i className="fas fa-images text-sm"></i> <span className="hidden sm:inline">Assets IA</span>
                     </button>
-                    <button onClick={() => setActiveTab('config')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'config' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Infra & Cotas">
+                    <button onClick={() => setActiveTab('config')} className={`flex-1 md:flex-none px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-[11px] uppercase tracking-wider ${activeTab === 'config' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-brand-400/50' : 'text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5'}`} title="Infra & Cotas">
                         <i className="fas fa-microchip text-sm"></i> <span className="hidden sm:inline">Infra</span>
                     </button>
-                    <button onClick={() => setActiveTab('acl')} className={`flex-1 md:flex-none px-3 md:px-5 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold text-xs uppercase tracking-wider ${activeTab === 'acl' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`} title="Controle de Acesso">
+                    <button onClick={() => setActiveTab('acl')} className={`flex-1 md:flex-none px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-[11px] uppercase tracking-wider ${activeTab === 'acl' ? 'bg-white dark:bg-brand-500 text-brand-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-brand-400/50' : 'text-slate-500 hover:bg-slate-200/50 dark:hover:bg-white/5'}`} title="Controle de Acesso">
                         <i className="fas fa-user-shield text-sm"></i> <span className="hidden sm:inline">ACL</span>
                     </button>
                 </div>
@@ -647,23 +669,29 @@ const SystemAdmin: React.FC = () => {
                     <motion.div key="acl" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                             {/* User List */}
-                            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col">
-                                <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] mb-4 flex items-center gap-2">
-                                    <i className="fas fa-users text-brand-500"></i> Selecione um Usuário
+                            <div className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl p-6 border border-slate-200/50 dark:border-white/10 shadow-xl flex flex-col h-full max-h-[800px]">
+                                <h3 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] mb-6 flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-white/5">
+                                    <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
+                                        <i className="fas fa-users"></i>
+                                    </div>
+                                    Diretório de Usuários
                                 </h3>
-                                <div className="space-y-2 pr-2">
+                                <div className="space-y-3 overflow-y-auto custom-scrollbar pr-2 flex-1">
                                     {usersList.map(user => (
                                         <button
                                             key={user.username}
                                             onClick={() => handleSelectUserACL(user.username)}
-                                            className={`w-full p-4 rounded-2xl flex items-center gap-3 transition-all text-left border ${
+                                            className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all text-left border group relative overflow-hidden ${
                                                 selectedUserForACL === user.username
-                                                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 shadow-md'
-                                                : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-slate-100 dark:hover:bg-white/10'
+                                                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 shadow-md ring-1 ring-brand-500/50'
+                                                : 'bg-slate-50/50 dark:bg-white/5 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/10 hover:shadow-sm hover:border-brand-500/30'
                                             }`}
                                         >
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden ${
-                                                user.role === 'super-admin' ? 'bg-purple-500' : user.role === 'admin' ? 'bg-blue-500' : 'bg-slate-400'
+                                            {selectedUserForACL === user.username && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 to-transparent pointer-events-none"></div>
+                                            )}
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0 overflow-hidden shadow-inner relative z-10 ${
+                                                user.role === 'super-admin' ? 'bg-gradient-to-br from-purple-400 to-purple-600' : user.role === 'admin' ? 'bg-gradient-to-br from-blue-400 to-blue-600' : 'bg-gradient-to-br from-slate-400 to-slate-600'
                                             }`}>
                                                 {user.photoURL ? (
                                                     <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
@@ -671,57 +699,73 @@ const SystemAdmin: React.FC = () => {
                                                     user.name.charAt(0)
                                                 )}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-bold truncate ${selectedUserForACL === user.username ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                                            <div className="flex-1 min-w-0 relative z-10">
+                                                <p className={`text-sm font-bold truncate transition-colors ${selectedUserForACL === user.username ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400'}`}>
                                                     {user.name}
                                                 </p>
-                                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">{user.role}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
+                                                        user.role === 'super-admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                                                        user.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                        'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                                    }`}>
+                                                        {user.role}
+                                                    </span>
+                                                </div>
                                             </div>
+                                            {selectedUserForACL === user.username && (
+                                                <i className="fas fa-chevron-right text-brand-500 opacity-50 relative z-10"></i>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Permissions Matrix */}
-                            <div id="acl-matrix" className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-[2.5rem] p-6 md:p-8 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col relative overflow-hidden min-h-[500px]">
+                            <div id="acl-matrix" className="lg:col-span-2 bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-200/50 dark:border-white/10 shadow-xl flex flex-col relative overflow-hidden min-h-[500px]">
                                 {selectedUserForACL ? (
                                     <>
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-100 dark:border-white/5 pb-6 gap-4">
-                                            <div>
-                                                <h2 className="text-xl md:text-2xl font-display font-bold text-slate-800 dark:text-white mb-1">
-                                                    Matriz de Acesso
-                                                </h2>
-                                                <p className="text-sm text-slate-400">
-                                                    Editando: <span className="text-brand-500 font-bold">{usersList.find(u => u.username === selectedUserForACL)?.name}</span>
-                                                </p>
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-100 dark:border-white/5 pb-6 gap-4 relative z-10">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20 hidden md:flex">
+                                                    <i className="fas fa-shield-alt text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl md:text-2xl font-display font-bold text-slate-800 dark:text-white mb-1">
+                                                        Matriz de Acesso
+                                                    </h2>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                                        Editando permissões para: <span className="text-brand-600 dark:text-brand-400 font-bold bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 rounded-md ml-1">{usersList.find(u => u.username === selectedUserForACL)?.name}</span>
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-2 w-full md:w-auto">
+                                            <div className="flex gap-3 w-full md:w-auto">
                                                 <button 
                                                     onClick={handleResetACL}
-                                                    className="flex-1 md:flex-none px-4 py-3 md:py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-xs font-bold uppercase tracking-wider"
+                                                    className="flex-1 md:flex-none px-5 py-3 md:py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-[10px] font-black uppercase tracking-widest border border-transparent hover:border-red-200 dark:hover:border-red-900/50"
                                                 >
-                                                    Resetar
+                                                    Descartar
                                                 </button>
                                                 <button 
                                                     onClick={handleSaveACL}
                                                     disabled={isSavingACL}
-                                                    className="flex-[2] md:flex-none px-6 py-3 md:py-2 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                                                    className="flex-[2] md:flex-none px-6 py-3 md:py-2.5 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 hover:-translate-y-0.5 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
                                                 >
                                                     {isSavingACL ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>}
-                                                    Salvar
+                                                    Salvar Alterações
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20 max-h-[60vh] lg:max-h-none">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20 max-h-[60vh] lg:max-h-none relative z-10">
                                             {Object.entries(PERMISSION_MODULES).map(([modKey, modValue]) => {
                                                 const config = MODULE_CONFIG[modValue];
                                                 if (!config) return null;
 
                                                 return (
-                                                <div key={modKey} className="bg-slate-50 dark:bg-black/20 rounded-2xl p-5 border border-slate-100 dark:border-white/5">
-                                                    <div className="flex items-center gap-3 mb-4">
-                                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-400 shadow-sm">
+                                                <div key={modKey} className="bg-slate-50/50 dark:bg-black/20 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 hover:border-brand-500/30 transition-colors group">
+                                                    <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-200/50 dark:border-white/5">
+                                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm border border-slate-100 dark:border-white/5 group-hover:text-brand-500 transition-colors">
                                                             <i className={`fas ${
                                                                 modValue === 'dashboard' ? 'fa-chart-pie' :
                                                                 modValue === 'repertory' ? 'fa-music' :
@@ -738,12 +782,12 @@ const SystemAdmin: React.FC = () => {
                                                                 'fa-cogs'
                                                             }`}></i>
                                                         </div>
-                                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 uppercase text-xs tracking-widest">
+                                                        <h4 className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[10px] tracking-widest">
                                                             {config.label}
                                                         </h4>
                                                     </div>
                                                     
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-2.5">
                                                         {config.actions.map((action) => {
                                                             const permString = `${modValue}:${action}`;
                                                             const isGlobalWildcard = aclPermissions.includes('*');
@@ -751,11 +795,11 @@ const SystemAdmin: React.FC = () => {
                                                             const isChecked = isGlobalWildcard || isModuleWildcard || aclPermissions.includes(permString);
                                                             
                                                             return (
-                                                                <label key={action} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-white/5 cursor-pointer transition-colors group select-none">
-                                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${
+                                                                <label key={action} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white dark:hover:bg-white/5 cursor-pointer transition-all group/item select-none border border-transparent hover:border-slate-200 dark:hover:border-white/10 hover:shadow-sm">
+                                                                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                                                                         isChecked 
-                                                                        ? 'bg-brand-500 border-brand-500 text-white' 
-                                                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                                                                        ? 'bg-brand-500 border-brand-500 text-white shadow-sm shadow-brand-500/30' 
+                                                                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 group-hover/item:border-brand-400'
                                                                     }`}>
                                                                         {isChecked && <i className="fas fa-check text-[10px]"></i>}
                                                                     </div>
@@ -766,10 +810,10 @@ const SystemAdmin: React.FC = () => {
                                                                         onChange={() => togglePermission(modValue, action)}
                                                                         disabled={(isGlobalWildcard || isModuleWildcard)} 
                                                                     />
-                                                                    <span className={`text-xs font-medium ${isChecked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                                    <span className={`text-xs font-medium transition-colors ${isChecked ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 group-hover/item:text-slate-800 dark:group-hover/item:text-slate-200'}`}>
                                                                         {PERMISSION_ACTIONS_LABELS[action] || action}
                                                                         {modValue === 'users' && (action === 'delete' || action === 'edit') && (
-                                                                            <span className="block text-[9px] text-brand-500 font-bold uppercase tracking-wider mt-0.5">
+                                                                            <span className="block text-[9px] text-brand-500 font-bold uppercase tracking-wider mt-1 opacity-80">
                                                                                 *Exceto outros Admins
                                                                             </span>
                                                                         )}
@@ -781,12 +825,15 @@ const SystemAdmin: React.FC = () => {
                                                 </div>
                                             )})}
                                         </div>
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                                     </>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center h-full text-slate-300 dark:text-slate-600 py-20 lg:py-0">
-                                        <i className="fas fa-user-shield text-6xl mb-4 opacity-50"></i>
-                                        <p className="text-lg font-bold uppercase tracking-widest text-center px-4">Selecione um usuário</p>
-                                        <p className="text-sm mt-2 max-w-xs text-center opacity-70 px-4">Toque em um nome na lista acima para gerenciar suas permissões.</p>
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 py-20 lg:py-0 relative z-10">
+                                        <div className="w-24 h-24 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center mb-6 border border-slate-100 dark:border-white/5 shadow-inner">
+                                            <i className="fas fa-user-shield text-4xl text-slate-300 dark:text-slate-600"></i>
+                                        </div>
+                                        <p className="text-lg font-black uppercase tracking-widest text-center px-4 text-slate-700 dark:text-slate-300">Selecione um usuário</p>
+                                        <p className="text-xs mt-3 max-w-xs text-center opacity-80 px-4 leading-relaxed">Escolha um perfil no diretório ao lado para visualizar e configurar sua matriz de acesso ao sistema.</p>
                                     </div>
                                 )}
                             </div>
@@ -796,24 +843,65 @@ const SystemAdmin: React.FC = () => {
 
                 {activeTab === 'storage' && (
                     <motion.div key="storage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Card noPadding className="p-6 border-brand-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-brand-500/5 to-transparent">
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-brand-500/10 rotate-12"><i className="fas fa-database"></i></div>
-                                <p className="text-[10px] uppercase font-black text-brand-500 dark:text-brand-400 tracking-widest mb-1 relative z-10">Mapeamento Total</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">{totalDocs}</p>
-                                <p className="text-[10px] font-bold text-slate-500 dark:text-brand-300/50 mt-1 uppercase tracking-wider relative z-10">Documentos Registrados</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Card noPadding className="p-5 border-brand-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-brand-500/5 to-transparent">
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-500 dark:text-brand-400 border border-brand-500/20">
+                                            <i className="fas fa-database text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-slate-800 dark:text-white font-bold text-sm">Mapeamento Total</h4>
+                                            <p className="text-[9px] text-brand-600 dark:text-brand-400 uppercase tracking-widest font-black">Documentos Registrados</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="relative z-10 mt-2">
+                                    <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">{totalDocs}</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-brand-300/60 font-bold uppercase tracking-wide mt-1">Entidades no Firestore</p>
+                                </div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-brand-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-database"></i></div>
                             </Card>
-                            <Card noPadding className="p-6 border-sky-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-sky-500/5 to-transparent">
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-sky-500/10 rotate-12"><i className="fas fa-hdd"></i></div>
-                                <p className="text-[10px] uppercase font-black text-sky-500 dark:text-sky-400 tracking-widest mb-1 relative z-10">Consumo de Dados</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">~{estimatedUsageKB.toFixed(1)} KB</p>
-                                <p className="text-[10px] font-bold text-slate-500 dark:text-sky-300/50 mt-1 uppercase tracking-wider relative z-10">Persistência Firestore</p>
+
+                            <Card noPadding className="p-5 border-sky-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-sky-500/5 to-transparent">
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500 dark:text-sky-400 border border-sky-500/20">
+                                            <i className="fas fa-hdd text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-slate-800 dark:text-white font-bold text-sm">Consumo de Dados</h4>
+                                            <p className="text-[9px] text-sky-600 dark:text-sky-400 uppercase tracking-widest font-black">Persistência Firestore</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="relative z-10 mt-2">
+                                    <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">~{estimatedUsageKB.toFixed(1)} <span className="text-xl text-slate-400">KB</span></p>
+                                    <p className="text-[10px] text-slate-500 dark:text-sky-300/60 font-bold uppercase tracking-wide mt-1">Estimativa de Volume</p>
+                                </div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-sky-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-hdd"></i></div>
                             </Card>
-                            <Card noPadding className="p-6 border-green-500/30 border-2 relative overflow-hidden bg-gradient-to-br from-green-500/5 to-transparent">
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-green-500/10 rotate-12"><i className="fas fa-server"></i></div>
-                                <p className="text-[10px] uppercase font-black text-green-500 dark:text-green-400 tracking-widest mb-1 relative z-10">Estado do Cluster</p>
-                                <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white relative z-10">ESTÁVEL</p>
-                                <p className="text-[10px] font-bold text-slate-500 dark:text-green-300/50 mt-1 uppercase tracking-wider relative z-10">Sincronização em 16ms</p>
+
+                            <Card noPadding className="p-5 border-emerald-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-emerald-500/5 to-transparent">
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 dark:text-emerald-400 border border-emerald-500/20">
+                                            <i className="fas fa-server text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-slate-800 dark:text-white font-bold text-sm">Estado do Cluster</h4>
+                                            <p className="text-[9px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Health Check</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="relative z-10 mt-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                                        <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">ESTÁVEL</p>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 dark:text-emerald-300/60 font-bold uppercase tracking-wide mt-1">Sincronização em 16ms</p>
+                                </div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-emerald-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-network-wired"></i></div>
                             </Card>
                         </div>
 
@@ -827,34 +915,47 @@ const SystemAdmin: React.FC = () => {
                                         <div 
                                             key={key} 
                                             onClick={() => setExploringCollection(key)}
-                                            className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-[2.5rem] border border-slate-100 dark:border-white/10 flex flex-col overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 hover:border-brand-500/50 transition-all cursor-pointer group relative"
+                                            className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl border border-slate-200/50 dark:border-white/10 flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-brand-500/50 transition-all cursor-pointer group relative"
                                         >
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-brand-500/20"></div>
-                                            <div className="p-5 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-black/20 relative z-10">
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase text-brand-500 group-hover:text-brand-400 transition-colors tracking-widest">{key.replace('_', ' ')}</p>
-                                                    <p className="text-2xl font-mono font-bold text-slate-800 dark:text-white mt-1">{val} <span className="text-sm text-slate-400 font-sans font-medium">docs</span></p>
+                                            <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-black/20 relative z-10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
+                                                        <i className="fas fa-folder-open"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black uppercase text-brand-500 group-hover:text-brand-400 transition-colors tracking-widest">{key.replace('_', ' ')}</p>
+                                                        <p className="text-2xl font-mono font-bold text-slate-800 dark:text-white leading-none mt-1">{val} <span className="text-xs text-slate-400 font-sans font-medium uppercase tracking-wider">docs</span></p>
+                                                    </div>
                                                 </div>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setPurgeModal({ isOpen: true, target: key, title: `Limpar [${key}]`, desc: `Deseja realmente apagar os ${val} documentos da coleção "${key}"?`, action: () => handlePurgeCollection(key) }) }} 
-                                                    className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center"
+                                                    className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center border border-red-100 dark:border-red-900/30"
                                                     title="Limpar Coleção"
                                                 >
                                                     <i className="fas fa-eraser"></i>
                                                 </button>
                                             </div>
-                                            <div className="p-5 space-y-2 flex-1 relative overflow-hidden">
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amostra Visual:</p>
+                                            <div className="p-5 space-y-2 flex-1 relative overflow-hidden bg-slate-50/30 dark:bg-transparent">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Amostra de Dados</p>
+                                                    <i className="fas fa-code text-slate-300 dark:text-slate-600"></i>
+                                                </div>
                                                 {previews[key]?.map((item, idx) => (
-                                                    <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate">
+                                                    <div key={idx} className="p-3 rounded-xl bg-white dark:bg-black/40 border border-slate-200/50 dark:border-white/5 text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate shadow-sm">
                                                         <span className="text-brand-500 font-bold mr-2">{item.id?.slice(-4)}:</span>
-                                                        {JSON.stringify(item).slice(0, 100)}...
+                                                        <span className="opacity-80">{JSON.stringify(item).slice(0, 80)}...</span>
                                                     </div>
                                                 ))}
-                                                {(!previews[key] || previews[key].length === 0) && <p className="text-xs text-slate-300 italic">Estrutura vazia.</p>}
-                                                <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-slate-800 to-transparent pointer-events-none opacity-60"></div>
+                                                {(!previews[key] || previews[key].length === 0) && (
+                                                    <div className="flex flex-col items-center justify-center py-6 text-slate-400 dark:text-slate-500">
+                                                        <i className="fas fa-box-open text-2xl mb-2 opacity-50"></i>
+                                                        <p className="text-xs italic">Estrutura vazia</p>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-slate-800 to-transparent pointer-events-none opacity-80"></div>
                                             </div>
-                                            <div className="p-3 text-center border-t border-slate-50 dark:border-white/5 text-[9px] font-black uppercase text-brand-500 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="p-3 text-center border-t border-slate-100 dark:border-white/5 text-[9px] font-black uppercase text-brand-500 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50/50 dark:bg-black/20">
                                                 Explorar Dados Completos
                                             </div>
                                         </div>
@@ -988,7 +1089,7 @@ const SystemAdmin: React.FC = () => {
                                             <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{(aiUsage.textTokens >= 1000 ? (aiUsage.textTokens/1000).toFixed(1) + 'k' : aiUsage.textTokens)}</p>
                                         </div>
                                     </div>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-brain"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-indigo-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-brain"></i></div>
                                 </Card>
 
                                 <Card noPadding className="p-5 border-pink-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-pink-500/5 to-transparent">
@@ -1013,7 +1114,7 @@ const SystemAdmin: React.FC = () => {
                                             <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{aiUsage.imageCount}</p>
                                         </div>
                                     </div>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-image"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-pink-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-image"></i></div>
                                 </Card>
 
                                 <Card noPadding className="p-5 border-cyan-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-cyan-500/5 to-transparent">
@@ -1038,7 +1139,7 @@ const SystemAdmin: React.FC = () => {
                                             <p className="text-xl font-mono font-bold text-slate-800 dark:text-white">{(aiUsage.audioTokens >= 1000 ? (aiUsage.audioTokens/1000).toFixed(1) + 'k' : aiUsage.audioTokens)}</p>
                                         </div>
                                     </div>
-                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-waveform"></i></div>
+                                    <div className="absolute -right-4 -bottom-4 text-8xl text-cyan-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-waveform"></i></div>
                                 </Card>
 
                                 <Card noPadding className="p-6 border-amber-500/40 border-2 relative overflow-hidden group bg-gradient-to-br from-amber-500/10 to-transparent">
@@ -1072,30 +1173,46 @@ const SystemAdmin: React.FC = () => {
                                             <p className="text-[9px] text-slate-500 dark:text-amber-300/60 font-bold uppercase tracking-wide">{((aiUsage.textCount + aiUsage.imageCount + aiUsage.audioCount) / 1500 * 100).toFixed(1)}%</p>
                                         </div>
                                     </div>
-                                    <div className="absolute -right-6 -bottom-6 text-8xl text-amber-500/5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6"><i className="fas fa-tachometer-alt"></i></div>
+                                    <div className="absolute -right-6 -bottom-6 text-8xl text-amber-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-tachometer-alt"></i></div>
                                 </Card>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <Card className="p-8 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-6xl"><i className="fas fa-key"></i></div>
-                                <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white mb-6 border-b border-slate-100 dark:border-white/5 pb-4 flex items-center gap-3">
-                                    <i className="fas fa-shield-alt text-brand-500"></i> Segurança & Provedores
-                                </h3>
-                                <div className="space-y-6">
+                            <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-key"></i></div>
+                                
+                                <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                    <div className="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
+                                        <i className="fas fa-shield-alt text-xl"></i>
+                                    </div>
                                     <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gemini API Key</label>
-                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${geminiSource === 'env' ? 'bg-slate-200 dark:bg-white/10 text-slate-500' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'}`}>
+                                        <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                            Segurança & Provedores
+                                        </h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                            Gerenciamento de chaves e configurações externas
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-8 relative z-10">
+                                    <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <i className="fas fa-robot text-brand-500"></i>
+                                                <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Gemini API Key</label>
+                                            </div>
+                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${geminiSource === 'env' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
                                                 FONTE: {geminiSource === 'env' ? 'ARQUIVO / ENV' : 'PERSONALIZADA / LOCAL'}
                                             </span>
                                         </div>
                                         
                                         {isEditingGemini ? (
-                                            <div className="flex items-center gap-2 animate-fade-in-right">
-                                                <div className="flex-1 flex items-center gap-4 bg-slate-100 dark:bg-black/40 p-4 rounded-2xl font-mono text-xs text-slate-500 border-2 border-brand-500 shadow-sm relative">
-                                                    <i className="fas fa-microchip text-brand-500"></i>
+                                            <div className="flex items-center gap-3 animate-fade-in-right">
+                                                <div className="flex-1 flex items-center gap-4 bg-white dark:bg-black/40 p-4 rounded-xl font-mono text-xs text-slate-500 border-2 border-brand-500 shadow-sm shadow-brand-500/20 relative">
+                                                    <i className="fas fa-key text-brand-500 opacity-50"></i>
                                                     <input 
                                                         type="text" 
                                                         value={customGeminiKey}
@@ -1105,40 +1222,45 @@ const SystemAdmin: React.FC = () => {
                                                         autoFocus
                                                     />
                                                 </div>
-                                                <button onClick={() => setIsEditingGemini(false)} className="w-12 h-12 rounded-2xl bg-brand-500 text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform">
+                                                <button onClick={() => setIsEditingGemini(false)} className="w-12 h-12 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center hover:-translate-y-0.5 transition-transform">
                                                     <i className="fas fa-check"></i>
                                                 </button>
                                             </div>
                                         ) : (
                                             <div className="group relative" onClick={() => setIsEditingGemini(true)}>
-                                                <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-white/10 cursor-pointer hover:border-brand-500/50 transition-colors shadow-inner">
-                                                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500">
-                                                        <i className="fas fa-key text-xs"></i>
+                                                <div className="flex items-center gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-white/10 cursor-pointer hover:border-brand-500/50 transition-colors shadow-sm">
+                                                    <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
+                                                        <i className="fas fa-lock text-xs"></i>
                                                     </div>
-                                                    <div className="flex-1 font-mono text-xs text-slate-600 dark:text-slate-400 truncate">
+                                                    <div className="flex-1 font-mono text-xs text-slate-600 dark:text-slate-400 truncate tracking-wider">
                                                         {customGeminiKey && customGeminiKey.length > 10 
                                                             ? `${customGeminiKey.substring(0, 8)}••••••••••••••••${customGeminiKey.substring(customGeminiKey.length - 4)}`
                                                             : '••••••••••••••••••••••••'
                                                         }
                                                     </div>
                                                     {geminiSource === 'custom' && (
-                                                        <button onClick={(e) => {e.stopPropagation(); handleResetGemini();}} className="text-slate-400 hover:text-red-500 p-2" title="Restaurar Padrão">
+                                                        <button onClick={(e) => {e.stopPropagation(); handleResetGemini();}} className="text-slate-400 hover:text-red-500 p-2 transition-colors" title="Restaurar Padrão">
                                                             <i className="fas fa-undo"></i>
                                                         </button>
                                                     )}
                                                 </div>
-                                                <button className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+                                                <button className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center opacity-100 transition-all hover:scale-110">
                                                     <i className="fas fa-pen text-xs"></i>
                                                 </button>
                                             </div>
                                         )}
-                                        <p className="text-[9px] text-slate-400 mt-2 ml-1">O valor exibido é a chave ativa no momento.</p>
+                                        <p className="text-[9px] text-slate-400 mt-3 ml-1 flex items-center gap-1.5 font-medium">
+                                            <i className="fas fa-info-circle opacity-50"></i> O valor exibido é a chave ativa no momento.
+                                        </p>
                                     </div>
 
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Firebase Cloud Config</label>
-                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${fbSource === 'default' ? 'bg-slate-200 dark:bg-white/10 text-slate-500' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'}`}>
+                                    <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <i className="fas fa-fire text-orange-500"></i>
+                                                <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Firebase Cloud Config</label>
+                                            </div>
+                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${fbSource === 'default' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
                                                 FONTE: {fbSource === 'default' ? 'PADRÃO / HARDCODED' : 'PERSONALIZADA / LOCAL'}
                                             </span>
                                         </div>
@@ -1149,37 +1271,39 @@ const SystemAdmin: React.FC = () => {
                                                     value={customFirebaseConfig}
                                                     onChange={(e) => { setCustomFirebaseConfig(e.target.value); setFbSource('custom'); }}
                                                     placeholder='Cole o objeto JSON do Firebase aqui...'
-                                                    className="w-full h-48 bg-slate-100 dark:bg-black/40 p-4 rounded-2xl font-mono text-xs text-slate-700 dark:text-slate-300 border-2 border-brand-500 outline-none transition-colors resize-none shadow-sm"
+                                                    className="w-full h-48 bg-white dark:bg-black/40 p-4 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300 border-2 border-brand-500 outline-none transition-colors resize-none shadow-sm shadow-brand-500/10"
                                                     autoFocus
                                                 />
                                                 <div className="absolute bottom-4 right-4 flex gap-2">
-                                                    <button onClick={() => setIsEditingFirebase(false)} className="px-4 py-2 rounded-xl bg-brand-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg hover:bg-brand-600 transition-colors">
+                                                    <button onClick={() => setIsEditingFirebase(false)} className="px-5 py-2.5 rounded-lg bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:-translate-y-0.5 transition-all">
                                                         Confirmar Edição
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="relative group cursor-pointer" onClick={() => setIsEditingFirebase(true)}>
-                                                <div className="w-full h-48 bg-[#1e1e1e] p-4 rounded-2xl border border-slate-800 shadow-inner overflow-hidden relative">
-                                                    <div className="absolute top-0 left-0 w-full h-6 bg-[#252526] border-b border-[#333] flex items-center px-3 gap-1.5">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                                                        <span className="ml-2 text-[10px] text-slate-500 font-mono">firebase_config.json</span>
+                                                <div className="w-full h-48 bg-[#1e1e1e] p-4 rounded-xl border border-slate-800 shadow-inner overflow-hidden relative group-hover:border-brand-500/50 transition-colors">
+                                                    <div className="absolute top-0 left-0 w-full h-8 bg-[#252526] border-b border-[#333] flex items-center px-4 gap-2">
+                                                        <div className="flex gap-1.5">
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
+                                                        </div>
+                                                        <span className="ml-3 text-[10px] text-slate-400 font-mono">firebase_config.json</span>
                                                     </div>
-                                                    <pre className="mt-4 font-mono text-[10px] text-blue-300 overflow-hidden opacity-90 leading-relaxed">
+                                                    <pre className="mt-6 font-mono text-[11px] text-blue-300/90 overflow-hidden leading-relaxed">
                                                         {customFirebaseConfig.slice(0, 300)}...
                                                     </pre>
                                                     <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e1e] via-transparent to-transparent pointer-events-none"></div>
-                                                    <div className="absolute bottom-3 right-4 text-[10px] font-mono text-slate-500">JSON • Read Only</div>
+                                                    <div className="absolute bottom-3 right-4 text-[9px] font-mono text-slate-500 font-bold tracking-widest uppercase">JSON • Read Only</div>
                                                 </div>
                                                 
-                                                <button className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 z-10">
+                                                <button className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center opacity-100 transition-all hover:scale-110 z-10">
                                                     <i className="fas fa-pen text-xs"></i>
                                                 </button>
 
                                                 {fbSource === 'custom' && (
-                                                    <button onClick={(e) => {e.stopPropagation(); handleResetFirebase();}} className="absolute bottom-4 right-4 z-20 text-slate-400 hover:text-red-500 bg-white/10 p-2 rounded-lg backdrop-blur-sm" title="Restaurar Padrão">
+                                                    <button onClick={(e) => {e.stopPropagation(); handleResetFirebase();}} className="absolute bottom-4 right-4 z-20 text-slate-400 hover:text-red-500 bg-white/10 p-2 rounded-lg backdrop-blur-sm transition-colors" title="Restaurar Padrão">
                                                         <i className="fas fa-undo"></i>
                                                     </button>
                                                 )}
@@ -1189,56 +1313,112 @@ const SystemAdmin: React.FC = () => {
                                     
                                     <button 
                                         onClick={handleSaveConfigs}
-                                        className="w-full py-4 rounded-2xl bg-brand-600 text-white font-bold uppercase text-xs tracking-widest hover:bg-brand-500 transition-all shadow-lg mt-4"
+                                        className="w-full py-4 rounded-xl bg-brand-600 text-white font-black uppercase text-[10px] tracking-widest hover:bg-brand-500 hover:-translate-y-0.5 transition-all shadow-lg shadow-brand-500/20 mt-4 flex items-center justify-center gap-2"
                                     >
-                                        Salvar e Aplicar Configurações
+                                        <i className="fas fa-save"></i> Salvar e Aplicar Configurações
                                     </button>
                                 </div>
                             </Card>
 
-                            <Card className="p-8 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-6xl"><i className="fas fa-network-wired"></i></div>
-                                <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white mb-6 border-b border-slate-100 dark:border-white/5 pb-4 flex items-center gap-3">
-                                    <i className="fas fa-cloud-sun text-sky-500"></i> Cluster de Persistência
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-slate-400 mb-1">ID do Projeto (Firestore)</p>
-                                        <p className="font-mono text-xs text-slate-700 dark:text-slate-200 font-bold">portal-uziel-295cb</p>
+                            <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-network-wired"></i></div>
+                                
+                                <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                    <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-100 dark:border-sky-500/20">
+                                        <i className="fas fa-cloud-sun text-xl"></i>
                                     </div>
-                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-slate-400 mb-1">Identidade do WebApp</p>
-                                        <p className="font-mono text-xs text-slate-700 dark:text-slate-200 font-bold truncate">1:98540572300:web</p>
+                                    <div>
+                                        <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                            Cluster de Persistência
+                                        </h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                            Informações do banco de dados e storage
+                                        </p>
                                     </div>
-                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-slate-400 mb-1">Bucket Principal</p>
-                                        <p className="font-mono text-xs text-slate-700 dark:text-slate-200 font-bold truncate">portal-uziel-295cb.firebasestorage.app</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
+                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <i className="fas fa-project-diagram text-sky-500 opacity-70"></i>
+                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">ID do Projeto (Firestore)</p>
+                                        </div>
+                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">portal-uziel-295cb</p>
                                     </div>
-                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-slate-400 mb-1">Região Geográfica</p>
-                                        <p className="font-mono text-xs text-green-500 font-bold">multi-region (US/SA-E1)</p>
+                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <i className="fas fa-fingerprint text-sky-500 opacity-70"></i>
+                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Identidade do WebApp</p>
+                                        </div>
+                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">1:98540572300:web</p>
+                                    </div>
+                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <i className="fas fa-box-open text-sky-500 opacity-70"></i>
+                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Bucket Principal</p>
+                                        </div>
+                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">portal-uziel-295cb.firebasestorage.app</p>
+                                    </div>
+                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <i className="fas fa-globe-americas text-sky-500 opacity-70"></i>
+                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Região Geográfica</p>
+                                        </div>
+                                        <p className="font-mono text-sm text-emerald-600 dark:text-emerald-400 font-bold group-hover:text-emerald-500 transition-colors">multi-region (US/SA-E1)</p>
                                     </div>
                                 </div>
                             </Card>
                         </div>
 
-                        <Card className="p-10 shadow-2xl">
-                            <h3 className="text-2xl font-display font-bold text-slate-800 dark:text-white mb-8 border-b border-slate-100 dark:border-white/5 pb-4 flex items-center gap-3">
-                                <i className="fas fa-server"></i> Ambiente de Produção Edge
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">CDN Network</label>
-                                    <div className="w-full p-5 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between group hover:border-brand-500 transition-colors">
-                                        <span className="font-mono text-sm text-green-500 uppercase tracking-widest font-black">Cloudflare Proxy Ativo</span>
-                                        <i className="fas fa-globe text-slate-300 group-hover:text-brand-500 transition-colors"></i>
-                                    </div>
+                        <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                            <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-20 -mt-20 pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-8xl"><i className="fas fa-server"></i></div>
+                            
+                            <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-100 dark:border-indigo-500/20">
+                                    <i className="fas fa-server text-xl"></i>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">Runtime Status</label>
-                                    <div className="w-full p-5 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between group hover:border-brand-500 transition-colors">
-                                        <span className="font-mono text-sm text-blue-500 uppercase tracking-widest font-black">Node 20.x • React 19</span>
-                                        <i className="fab fa-react text-slate-300 group-hover:text-brand-500 transition-colors"></i>
+                                    <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                        Ambiente de Produção Edge
+                                    </h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                        Status da infraestrutura de entrega
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                <div className="bg-slate-50/50 dark:bg-black/20 p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <i className="fas fa-network-wired text-indigo-500"></i>
+                                        <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">CDN Network</label>
+                                    </div>
+                                    <div className="w-full p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative flex h-3 w-3">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                            </div>
+                                            <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Cloudflare Proxy Ativo</span>
+                                        </div>
+                                        <i className="fas fa-globe text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors text-xl"></i>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50/50 dark:bg-black/20 p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <i className="fas fa-microchip text-indigo-500"></i>
+                                        <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Runtime Status</label>
+                                    </div>
+                                    <div className="w-full p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                                <i className="fab fa-react"></i>
+                                            </div>
+                                            <span className="font-mono text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-black">Node 20.x • React 19</span>
+                                        </div>
+                                        <i className="fas fa-bolt text-slate-300 dark:text-slate-600 group-hover:text-yellow-500 transition-colors text-xl"></i>
                                     </div>
                                 </div>
                             </div>

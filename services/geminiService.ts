@@ -101,7 +101,7 @@ const showQuotaNotification = () => {
             quotaToastElement.style.opacity = '0';
             quotaToastElement.style.transform = 'translate(-50%, -20px)';
             quotaToastElement.style.transition = 'all 0.5s ease';
-            setTimeout(() => closeBtn.onclick && closeBtn.onclick(new MouseEvent('click')), 500);
+            setTimeout(() => closeBtn.click(), 500);
         }
     }, 10000);
 };
