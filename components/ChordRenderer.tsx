@@ -60,7 +60,7 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
     const lines = text.split(/\r\n|\r|\n/);
 
     return (
-        <div className={`font-sans text-lg leading-8 tracking-normal w-full overflow-x-hidden ${center ? 'text-center' : 'text-left'}`}>
+        <div className={`font-sans text-base md:text-lg leading-relaxed md:leading-8 tracking-normal w-full overflow-x-hidden ${center ? 'text-center' : 'text-left'}`}>
             {lines.map((line, lineIdx) => {
                 // Handle empty lines explicitly to preserve spacing
                 if (!line.trim()) {
@@ -105,9 +105,9 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                             // If we had a pending chord without text (e.g., [A][B]), render the previous one
                             if (currentChord) {
                                 blocks.push(
-                                    <div key={`${lineIdx}-${i}-prev`} className="inline-flex flex-col justify-end mr-2 mb-4 min-w-[1.5rem]">
-                                        <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1.5 rounded-md mb-1">{currentChord}</span>
-                                        <span className="text-transparent text-lg h-7 leading-normal select-none border-b-2 border-transparent">.</span>
+                                    <div key={`${lineIdx}-${i}-prev`} className="inline-flex flex-col justify-end mr-1.5 md:mr-2 mb-3 md:mb-4 min-w-[1.25rem] md:min-w-[1.5rem]">
+                                        <span className="text-brand-600 dark:text-brand-400 font-black text-[10px] md:text-sm h-5 md:h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1 md:px-1.5 rounded-md mb-1">{currentChord}</span>
+                                        <span className="text-transparent text-base md:text-lg h-6 md:h-7 leading-normal select-none border-b-2 border-transparent">.</span>
                                     </div>
                                 );
                             }
@@ -120,15 +120,15 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                             const marginClass = hasLeadingSpace ? 'mr-1' : 'mr-0.5';
                             
                             blocks.push(
-                                <div key={`${lineIdx}-${i}`} className={`inline-flex flex-col justify-end ${marginClass} mb-4 group relative`}>
+                                <div key={`${lineIdx}-${i}`} className={`inline-flex flex-col justify-end ${marginClass} mb-3 md:mb-4 group relative`}>
                                     {/* Chord (Top) */}
-                                    <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap min-w-[1px] text-left">
+                                    <span className="text-brand-600 dark:text-brand-400 font-black text-[10px] md:text-sm h-5 md:h-6 leading-none whitespace-nowrap min-w-[1px] text-left">
                                         {currentChord ? (
-                                            <span className="bg-brand-50 dark:bg-brand-900/30 px-1.5 py-0.5 rounded-md">{currentChord}</span>
+                                            <span className="bg-brand-50 dark:bg-brand-900/30 px-1 md:px-1.5 py-0.5 rounded-md">{currentChord}</span>
                                         ) : '\u00A0'}
                                     </span>
                                     {/* Lyrics (Bottom) with Rich Text Support */}
-                                    <span className="text-slate-800 dark:text-slate-100 font-semibold text-lg leading-normal whitespace-pre text-left border-b-2 border-transparent">
+                                    <span className="text-slate-800 dark:text-slate-100 font-semibold text-base md:text-lg leading-normal whitespace-pre text-left border-b-2 border-transparent">
                                         {renderMarkdownLine(part)}
                                     </span>
                                 </div>
@@ -140,9 +140,9 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                     // If a chord is left at the end of the line without text
                     if (currentChord) {
                         blocks.push(
-                            <div key={`${lineIdx}-last`} className="inline-flex flex-col justify-end mr-2 mb-4">
-                                <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1.5 rounded-md mb-1">{currentChord}</span>
-                                <span className="text-transparent text-lg h-7 leading-normal select-none">.</span>
+                            <div key={`${lineIdx}-last`} className="inline-flex flex-col justify-end mr-1.5 md:mr-2 mb-3 md:mb-4">
+                                <span className="text-brand-600 dark:text-brand-400 font-black text-[10px] md:text-sm h-5 md:h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1 md:px-1.5 rounded-md mb-1">{currentChord}</span>
+                                <span className="text-transparent text-base md:text-lg h-6 md:h-7 leading-normal select-none">.</span>
                             </div>
                         );
                     }
@@ -156,7 +156,7 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
 
                 // Line without chords (just text with potential formatting)
                 return (
-                    <div key={lineIdx} className="mb-3 text-slate-700 dark:text-slate-300 font-medium text-[1.1rem] whitespace-pre-wrap">
+                    <div key={lineIdx} className="mb-3 text-slate-700 dark:text-slate-300 font-medium text-base md:text-[1.1rem] whitespace-pre-wrap">
                         {renderMarkdownLine(processedLine)}
                     </div>
                 );

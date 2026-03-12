@@ -432,7 +432,7 @@ const Justifications: React.FC = () => {
   if (loading) return <Loading fullScreen />;
 
   return (
-    <div className="space-y-8 animate-fade-in-up pb-32">
+    <div className="space-y-8 animate-fade-in-up pb-32 w-full overflow-x-hidden">
         {/* --- NOTIFICATION TOAST --- */}
         {notification && (
             <div className={`fixed top-6 right-6 z-[11000] px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 animate-fade-in-right ${notification.type === 'success' ? 'bg-green-500/90 text-white border-green-400' : 'bg-red-500/90 text-white border-red-400'}`}>
@@ -454,18 +454,18 @@ const Justifications: React.FC = () => {
                <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Regularize suas faltas ou comunique ausências futuras.</p>
             </div>
             
-            <div className={`bg-white dark:bg-slate-800 p-1.5 rounded-[1.5rem] grid ${canAdmin ? 'grid-cols-3' : 'grid-cols-2'} lg:flex gap-1 shadow-premium border border-slate-100 dark:border-white/5 w-full lg:w-auto`}>
-                 <button onClick={() => { resetForm(); setActiveTab('create'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'create' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+            <div className={`bg-white dark:bg-slate-800 p-1 rounded-[1.5rem] grid ${canAdmin ? 'grid-cols-3' : 'grid-cols-2'} lg:flex gap-1 shadow-premium border border-slate-100 dark:border-white/5 w-full lg:w-auto`}>
+                 <button onClick={() => { resetForm(); setActiveTab('create'); }} className={`px-1 md:px-6 py-3 rounded-2xl text-[9px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 ${activeTab === 'create' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                      <i className="fas fa-plus-circle"></i> <span className="truncate">Nova</span>
                  </button>
-                 <button onClick={() => { resetForm(); setActiveTab('history'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'history' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                 <button onClick={() => { resetForm(); setActiveTab('history'); }} className={`px-1 md:px-6 py-3 rounded-2xl text-[9px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 ${activeTab === 'history' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                      <i className="fas fa-history"></i> <span className="truncate">Minhas</span>
                  </button>
                  {canAdmin && (
-                    <button onClick={() => { resetForm(); setActiveTab('admin'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'admin' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                    <button onClick={() => { resetForm(); setActiveTab('admin'); }} className={`px-1 md:px-6 py-3 rounded-2xl text-[9px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 ${activeTab === 'admin' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                         <i className="fas fa-gavel"></i>
                         <span className="truncate">Análise</span>
-                        {justifications.filter(j => j.status === 'PENDING').length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-red-500 rounded-full text-[9px] font-black">{justifications.filter(j => j.status === 'PENDING').length}</span>}
+                        {justifications.filter(j => j.status === 'PENDING').length > 0 && <span className="ml-1 px-1 py-0.5 bg-white text-red-500 rounded-full text-[8px] font-black">{justifications.filter(j => j.status === 'PENDING').length}</span>}
                     </button>
                  )}
             </div>

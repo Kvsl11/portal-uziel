@@ -290,7 +290,7 @@ const Layout: React.FC = () => {
                         transition-all duration-500 transform active:scale-90
                         border-[4px] border-white dark:border-[#0f172a]
                         ${isActive 
-                            ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
+                            ? '!bg-brand-600 !text-white scale-110' 
                             : ''
                         }
                     `}
@@ -306,7 +306,7 @@ const Layout: React.FC = () => {
                             transition-all duration-500 transform active:scale-90
                             border-[4px] border-white dark:border-[#0f172a]
                             ${isActive 
-                                ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
+                                ? '!bg-brand-600 !text-white scale-110' 
                                 : ''
                             }
                         `}

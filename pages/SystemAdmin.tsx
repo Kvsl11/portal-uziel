@@ -226,7 +226,7 @@ const ContextSelectorModal = ({ currentImage, onSelect, onClose }: { currentImag
                                                 {isCurrent && <span className="text-[9px] font-black uppercase text-green-600 dark:text-green-400 tracking-widest bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded flex items-center gap-1 w-fit mt-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Agora</span>}
                                             </div>
                                         </div>
-                                        <i className="fas fa-chevron-right text-slate-300 group-hover:text-brand-500 transition-all group-hover:translate-x-1 relative z-10"></i>
+                                        <i className="fas fa-chevron-right text-slate-300 group-hover:text-brand-500 transition-all relative z-10"></i>
                                     </button>
                                 );
                             })}
@@ -900,7 +900,7 @@ const SystemAdmin: React.FC = () => {
                                     <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">{totalDocs}</p>
                                     <p className="text-[10px] text-slate-500 dark:text-brand-300/60 font-bold uppercase tracking-wide mt-1">Entidades no Firestore</p>
                                 </div>
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-brand-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-database"></i></div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-brand-500/5 rotate-12 transition-transform hover:scale-110"><i className="fas fa-database"></i></div>
                             </Card>
 
                             <Card noPadding className="p-5 border-sky-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-sky-500/5 to-transparent">
@@ -919,7 +919,7 @@ const SystemAdmin: React.FC = () => {
                                     <p className="text-4xl font-mono font-bold text-slate-800 dark:text-white">~{estimatedUsageKB.toFixed(1)} <span className="text-xl text-slate-400">KB</span></p>
                                     <p className="text-[10px] text-slate-500 dark:text-sky-300/60 font-bold uppercase tracking-wide mt-1">Estimativa de Volume</p>
                                 </div>
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-sky-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-hdd"></i></div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-sky-500/5 rotate-12 transition-transform hover:scale-110"><i className="fas fa-hdd"></i></div>
                             </Card>
 
                             <Card noPadding className="p-5 border-emerald-500/30 border-2 relative overflow-hidden group bg-gradient-to-br from-emerald-500/5 to-transparent">
@@ -941,7 +941,7 @@ const SystemAdmin: React.FC = () => {
                                     </div>
                                     <p className="text-[10px] text-slate-500 dark:text-emerald-300/60 font-bold uppercase tracking-wide mt-1">Sincronização em 16ms</p>
                                 </div>
-                                <div className="absolute -right-4 -bottom-4 text-8xl text-emerald-500/5 rotate-12 transition-transform hover:scale-110 hover:rotate-6"><i className="fas fa-network-wired"></i></div>
+                                <div className="absolute -right-4 -bottom-4 text-8xl text-emerald-500/5 rotate-12 transition-transform hover:scale-110"><i className="fas fa-network-wired"></i></div>
                             </Card>
                         </div>
 

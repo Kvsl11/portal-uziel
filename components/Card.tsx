@@ -47,7 +47,7 @@ const Card: React.FC<CardProps> = ({
       if(hover) {
           setIsHovering(false);
           // Reset to flat position smoothly
-          setTransform('perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
+          setTransform('scale3d(1, 1, 1)');
       }
   };
 
