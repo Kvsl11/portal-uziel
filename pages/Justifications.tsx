@@ -454,17 +454,17 @@ const Justifications: React.FC = () => {
                <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Regularize suas faltas ou comunique ausências futuras.</p>
             </div>
             
-            <div className="bg-white dark:bg-slate-800 p-1.5 rounded-[1.5rem] flex gap-1 shadow-premium border border-slate-100 dark:border-white/5 overflow-x-auto hide-scrollbar w-full lg:w-auto">
-                 <button onClick={() => { resetForm(); setActiveTab('create'); }} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'create' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                     <i className="fas fa-plus-circle"></i> Nova
+            <div className={`bg-white dark:bg-slate-800 p-1.5 rounded-[1.5rem] grid ${canAdmin ? 'grid-cols-3' : 'grid-cols-2'} lg:flex gap-1 shadow-premium border border-slate-100 dark:border-white/5 w-full lg:w-auto`}>
+                 <button onClick={() => { resetForm(); setActiveTab('create'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'create' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                     <i className="fas fa-plus-circle"></i> <span className="truncate">Nova</span>
                  </button>
-                 <button onClick={() => { resetForm(); setActiveTab('history'); }} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'history' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                     <i className="fas fa-history"></i> Minhas
+                 <button onClick={() => { resetForm(); setActiveTab('history'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'history' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                     <i className="fas fa-history"></i> <span className="truncate">Minhas</span>
                  </button>
                  {canAdmin && (
-                    <button onClick={() => { resetForm(); setActiveTab('admin'); }} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'admin' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                    <button onClick={() => { resetForm(); setActiveTab('admin'); }} className={`px-2 md:px-6 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'admin' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                         <i className="fas fa-gavel"></i>
-                        <span>Análise</span>
+                        <span className="truncate">Análise</span>
                         {justifications.filter(j => j.status === 'PENDING').length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-white text-red-500 rounded-full text-[9px] font-black">{justifications.filter(j => j.status === 'PENDING').length}</span>}
                     </button>
                  )}
@@ -783,12 +783,12 @@ const Justifications: React.FC = () => {
             <div className="space-y-8 animate-fade-in">
                 {/* Admin Filters */}
                 <div className="flex justify-center mb-8">
-                    <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl inline-flex shadow-inner">
+                    <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl grid grid-cols-2 sm:flex sm:gap-1 shadow-inner w-full sm:w-auto">
                         {['ALL', 'PENDING', 'ACCEPTED', 'REJECTED'].map(s => (
                             <button 
                                 key={s} 
                                 onClick={() => setFilterStatus(s as any)} 
-                                className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filterStatus === s ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`px-2 sm:px-6 py-2 rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all ${filterStatus === s ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
                                 {s === 'ALL' ? 'Todos' : s === 'PENDING' ? 'Pendentes' : s === 'ACCEPTED' ? 'Aprovados' : 'Recusados'}
                             </button>
