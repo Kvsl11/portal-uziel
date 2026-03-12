@@ -225,7 +225,7 @@ const Rota: React.FC = () => {
   });
 
   const eligibleMembers = useMemo(() => {
-    const excludedNames = ['JULIO CÉSAR', 'ALEXANDRE MANDELI', 'MEL BUZZO'];
+    const excludedNames = ['JULIO CÉSAR', 'JULIO CESAR', 'JÚLIO CESAR', 'JÚLIO CÉSAR', 'JULIO', 'ALEXANDRE MANDELI', 'MEL BUZZO'];
     return usersList
         .filter(u => (u.role === 'member' || u.role === 'admin' || u.role === 'super-admin') && !excludedNames.includes(u.name))
         .map(u => u.name);
