@@ -27,7 +27,6 @@ export const PERMISSION_MODULES = {
   PLAYLISTS: 'playlists',
   POLLS: 'polls',
   JUSTIFICATIONS: 'justifications',
-  CREATIVE: 'creative',
   COMPOSER: 'composer',
   MONITORING: 'monitoring',
   SYSTEM: 'system'
@@ -51,8 +50,7 @@ export const DEFAULT_PERMISSIONS = {
     'playlists:view',
     'polls:view',
     'justifications:create', // Members create justifications
-    'justifications:view',
-    'creative:view'
+    'justifications:view'
   ],
   'admin': [
     'dashboard:view',
@@ -65,7 +63,6 @@ export const DEFAULT_PERMISSIONS = {
     'playlists:view', 'playlists:create', 'playlists:edit', 'playlists:delete',
     'polls:view', 'polls:create', 'polls:edit', 'polls:delete',
     'justifications:view', 'justifications:edit', // Admins approve/reject (edit)
-    'creative:view', 'creative:create',
     'composer:view', 'composer:create', 'composer:edit', 'composer:delete',
     'monitoring:view'
   ],

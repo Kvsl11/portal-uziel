@@ -194,6 +194,7 @@ const Rehearsals: React.FC = () => {
   const canEdit = checkPermission('rehearsals', 'edit');
   const canDelete = checkPermission('rehearsals', 'delete');
   const isSuperAdmin = currentUser?.role === 'super-admin';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
 
   // Load Data
   useEffect(() => {

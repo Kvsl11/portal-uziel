@@ -56,14 +56,11 @@ const renderMarkdownLine = (line: string) => {
 const ChordRenderer = ({ text, center = false, showChords = true }: { text: string, center?: boolean, showChords?: boolean }) => {
     if (!text) return null;
 
-    // Remove chords if showChords is false
-    const processedText = showChords ? text : text.replace(/\[[^\]]+\]/g, '');
-
     // Split by newline but keep empty lines
-    const lines = processedText.split(/\r\n|\r|\n/);
+    const lines = text.split(/\r\n|\r|\n/);
 
     return (
-        <div className={`font-sans text-lg leading-loose w-full overflow-x-hidden ${center ? 'text-center' : 'text-left'}`}>
+        <div className={`font-sans text-lg leading-8 tracking-normal w-full overflow-x-hidden ${center ? 'text-center' : 'text-left'}`}>
             {lines.map((line, lineIdx) => {
                 // Handle empty lines explicitly to preserve spacing
                 if (!line.trim()) {
@@ -74,10 +71,31 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                     );
                 }
 
+                // Check if it's a section header (e.g. [REFRÃO], [VERSO 1])
+                const trimmedLine = line.trim();
+                const isSectionHeader = trimmedLine.startsWith('[') && trimmedLine.endsWith(']') && (trimmedLine.match(/\[/g) || []).length === 1 && trimmedLine.length > 4;
+
+                if (isSectionHeader) {
+                    const sectionName = trimmedLine.replace(/[\[\]]/g, '').toUpperCase();
+                    return (
+                        <div key={lineIdx} className="mt-6 mb-2 text-brand-600 dark:text-brand-400 font-black text-sm uppercase tracking-widest">
+                            {sectionName}
+                        </div>
+                    );
+                }
+
+                // If showChords is false, strip chords from the line
+                const processedLine = showChords ? line : line.replace(/\[[^\]]+\]/g, '');
+
+                // If the line becomes empty after stripping chords, it was just chords, so we can skip it
+                if (!showChords && !processedLine.trim() && line.includes('[')) {
+                    return null;
+                }
+
                 // Detect if the line has chords in the format [C]
-                if (line.includes('[')) {
+                if (showChords && processedLine.includes('[')) {
                     // Regex to capture [Chord] and the text that follows it
-                    const parts = line.split(/(\[[^\]]+\])/g);
+                    const parts = processedLine.split(/(\[[^\]]+\])/g);
                     
                     const blocks: React.ReactNode[] = [];
                     let currentChord = '';
@@ -87,7 +105,7 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                             // If we had a pending chord without text (e.g., [A][B]), render the previous one
                             if (currentChord) {
                                 blocks.push(
-                                    <div key={`${lineIdx}-${i}-prev`} className="inline-flex flex-col justify-end mr-2 mb-6 min-w-[1.5rem]">
+                                    <div key={`${lineIdx}-${i}-prev`} className="inline-flex flex-col justify-end mr-2 mb-4 min-w-[1.5rem]">
                                         <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1.5 rounded-md mb-1">{currentChord}</span>
                                         <span className="text-transparent text-lg h-7 leading-normal select-none border-b-2 border-transparent">.</span>
                                     </div>
@@ -102,7 +120,7 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                             const marginClass = hasLeadingSpace ? 'mr-1' : 'mr-0.5';
                             
                             blocks.push(
-                                <div key={`${lineIdx}-${i}`} className={`inline-flex flex-col justify-end ${marginClass} mb-6 group relative`}>
+                                <div key={`${lineIdx}-${i}`} className={`inline-flex flex-col justify-end ${marginClass} mb-4 group relative`}>
                                     {/* Chord (Top) */}
                                     <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap min-w-[1px] text-left">
                                         {currentChord ? (
@@ -122,7 +140,7 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
                     // If a chord is left at the end of the line without text
                     if (currentChord) {
                         blocks.push(
-                            <div key={`${lineIdx}-last`} className="inline-flex flex-col justify-end mr-2 mb-6">
+                            <div key={`${lineIdx}-last`} className="inline-flex flex-col justify-end mr-2 mb-4">
                                 <span className="text-brand-600 dark:text-brand-400 font-black text-sm h-6 leading-none whitespace-nowrap bg-brand-50 dark:bg-brand-900/30 px-1.5 rounded-md mb-1">{currentChord}</span>
                                 <span className="text-transparent text-lg h-7 leading-normal select-none">.</span>
                             </div>
@@ -138,8 +156,8 @@ const ChordRenderer = ({ text, center = false, showChords = true }: { text: stri
 
                 // Line without chords (just text with potential formatting)
                 return (
-                    <div key={lineIdx} className="mb-4 text-slate-700 dark:text-slate-300 font-semibold text-lg whitespace-pre-wrap">
-                        {renderMarkdownLine(line)}
+                    <div key={lineIdx} className="mb-3 text-slate-700 dark:text-slate-300 font-medium text-[1.1rem] whitespace-pre-wrap">
+                        {renderMarkdownLine(processedLine)}
                     </div>
                 );
             })}

@@ -23,7 +23,7 @@ const getSemitoneIndex = (note: string) => {
 
 export const MusicUtils = {
     // Lista de tons para o Select (Apenas raízes)
-    KEYS: ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
+    KEYS: ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'],
 
     // Transpõe uma única nota/acorde raiz
     transposeNote: (note: string, semitones: number) => {

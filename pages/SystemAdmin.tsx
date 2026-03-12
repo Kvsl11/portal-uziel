@@ -289,7 +289,6 @@ const SystemAdmin: React.FC = () => {
         playlists: { label: 'Playlists', actions: ['view', 'create', 'edit', 'delete'] },
         polls: { label: 'Enquetes', actions: ['view', 'create', 'edit', 'delete'] },
         justifications: { label: 'Justificativas', actions: ['view', 'create', 'edit'] },
-        creative: { label: 'Creative Studio', actions: ['view', 'create'] },
         composer: { label: 'Estúdio de Composição', actions: ['view', 'create', 'edit', 'delete'] },
         monitoring: { label: 'Comando', actions: ['view'] },
         system: { label: 'Engine Room', actions: ['view', 'edit', 'delete'] }

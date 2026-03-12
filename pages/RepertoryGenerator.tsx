@@ -243,6 +243,19 @@ const LyricsToolbar = ({ textareaRef, onInsert }: { textareaRef: React.RefObject
             setTimeout(() => { el.setSelectionRange(startPos, startPos + replacement.length); }, 0);
         }
     };
+
+    const handleClearChords = () => {
+        const el = textareaRef.current;
+        if (!el) return;
+        const currentText = el.value;
+        const cleanedText = currentText
+            .replace(/\[.*?\]/g, '') // Remove all bracketed text (chords and sections)
+            .replace(/^[ \t]*\n/gm, '\n') // Remove lines that became empty
+            .replace(/\n{3,}/g, '\n\n') // Reduce multiple blank lines
+            .trim();
+        onInsert(cleanedText);
+    };
+
     return (
         <div className="flex flex-col gap-3 p-4 bg-white dark:bg-[#0b1221] rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm mx-4 -mt-4 relative z-20">
             <div className="flex items-center gap-3">
@@ -261,6 +274,15 @@ const LyricsToolbar = ({ textareaRef, onInsert }: { textareaRef: React.RefObject
                         <input id="custom-color-picker" type="color" className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" onChange={(e) => insertTag(`<c:${e.target.value}>`, `</c>`)} title="Cor Única (Sem Salvar)" />
                     </div>
                 </div>
+                <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
+                <button 
+                    type="button" 
+                    onClick={handleClearChords} 
+                    className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 shrink-0" 
+                    title="Remove todas as cifras e marcadores de seção da letra"
+                >
+                    <i className="fas fa-eraser"></i> Limpar Cifras
+                </button>
             </div>
             <div className="flex justify-between items-center pl-1"><p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Editor Rico</p><p className="text-[9px] text-slate-300 italic mr-1">Botão direito na cor para editar atalho</p></div>
         </div>

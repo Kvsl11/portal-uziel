@@ -30,6 +30,7 @@ const Composer: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedComp, setEditedComp] = useState<Composition | null>(null);
     const [showChords, setShowChords] = useState(true);
+    const [isCopied, setIsCopied] = useState(false);
 
     const SUGGESTED_STYLES = [
         'Worship',
@@ -76,7 +77,8 @@ const Composer: React.FC = () => {
         if (!editedComp) return;
         const textToCopy = `Título: ${editedComp.title}\nCompositor: ${editedComp.composer || currentUser?.name || 'Uziel AI'}\nTom: ${editedComp.key}\n\nLetra:\n${editedComp.lyricsWithChords.replace(/\[[^\]]+\]/g, '')}\n\nNotas de Arranjo:\n${editedComp.arrangementNotes}`;
         navigator.clipboard.writeText(textToCopy);
-        alert("Letra copiada para a área de transferência!");
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
     };
 
     const handleTranspose = (targetKey: string) => {
@@ -102,7 +104,7 @@ const Composer: React.FC = () => {
         let y = 25;
 
         // Background Header Accent
-        doc.setFillColor(37, 99, 235); // brand-600
+        doc.setFillColor(41, 170, 226); // brand-600
         doc.rect(0, 0, pageWidth, 40, 'F');
 
         // Header Text
@@ -116,7 +118,7 @@ const Composer: React.FC = () => {
         // Metadata Block
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(37, 99, 235); // brand-600
+        doc.setTextColor(41, 170, 226); // brand-600
         doc.text("COMPOSITOR", margin, y);
         doc.text("ESTILO", margin + 70, y);
         doc.text("TOM", margin + 130, y);
@@ -147,13 +149,13 @@ const Composer: React.FC = () => {
 
             const trimmedLine = line.trim();
             // Detect section headers like [REFRÃO] or [VERSO]
-            const isSectionHeader = trimmedLine.startsWith('[') && trimmedLine.endsWith(']') && !trimmedLine.includes(' ');
+            const isSectionHeader = trimmedLine.startsWith('[') && trimmedLine.endsWith(']') && (trimmedLine.match(/\[/g) || []).length === 1 && trimmedLine.length > 4;
             
             if (isSectionHeader) {
                 y += 5;
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(10);
-                doc.setTextColor(37, 99, 235); // brand-600
+                doc.setTextColor(41, 170, 226); // brand-600
                 doc.text(trimmedLine.toUpperCase(), margin, y);
                 y += 8;
             } else if (trimmedLine === "") {
@@ -166,7 +168,7 @@ const Composer: React.FC = () => {
                     // Chords pass
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(9);
-                    doc.setTextColor(37, 99, 235);
+                    doc.setTextColor(41, 170, 226);
                     
                     let textX = margin;
                     parts.forEach(part => {
@@ -318,8 +320,8 @@ const Composer: React.FC = () => {
                             </h3>
                             
                             <div className="grid grid-cols-2 gap-3">
-                                <button onClick={handleCopy} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
-                                    <i className="fas fa-copy"></i> Copiar
+                                <button onClick={handleCopy} className={`p-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${isCopied ? 'bg-emerald-500 text-white shadow-md scale-105' : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}`}>
+                                    <i className={`fas ${isCopied ? 'fa-check animate-bounce' : 'fa-copy'}`}></i> {isCopied ? 'Copiado!' : 'Copiar'}
                                 </button>
                                 <button 
                                     onClick={() => setIsEditing(!isEditing)} 
@@ -332,12 +334,12 @@ const Composer: React.FC = () => {
 
                             <div className="pt-2">
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Transpor Tom</label>
-                                <div className="grid grid-cols-4 gap-1">
-                                    {MusicUtils.KEYS.slice(0, 12).map(k => (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {MusicUtils.KEYS.map(k => (
                                         <button 
                                             key={k}
                                             onClick={() => handleTranspose(k)}
-                                            className={`py-2 rounded-lg text-[10px] font-bold transition-all ${editedComp.key.replace(/m.*/, '') === k ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-50 dark:bg-white/5 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                            className={`flex-1 min-w-[3rem] py-2 rounded-lg text-[10px] font-bold transition-all ${editedComp.key.replace(/m.*/, '') === k ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-50 dark:bg-white/5 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10'}`}
                                         >
                                             {k}
                                         </button>
@@ -350,16 +352,16 @@ const Composer: React.FC = () => {
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Incluir Cifras no PDF</span>
                                     <button 
                                         onClick={() => setShowChords(!showChords)}
-                                        className={`w-10 h-5 rounded-full transition-colors relative ${showChords ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                        className={`w-10 h-5 rounded-full transition-colors relative outline-none focus:outline-none ${showChords ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                                     >
                                         <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${showChords ? 'right-1' : 'left-1'}`}></div>
                                     </button>
                                 </div>
                                 <button 
                                     onClick={handleExportPDF}
-                                    className="w-full py-3 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold uppercase tracking-widest text-[10px] border border-red-100 dark:border-red-500/20 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full px-6 py-3 rounded-xl bg-white dark:bg-white/10 text-slate-800 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95 active:shadow-inner flex items-center justify-center gap-2 shadow-sm text-xs uppercase tracking-wider group"
                                 >
-                                    <i className="fas fa-file-pdf"></i> Exportar PDF
+                                    <i className="fas fa-file-pdf text-red-500 text-lg transition-transform group-active:scale-125 group-active:rotate-12"></i> Exportar PDF
                                 </button>
                             </div>
                         </motion.div>
@@ -441,12 +443,33 @@ const Composer: React.FC = () => {
                                 <div className="p-8 md:p-12 space-y-12">
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                                         <div className="md:col-span-7">
-                                            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 mb-8 flex items-center gap-3">
-                                                <div className="w-6 h-6 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
-                                                    <i className="fas fa-align-left text-[10px]"></i>
-                                                </div>
-                                                Letra & Cifras
-                                            </h4>
+                                            <div className="flex items-center justify-between mb-5">
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+                                                        <i className="fas fa-align-left text-xs"></i>
+                                                    </div>
+                                                    Letra & Cifras
+                                                </h4>
+                                                {isEditing && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            const cleanedText = editedComp.lyricsWithChords
+                                                                .replace(/\[.*?\]/g, '')
+                                                                .replace(/^[ \t]*\n/gm, '\n')
+                                                                .replace(/\n{3,}/g, '\n\n')
+                                                                .trim();
+                                                            setEditedComp({
+                                                                ...editedComp,
+                                                                lyricsWithChords: cleanedText
+                                                            });
+                                                        }}
+                                                        className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors flex items-center gap-2 bg-red-50 dark:bg-red-500/10 px-3 py-1.5 rounded-lg"
+                                                        title="Remove todas as cifras e marcadores de seção da letra"
+                                                    >
+                                                        <i className="fas fa-eraser"></i> Limpar Cifras/Seções
+                                                    </button>
+                                                )}
+                                            </div>
                                             
                                             {isEditing ? (
                                                 <textarea 
@@ -455,17 +478,17 @@ const Composer: React.FC = () => {
                                                     className="w-full h-[600px] p-6 rounded-3xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 font-mono text-sm outline-none focus:border-brand-500 transition-all resize-none"
                                                 />
                                             ) : (
-                                                <div className="bg-slate-50/30 dark:bg-black/10 p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-white/5">
+                                                <div className="bg-white dark:bg-[#0b1221] p-6 md:p-8 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm">
                                                     <ChordRenderer text={editedComp.lyricsWithChords} showChords={showChords} />
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="md:col-span-5 space-y-10">
+                                        <div className="md:col-span-5 space-y-8">
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
-                                                        <i className="fas fa-guitar text-[10px]"></i>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white mb-5 flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+                                                        <i className="fas fa-guitar text-xs"></i>
                                                     </div>
                                                     Resumo Harmônico
                                                 </h4>
@@ -473,19 +496,21 @@ const Composer: React.FC = () => {
                                                     <textarea 
                                                         value={editedComp.chordsSummary}
                                                         onChange={(e) => setEditedComp({...editedComp, chordsSummary: e.target.value})}
-                                                        className="w-full h-32 p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 font-mono text-xs outline-none focus:border-brand-500 transition-all resize-none"
+                                                        className="w-full h-32 p-5 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 font-mono text-xs outline-none focus:border-brand-500 transition-all resize-none"
                                                     />
                                                 ) : (
-                                                    <div className="bg-slate-50 dark:bg-black/20 p-6 rounded-3xl border border-slate-100 dark:border-white/5 whitespace-pre-wrap font-mono text-sm text-slate-700 dark:text-slate-300 shadow-inner">
-                                                        {editedComp.chordsSummary}
+                                                    <div className="bg-brand-50 dark:bg-brand-900/30 p-6 md:p-8 rounded-[2rem] border border-brand-100 dark:border-brand-500/20 shadow-sm">
+                                                        <div className="text-brand-600 dark:text-brand-400 font-black text-sm leading-relaxed whitespace-pre-wrap">
+                                                            {editedComp.chordsSummary.replace(/\[|\]/g, '')}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div>
-                                                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
-                                                        <i className="fas fa-headphones text-[10px]"></i>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white mb-5 flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+                                                        <i className="fas fa-headphones text-xs"></i>
                                                     </div>
                                                     Direção de Arranjo
                                                 </h4>
@@ -493,11 +518,13 @@ const Composer: React.FC = () => {
                                                     <textarea 
                                                         value={editedComp.arrangementNotes}
                                                         onChange={(e) => setEditedComp({...editedComp, arrangementNotes: e.target.value})}
-                                                        className="w-full h-48 p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm outline-none focus:border-brand-500 transition-all resize-none"
+                                                        className="w-full h-48 p-5 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 text-sm outline-none focus:border-brand-500 transition-all resize-none"
                                                     />
                                                 ) : (
-                                                    <div className="bg-brand-50/50 dark:bg-brand-900/10 p-6 rounded-3xl border border-brand-100 dark:border-brand-500/20 text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-inner">
-                                                        {editedComp.arrangementNotes}
+                                                    <div className="bg-brand-50 dark:bg-brand-900/30 p-6 md:p-8 rounded-[2rem] border border-brand-100 dark:border-brand-500/20 shadow-sm">
+                                                        <div className="text-brand-600 dark:text-brand-400 font-black text-sm leading-relaxed whitespace-pre-wrap">
+                                                            {editedComp.arrangementNotes.replace(/\[|\]/g, '')}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
