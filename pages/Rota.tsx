@@ -382,7 +382,7 @@ const Rota: React.FC = () => {
                 <div className="flex-1 px-4 min-w-0">
                      <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Filtrar por Membro</label>
                      <div className="relative">
-                        <select value={selectedMember} onChange={(e) => { setSelectedMember(e.target.value); setFilterType('all'); }} className="w-full bg-transparent outline-none font-bold text-slate-700 dark:text-white appearance-none cursor-pointer relative z-10 text-sm md:text-base truncate pr-6">
+                        <select value={selectedMember} onChange={(e) => { setSelectedMember(e.target.value); setFilterType('all'); }} className="w-full bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl outline-none font-bold text-slate-700 dark:text-white appearance-none cursor-pointer relative z-10 text-sm md:text-base truncate pr-6">
                             <option value="all">Visualizar Geral (Todos)</option>
                             {eligibleMembers.sort().map(name => <option key={name} value={name}>{name}</option>)}
                         </select>
@@ -391,9 +391,9 @@ const Rota: React.FC = () => {
                 </div>
             </div>
             <div className="hidden xl:block w-px h-12 bg-slate-100 dark:bg-white/10"></div>
-            <div className={`w-full xl:w-auto flex gap-2 overflow-x-auto hide-scrollbar transition-all duration-300 ${selectedMember === 'all' ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+            <div className={`w-full xl:w-auto grid grid-cols-3 gap-2 transition-all duration-300 ${selectedMember === 'all' ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
                  {[ { id: 'all', label: 'Todos', icon: 'fa-layer-group' }, { id: 'titular', label: 'Titular', icon: 'fa-microphone-alt' }, { id: 'reserva', label: 'Reserva', icon: 'fa-clipboard-user' } ].map((opt) => (
-                     <button key={opt.id} onClick={() => setFilterType(opt.id as any)} className={`flex-1 xl:flex-none px-6 py-4 rounded-[1.5rem] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all whitespace-nowrap border ${filterType === opt.id ? opt.id === 'titular' ? 'bg-brand-600 text-white border-brand-600 shadow-lg' : opt.id === 'reserva' ? 'bg-amber-500 text-white border-amber-500 shadow-lg' : 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 border-slate-800 dark:border-white shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                     <button key={opt.id} onClick={() => setFilterType(opt.id as any)} className={`px-4 py-3 rounded-[1.5rem] text-[10px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-all whitespace-nowrap border ${filterType === opt.id ? opt.id === 'titular' ? 'bg-brand-600 text-white border-brand-600 shadow-lg' : opt.id === 'reserva' ? 'bg-amber-500 text-white border-amber-500 shadow-lg' : 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 border-slate-800 dark:border-white shadow-lg' : 'bg-transparent text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                          <i className={`fas ${opt.icon}`}></i> {opt.label}
                      </button>
                  ))}
