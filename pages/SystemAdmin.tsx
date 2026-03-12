@@ -1215,7 +1215,7 @@ const SystemAdmin: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                            <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-key"></i></div>
                                 
@@ -1235,7 +1235,7 @@ const SystemAdmin: React.FC = () => {
 
                                 <div className="space-y-8 relative z-10">
                                     <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                        <div className="flex justify-between items-center mb-4">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <i className="fas fa-robot text-brand-500"></i>
                                                 <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Gemini API Key</label>
@@ -1246,36 +1246,36 @@ const SystemAdmin: React.FC = () => {
                                         </div>
                                         
                                         {isEditingGemini ? (
-                                            <div className="flex items-center gap-3 animate-fade-in-right">
-                                                <div className="flex-1 flex items-center gap-4 bg-white dark:bg-black/40 p-4 rounded-xl font-mono text-xs text-slate-500 border-2 border-brand-500 shadow-sm shadow-brand-500/20 relative">
-                                                    <i className="fas fa-key text-brand-500 opacity-50"></i>
+                                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-in-right">
+                                                <div className="flex-1 flex items-center gap-3 sm:gap-4 bg-white dark:bg-black/40 p-3 sm:p-4 rounded-xl font-mono text-xs text-slate-500 border-2 border-brand-500 shadow-sm shadow-brand-500/20 relative">
+                                                    <i className="fas fa-key text-brand-500 opacity-50 shrink-0"></i>
                                                     <input 
                                                         type="text" 
                                                         value={customGeminiKey}
                                                         onChange={(e) => { setCustomGeminiKey(e.target.value); setGeminiSource('custom'); }}
                                                         placeholder="Sua chave API aqui..." 
-                                                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-300 font-bold pr-8"
+                                                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-300 font-bold pr-2 sm:pr-8"
                                                         autoFocus
                                                     />
                                                 </div>
-                                                <button onClick={() => setIsEditingGemini(false)} className="w-12 h-12 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center hover:-translate-y-0.5 transition-transform">
+                                                <button onClick={() => setIsEditingGemini(false)} className="w-full sm:w-12 h-12 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center hover:-translate-y-0.5 transition-transform shrink-0">
                                                     <i className="fas fa-check"></i>
                                                 </button>
                                             </div>
                                         ) : (
                                             <div className="group relative" onClick={() => setIsEditingGemini(true)}>
-                                                <div className="flex items-center gap-4 bg-white dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-white/10 cursor-pointer hover:border-brand-500/50 transition-colors shadow-sm">
-                                                    <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
+                                                <div className="flex items-center gap-3 sm:gap-4 bg-white dark:bg-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-white/10 cursor-pointer hover:border-brand-500/50 transition-colors shadow-sm">
+                                                    <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20 shrink-0">
                                                         <i className="fas fa-lock text-xs"></i>
                                                     </div>
-                                                    <div className="flex-1 font-mono text-xs text-slate-600 dark:text-slate-400 truncate tracking-wider">
+                                                    <div className="flex-1 font-mono text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 truncate tracking-wider">
                                                         {customGeminiKey && customGeminiKey.length > 10 
                                                             ? `${customGeminiKey.substring(0, 8)}••••••••••••••••${customGeminiKey.substring(customGeminiKey.length - 4)}`
                                                             : '••••••••••••••••••••••••'
                                                         }
                                                     </div>
                                                     {geminiSource === 'custom' && (
-                                                        <button onClick={(e) => {e.stopPropagation(); handleResetGemini();}} className="text-slate-400 hover:text-red-500 p-2 transition-colors" title="Restaurar Padrão">
+                                                        <button onClick={(e) => {e.stopPropagation(); handleResetGemini();}} className="text-slate-400 hover:text-red-500 p-2 transition-colors shrink-0" title="Restaurar Padrão">
                                                             <i className="fas fa-undo"></i>
                                                         </button>
                                                     )}
@@ -1291,7 +1291,7 @@ const SystemAdmin: React.FC = () => {
                                     </div>
 
                                     <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                        <div className="flex justify-between items-center mb-4">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <i className="fas fa-fire text-orange-500"></i>
                                                 <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Firebase Cloud Config</label>
@@ -1302,7 +1302,7 @@ const SystemAdmin: React.FC = () => {
                                         </div>
                                         
                                         {isEditingFirebase ? (
-                                            <div className="relative animate-fade-in-up">
+                                            <div className="relative animate-fade-in-up flex flex-col gap-3">
                                                 <textarea 
                                                     value={customFirebaseConfig}
                                                     onChange={(e) => { setCustomFirebaseConfig(e.target.value); setFbSource('custom'); }}
@@ -1310,8 +1310,8 @@ const SystemAdmin: React.FC = () => {
                                                     className="w-full h-48 bg-white dark:bg-black/40 p-4 rounded-xl font-mono text-xs text-slate-700 dark:text-slate-300 border-2 border-brand-500 outline-none transition-colors resize-none shadow-sm shadow-brand-500/10"
                                                     autoFocus
                                                 />
-                                                <div className="absolute bottom-4 right-4 flex gap-2">
-                                                    <button onClick={() => setIsEditingFirebase(false)} className="px-5 py-2.5 rounded-lg bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:-translate-y-0.5 transition-all">
+                                                <div className="flex justify-end">
+                                                    <button onClick={() => setIsEditingFirebase(false)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl sm:rounded-lg bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:-translate-y-0.5 transition-all">
                                                         Confirmar Edição
                                                     </button>
                                                 </div>
@@ -1356,7 +1356,7 @@ const SystemAdmin: React.FC = () => {
                                 </div>
                             </Card>
 
-                            <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                            <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-network-wired"></i></div>
                                 
@@ -1407,7 +1407,7 @@ const SystemAdmin: React.FC = () => {
                             </Card>
                         </div>
 
-                        <Card className="p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                        <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                             <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-20 -mt-20 pointer-events-none"></div>
                             <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-8xl"><i className="fas fa-server"></i></div>
                             
