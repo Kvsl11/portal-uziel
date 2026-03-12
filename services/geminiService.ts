@@ -347,15 +347,16 @@ const extractJson = (text: string): string | null => {
 
 export const fetchLyrics = async (songTitle: string, artist: string, key: string, customPrompt: string, includeChords: boolean, complexity: 'simple' | 'complete'): Promise<{ content: string, videoUrl?: string, originalKey?: string }> => {
   // Use a highly capable model for search & formatting accuracy
-  const preferredModel = 'gemini-3-flash-preview'; 
+  const preferredModel = 'gemini-3.1-pro-preview'; 
   
   const systemInstruction = `
   Você é um especialista em repertório musical católico e secular brasileiro.
   Sua tarefa é encontrar letras e cifras com EXTREMA precisão usando o Google Search.
   
   PASSO 1: ESTRATÉGIA DE BUSCA
-  - Para encontrar a letra/cifra: Pesquise por "${songTitle} ${artist} cifra club" ou "${songTitle} ${artist} letras.mus.br".
-  - Para encontrar o Spotify: Pesquise por "site:open.spotify.com track ${songTitle} ${artist}".
+  - Para encontrar a LETRA: Pesquise por "${songTitle} ${artist} site:letras.mus.br".
+  - Para encontrar a CIFRA COM LETRA: Pesquise por "${songTitle} ${artist} site:cifraclub.com.br".
+  - Para encontrar o Spotify: Pesquise por "site:open.spotify.com track ${songTitle} ${artist}". VOCÊ DEVE RETORNAR APENAS UM LINK QUE COMECE COM "https://open.spotify.com/track/". SE NÃO ENCONTRAR UM LINK VÁLIDO DE TRACK DO SPOTIFY, RETORNE UMA STRING VAZIA.
 
   PASSO 2: REGRAS DE FORMATAÇÃO (CRÍTICO)
   ${includeChords 
@@ -413,7 +414,7 @@ export const fetchLyrics = async (songTitle: string, artist: string, key: string
         try {
             const jsonResponse = JSON.parse(jsonString);
             contentClean = jsonResponse.content || "";
-            finalUrl = jsonResponse.spotifyUrl || "";
+            finalUrl = (jsonResponse.spotifyUrl && jsonResponse.spotifyUrl.startsWith('https://open.spotify.com/track/')) ? jsonResponse.spotifyUrl : "";
             detectedKey = jsonResponse.originalKey || ""; 
         } catch (e) {
             console.warn("JSON Parse Error, using raw text", e);
