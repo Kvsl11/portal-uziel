@@ -411,6 +411,13 @@ const Justifications: React.FC = () => {
           
           if (!isUpcoming || !isParticipant) return false;
 
+          // Check if attendance already recorded
+          const hasAttendance = attendance.some(a => 
+              a.memberId.toLowerCase() === targetUserId.toLowerCase() &&
+              (a.eventId === r.id || (a.date === r.date && a.eventType.includes(r.topic)))
+          );
+          if (hasAttendance) return false;
+
           const resolvedJustification = justifications.find(j => 
               j.userId.toLowerCase() === targetUserId.toLowerCase() && 
               j.eventId === r.id && 
@@ -421,7 +428,7 @@ const Justifications: React.FC = () => {
 
           return true;
       });
-  }, [rehearsals, currentUser, justifications, targetUserId, editingId]);
+  }, [rehearsals, currentUser, justifications, targetUserId, editingId, attendance]);
 
   const adminFilteredJustifications = useMemo(() => {
       let list = justifications;
@@ -639,7 +646,13 @@ const Justifications: React.FC = () => {
                                 
                                 {/* AI Feedback Overlay */}
                                 {aiFeedback && !aiFeedback.valid && (
-                                    <div id="ai-feedback-box" className="absolute bottom-4 left-4 right-4 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-500/30 p-4 rounded-xl flex items-start gap-3 animate-scale-in shadow-lg backdrop-blur-md">
+                                    <div id="ai-feedback-box" className="mt-4 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-500/30 p-4 rounded-xl flex items-start gap-3 animate-scale-in shadow-lg backdrop-blur-md relative">
+                                        <button 
+                                            onClick={() => setAiFeedback(null)}
+                                            className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                        >
+                                            <i className="fas fa-times"></i>
+                                        </button>
                                         <div className="bg-red-500 text-white w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm"><i className="fas fa-robot"></i></div>
                                         <div>
                                             <p className="text-[9px] font-black uppercase text-red-600 dark:text-red-300 tracking-widest mb-0.5">Análise Neural</p>

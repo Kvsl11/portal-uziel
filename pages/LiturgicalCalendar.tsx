@@ -263,7 +263,7 @@ const DayDetailsModal = ({ day, onClose, onCacheChange }: { day: LiturgicalDay, 
                     ) : content ? (
                         <div className="flex flex-col h-full min-h-0">
                             <div className="px-6 pt-6 pb-2 bg-white dark:bg-[#0b1221] border-b border-slate-100 dark:border-white/5 overflow-x-auto hide-scrollbar shrink-0">
-                                <div className="flex space-x-2">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                     {[
                                         { id: 'reading1', label: '1ª Leitura', icon: 'fa-scroll' },
                                         { id: 'psalm', label: 'Salmo', icon: 'fa-music' },
@@ -273,7 +273,7 @@ const DayDetailsModal = ({ day, onClose, onCacheChange }: { day: LiturgicalDay, 
                                         <button 
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2 border ${activeTab === tab.id 
+                                            className={`px-4 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center justify-center gap-2 border ${activeTab === tab.id 
                                                 ? 'bg-brand-600 text-white border-brand-600 shadow-lg shadow-brand-500/25 scale-105' 
                                                 : 'bg-slate-50 dark:bg-white/5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border-slate-200 dark:border-white/10'}`}
                                         >

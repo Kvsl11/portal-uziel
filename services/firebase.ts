@@ -475,7 +475,7 @@ export const LiturgyCacheService = {
         return validDates;
     },
     save: async (dateStr: string, content: any) => {
-        await setDoc(getDocRef('liturgy_cache', `liturgy_${dateStr}`), { date: dateStr, content: content, createdAt: Date.now(), expiresAt: Date.now() + (48 * 60 * 60 * 1000) });
+        await setDoc(getDocRef('liturgy_cache', `liturgy_${dateStr}`), { date: dateStr, content: content, createdAt: Date.now(), expiresAt: Date.now() + (48 * 60 * 60 * 1000) }, { merge: true });
     },
     delete: async (dateStr: string) => {
         await deleteDoc(getDocRef('liturgy_cache', `liturgy_${dateStr}`));

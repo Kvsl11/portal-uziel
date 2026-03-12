@@ -887,16 +887,14 @@ const Attendance: React.FC = () => {
                           
                           {isExpanded && (
                               <div className="border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 p-6 animate-fade-in-up">
-                                  {(checkPermission('attendance', 'edit') || checkPermission('attendance', 'delete')) && (
-                                      <div className="mb-6 flex justify-end gap-2">
-                                          {checkPermission('attendance', 'edit') && (
-                                            <button onClick={(e) => openEditEventModal(e, event.date, event.type, event.records)} className="text-xs font-bold text-brand-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-brand-50 dark:bg-brand-900/10 hover:bg-brand-500 rounded-xl transition-all border border-brand-200 dark:border-brand-900/30">Editar Evento</button>
-                                          )}
-                                          {checkPermission('attendance', 'delete') && (
-                                            <button onClick={(e) => requestDeleteEvent(e, event.records)} className="text-xs font-bold text-red-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-red-50 dark:bg-red-900/10 hover:bg-red-500 rounded-xl transition-all border border-red-200 dark:border-red-900/30">Excluir Tudo</button>
-                                          )}
+                                  <div className="mb-6 flex justify-between gap-2">
+                                          <button onClick={(e) => requestDeleteEvent(e, event.records)} className="text-xs font-bold text-red-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-red-50 dark:bg-red-900/10 hover:bg-red-500 rounded-xl transition-all border border-red-200 dark:border-red-900/30 flex items-center gap-2">
+                                              <i className="fas fa-trash"></i> Excluir Evento
+                                          </button>
+                                          <button onClick={(e) => openEditEventModal(e, event.date, event.type, event.records)} className="text-xs font-bold text-brand-500 hover:text-white uppercase tracking-widest px-5 py-3 bg-brand-50 dark:bg-brand-900/10 hover:bg-brand-500 rounded-xl transition-all border border-brand-200 dark:border-brand-900/30 flex items-center gap-2">
+                                              <i className="fas fa-pen"></i> Editar Evento
+                                          </button>
                                       </div>
-                                  )}
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                       {event.records.map(r => {
                                           const hasPendingJustification = justifications.some(j => j.userId === r.memberId && j.eventDate === event.date && j.status === 'PENDING');
