@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import Attendance from './pages/Attendance';
 import RepertoryGenerator from './pages/RepertoryGenerator';
-import Composer from './pages/Composer';
 import Playlists from './pages/Playlists';
 import Rota from './pages/Rota';
 import Users from './pages/Users';
@@ -59,7 +58,6 @@ const App: React.FC = () => {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="repertory" element={<RepertoryGenerator />} />
-              <Route path="composer" element={<Composer />} />
               <Route path="playlists" element={<Playlists />} />
               <Route path="rota" element={<Rota />} />
               <Route path="calendar" element={<LiturgicalCalendar />} />

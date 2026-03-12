@@ -182,7 +182,6 @@ const Layout: React.FC = () => {
               {checkPermission('repertory', 'view') && (
                 <>
                   <SidebarItem to="/repertory" icon="fa-music" label="Repertório" />
-                  <SidebarItem to="/composer" icon="fa-pen-nib" label="Compositor AI" />
                 </>
               )}
               {checkPermission('liturgy', 'view') && (
