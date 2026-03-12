@@ -35,11 +35,8 @@ const Card: React.FC<CardProps> = ({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Rotation Strength (Degrees) - Adjusted for premium feel
-    const rotateX = ((y - centerY) / centerY) * -4; // Negative to tilt towards mouse vertically
-    const rotateY = ((x - centerX) / centerX) * 4;  // Positive to tilt towards mouse horizontally
-
-    setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`);
+    // Zoom effect only - removed 3D rotation as per user request
+    setTransform(`scale3d(1.02, 1.02, 1.02)`);
   };
 
   const handleMouseEnter = () => {

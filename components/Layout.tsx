@@ -138,9 +138,9 @@ const Layout: React.FC = () => {
   const isSuperAdmin = currentUser?.role === 'super-admin';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-[#020617] relative">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-[#0f172a] relative">
       <div className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000">
-          <div className={`absolute inset-0 bg-white dark:bg-[#020617]`} />
+          <div className={`absolute inset-0 bg-white dark:bg-[#0f172a]`} />
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `radial-gradient(circle at 0% 0%, #29aae2 0%, transparent 40%), radial-gradient(circle at 100% 100%, #38bdf8 0%, transparent 40%)` }} />
       </div>
 
@@ -288,7 +288,7 @@ const Layout: React.FC = () => {
                     className={({ isActive }) => `
                         w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
                         transition-all duration-500 transform active:scale-90
-                        border-[4px] border-white dark:border-[#020617]
+                        border-[4px] border-white dark:border-[#0f172a]
                         ${isActive 
                             ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
                             : ''
@@ -304,7 +304,7 @@ const Layout: React.FC = () => {
                         className={({ isActive }) => `
                             w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
                             transition-all duration-500 transform active:scale-90
-                            border-[4px] border-white dark:border-[#020617]
+                            border-[4px] border-white dark:border-[#0f172a]
                             ${isActive 
                                 ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
                                 : ''

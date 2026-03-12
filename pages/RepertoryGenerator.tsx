@@ -655,6 +655,9 @@ const RepertoryGenerator: React.FC = () => {
             if (typeof result === 'string') {
                 processedLyrics = result;
             }
+            if (currentUser) {
+                await AuditService.log(currentUser.username, 'Repertory', 'AI_PROCESS_LYRICS', `Processou letra para PDF: ${song.title}`, currentUser.role, currentUser.name);
+            }
         } catch (e) {
             console.warn("PDF AI processing failed, falling back to raw lyrics", e);
         }
@@ -854,6 +857,9 @@ const RepertoryGenerator: React.FC = () => {
                     rawText = result.join('\n');
                 } else if (typeof result === 'string') {
                     rawText = result;
+                }
+                if (currentUser) {
+                    await AuditService.log(currentUser.username, 'Repertory', 'AI_PROCESS_LYRICS', `Processou letra para PPTX: ${song.title}`, currentUser.role, currentUser.name);
                 }
             } catch (geminiError) {
                 console.warn("Gemini PPTX processing failed, using raw lyrics", geminiError);

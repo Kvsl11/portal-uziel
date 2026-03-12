@@ -30,7 +30,7 @@ const QuotaTimer = () => {
             <div>
                 <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-0.5">Cota Esgotada</p>
                 <p className="text-sm text-red-600 dark:text-red-300 font-medium">
-                    O limite gratuito da API foi atingido. A cota será renovada em: <span className="font-mono font-bold bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded">{timeLeft}</span>
+                    O limite gratuito da API foi atingido. A cota será renovada em: <span className="font-mono font-bold bg-white/50 dark:bg-slate-900/40 px-1.5 py-0.5 rounded">{timeLeft}</span>
                 </p>
             </div>
         </div>
@@ -64,7 +64,7 @@ const formatMessage = (text: string) => {
   formatted = formatted.replace(/\*(.*?)\*/g, '<em class="italic text-slate-500 dark:text-slate-400">$1</em>');
 
   // 5. Code Blocks
-  formatted = formatted.replace(/`(.*?)`/g, '<code class="bg-slate-100 dark:bg-black/30 px-1.5 py-0.5 rounded text-xs font-mono text-brand-600 dark:text-brand-400 border border-slate-200 dark:border-white/10 inline-block align-middle">$1</code>');
+  formatted = formatted.replace(/`(.*?)`/g, '<code class="bg-slate-100 dark:bg-slate-900/40 px-1.5 py-0.5 rounded text-xs font-mono text-brand-600 dark:text-brand-400 border border-slate-200 dark:border-white/10 inline-block align-middle">$1</code>');
 
   // 6. Blockquotes
   formatted = formatted.replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-500 dark:text-slate-400 my-2 py-1 bg-slate-50 dark:bg-white/5 rounded-r-lg">$1</blockquote>');
@@ -614,6 +614,17 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
       }
 
       setTtsState({ index, status: 'loading' });
+
+      if (currentUser) {
+          AuditService.log(
+              currentUser.username,
+              'AI Assistant',
+              'CREATE',
+              `Gerou voz (TTS) para mensagem ${index}`,
+              currentUser.role,
+              currentUser.name
+          );
+      }
 
       try {
           const rawChunks = text.match(/[^.!?;\n]+[.!?;\n]+|[^.!?;\n]+$/g) || [text];

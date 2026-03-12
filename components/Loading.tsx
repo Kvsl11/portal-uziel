@@ -19,7 +19,7 @@ const Loading: React.FC<LoadingProps> = ({ fullScreen = true, message = "Inicial
          
          {/* Center Logo */}
          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full p-3 shadow-lg border border-slate-200 dark:border-white/10">
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-full p-3 shadow-lg border border-slate-200 dark:border-white/10">
                 <UzielLogo className="text-slate-900 dark:text-white w-10 h-10" />
             </div>
          </div>
@@ -38,8 +38,8 @@ const Loading: React.FC<LoadingProps> = ({ fullScreen = true, message = "Inicial
 
   if (fullScreen) {
     return createPortal(
-      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#020617] flex items-center justify-center transition-colors duration-500">
-        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/60 dark:from-black/20 dark:to-black/60 pointer-events-none"></div>
+      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center transition-colors duration-500">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/60 dark:from-blue-900/10 dark:to-[#0f172a]/80 pointer-events-none"></div>
         <div className="relative z-10">
             {content}
         </div>

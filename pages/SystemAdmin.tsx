@@ -440,20 +440,20 @@ const SystemAdmin: React.FC = () => {
             const imagesList = imgSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             setDailyImages(imagesList);
 
-            const yesterday = new Date();
-            yesterday.setHours(yesterday.getHours() - 24);
-            const yesterdayTimestamp = Timestamp.fromDate(yesterday);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTimestamp = Timestamp.fromDate(today);
 
             const recentImagesQuery = query(
                 collection(db, `artifacts/${APP_ID}/public/data/daily_images`),
-                where('createdAt', '>=', yesterdayTimestamp)
+                where('createdAt', '>=', todayTimestamp)
             );
             const recentImagesSnap = await getDocs(recentImagesQuery);
             const dailyImageCount = recentImagesSnap.size;
             
             const logsSnap = await getDocs(query(
                 collection(db, `artifacts/${APP_ID}/public/data/audit_logs`),
-                where('timestamp', '>=', yesterdayTimestamp)
+                where('timestamp', '>=', todayTimestamp)
             ));
             
             let textReqs = 0;
@@ -465,22 +465,26 @@ const SystemAdmin: React.FC = () => {
 
             logsSnap.docs.forEach(d => {
                 const log = d.data();
+                const detailsLower = log.details.toLowerCase();
+                
                 if (
-                    (log.module === 'AI Assistant' && log.action === 'CREATE' && !log.details.toLowerCase().includes('imagem') && !log.details.toLowerCase().includes('voz')) ||
+                    (log.module === 'AI Assistant' && log.action === 'CREATE' && !detailsLower.includes('image') && !detailsLower.includes('imagem') && !detailsLower.includes('voz') && !detailsLower.includes('speech')) ||
                     (log.module === 'Repertory' && log.action === 'AI_LYRICS') ||
-                    (log.module === 'Liturgy' && log.action === 'AI_LITURGY')
+                    (log.module === 'Repertory' && log.action === 'AI_PROCESS_LYRICS') ||
+                    (log.module === 'Liturgy' && log.action === 'AI_LITURGY') ||
+                    (log.module === 'Composer' && log.action === 'AI_COMPOSER')
                 ) {
                     textReqs++;
                     textTokens += 1500;
                 }
                 else if (
-                    (log.module === 'AI Assistant' && log.action === 'CREATE' && log.details.toLowerCase().includes('imagem')) ||
+                    (log.module === 'AI Assistant' && log.action === 'CREATE' && (detailsLower.includes('image') || detailsLower.includes('imagem'))) ||
                     (log.module === 'Repertory' && log.action === 'AI_COVER')
                 ) {
                     imageReqs++;
                     imageTokens += 2500;
                 }
-                else if (log.module === 'AI Assistant' && log.action === 'CREATE' && (log.details.toLowerCase().includes('voz') || log.details.toLowerCase().includes('speech'))) {
+                else if (log.module === 'AI Assistant' && log.action === 'CREATE' && (detailsLower.includes('voz') || detailsLower.includes('speech'))) {
                     audioReqs++;
                     audioTokens += 500;
                 }
@@ -785,7 +789,7 @@ const SystemAdmin: React.FC = () => {
                                                 <button 
                                                     onClick={handleSaveACL}
                                                     disabled={isSavingACL}
-                                                    className="flex-[2] md:flex-none px-6 py-3 md:py-2.5 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 hover:-translate-y-0.5 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
+                                                    className="flex-[2] md:flex-none px-6 py-3 md:py-2.5 rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 hover:scale-105 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
                                                 >
                                                     {isSavingACL ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-save"></i>}
                                                     Salvar Alterações
@@ -799,10 +803,10 @@ const SystemAdmin: React.FC = () => {
                                                 if (!config) return null;
 
                                                 return (
-                                                <div key={modKey} className="bg-slate-50/50 dark:bg-black/20 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 hover:border-brand-500/30 transition-colors group">
-                                                    <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-200/50 dark:border-white/5">
-                                                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm border border-slate-100 dark:border-white/5 group-hover:text-brand-500 transition-colors">
-                                                            <i className={`fas ${
+                                                <div key={modKey} className="bg-slate-50/50 dark:bg-black/20 rounded-2xl p-4 sm:p-5 border border-slate-200/50 dark:border-white/5 hover:border-brand-500/30 transition-colors group">
+                                                    <div className="flex items-center gap-3 mb-4 sm:mb-5 pb-3 border-b border-slate-200/50 dark:border-white/5">
+                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm border border-slate-100 dark:border-white/5 group-hover:text-brand-500 transition-colors shrink-0">
+                                                            <i className={`fas text-xs sm:text-base ${
                                                                 modValue === 'dashboard' ? 'fa-chart-pie' :
                                                                 modValue === 'repertory' ? 'fa-music' :
                                                                 modValue === 'liturgy' ? 'fa-calendar-check' :
@@ -951,7 +955,7 @@ const SystemAdmin: React.FC = () => {
                                         <div 
                                             key={key} 
                                             onClick={() => setExploringCollection(key)}
-                                            className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl border border-slate-200/50 dark:border-white/10 flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-brand-500/50 transition-all cursor-pointer group relative"
+                                            className="bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl border border-slate-200/50 dark:border-white/10 flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] hover:border-brand-500/50 transition-all cursor-pointer group relative"
                                         >
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-brand-500/20"></div>
                                             <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-black/20 relative z-10">
@@ -1215,33 +1219,33 @@ const SystemAdmin: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                            <Card className="p-4 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-key"></i></div>
                                 
-                                <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20">
-                                        <i className="fas fa-shield-alt text-xl"></i>
+                                <div className="flex items-center gap-4 mb-6 sm:mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-500 border border-brand-100 dark:border-brand-500/20 shrink-0">
+                                        <i className="fas fa-shield-alt text-lg sm:text-xl"></i>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                        <h3 className="text-lg sm:text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
                                             Segurança & Provedores
                                         </h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                                             Gerenciamento de chaves e configurações externas
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-8 relative z-10">
-                                    <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+                                <div className="space-y-6 sm:space-y-8 relative z-10">
+                                    <div className="bg-slate-50/50 dark:bg-black/20 p-4 sm:p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <i className="fas fa-robot text-brand-500"></i>
-                                                <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Gemini API Key</label>
+                                                <label className="text-[9px] sm:text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Gemini API Key</label>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${geminiSource === 'env' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
-                                                FONTE: {geminiSource === 'env' ? 'ARQUIVO / ENV' : 'PERSONALIZADA / LOCAL'}
+                                            <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${geminiSource === 'env' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
+                                                {geminiSource === 'env' ? 'ARQUIVO / ENV' : 'PERSONALIZADA'}
                                             </span>
                                         </div>
                                         
@@ -1258,7 +1262,7 @@ const SystemAdmin: React.FC = () => {
                                                         autoFocus
                                                     />
                                                 </div>
-                                                <button onClick={() => setIsEditingGemini(false)} className="w-full sm:w-12 h-12 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center hover:-translate-y-0.5 transition-transform shrink-0">
+                                                <button onClick={() => setIsEditingGemini(false)} className="w-full sm:w-12 h-12 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center hover:scale-110 transition-transform shrink-0">
                                                     <i className="fas fa-check"></i>
                                                 </button>
                                             </div>
@@ -1290,14 +1294,14 @@ const SystemAdmin: React.FC = () => {
                                         </p>
                                     </div>
 
-                                    <div className="bg-slate-50/50 dark:bg-black/20 p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+                                    <div className="bg-slate-50/50 dark:bg-black/20 p-4 sm:p-5 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
                                             <div className="flex items-center gap-2">
                                                 <i className="fas fa-fire text-orange-500"></i>
-                                                <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Firebase Cloud Config</label>
+                                                <label className="text-[9px] sm:text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Firebase Cloud Config</label>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${fbSource === 'default' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
-                                                FONTE: {fbSource === 'default' ? 'PADRÃO / HARDCODED' : 'PERSONALIZADA / LOCAL'}
+                                            <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${fbSource === 'default' ? 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400' : 'bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-900/20 dark:border-orange-500/30 dark:text-orange-400'}`}>
+                                                {fbSource === 'default' ? 'PADRÃO' : 'PERSONALIZADA'}
                                             </span>
                                         </div>
                                         
@@ -1311,7 +1315,7 @@ const SystemAdmin: React.FC = () => {
                                                     autoFocus
                                                 />
                                                 <div className="flex justify-end">
-                                                    <button onClick={() => setIsEditingFirebase(false)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl sm:rounded-lg bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:-translate-y-0.5 transition-all">
+                                                    <button onClick={() => setIsEditingFirebase(false)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl sm:rounded-lg bg-brand-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:scale-105 transition-all">
                                                         Confirmar Edição
                                                     </button>
                                                 </div>
@@ -1349,112 +1353,112 @@ const SystemAdmin: React.FC = () => {
                                     
                                     <button 
                                         onClick={handleSaveConfigs}
-                                        className="w-full py-4 rounded-xl bg-brand-600 text-white font-black uppercase text-[10px] tracking-widest hover:bg-brand-500 hover:-translate-y-0.5 transition-all shadow-lg shadow-brand-500/20 mt-4 flex items-center justify-center gap-2"
+                                        className="w-full py-4 rounded-xl bg-brand-600 text-white font-black uppercase text-[10px] tracking-widest hover:bg-brand-500 hover:scale-[1.02] transition-all shadow-lg shadow-brand-500/20 mt-4 flex items-center justify-center gap-2"
                                     >
                                         <i className="fas fa-save"></i> Salvar e Aplicar Configurações
                                     </button>
                                 </div>
                             </Card>
 
-                            <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                            <Card className="p-4 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-6xl"><i className="fas fa-network-wired"></i></div>
                                 
-                                <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-100 dark:border-sky-500/20">
-                                        <i className="fas fa-cloud-sun text-xl"></i>
+                                <div className="flex items-center gap-4 mb-6 sm:mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-100 dark:border-sky-500/20 shrink-0">
+                                        <i className="fas fa-cloud-sun text-lg sm:text-xl"></i>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                        <h3 className="text-lg sm:text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
                                             Cluster de Persistência
                                         </h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                                             Informações do banco de dados e storage
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
-                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 relative z-10">
+                                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fas fa-project-diagram text-sky-500 opacity-70"></i>
-                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">ID do Projeto (Firestore)</p>
+                                            <p className="text-[8px] sm:text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">ID do Projeto (Firestore)</p>
                                         </div>
-                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">portal-uziel-295cb</p>
+                                        <p className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-bold group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate">portal-uziel-295cb</p>
                                     </div>
-                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fas fa-fingerprint text-sky-500 opacity-70"></i>
-                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Identidade do WebApp</p>
+                                            <p className="text-[8px] sm:text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Identidade do WebApp</p>
                                         </div>
-                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">1:98540572300:web</p>
+                                        <p className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">1:98540572300:web</p>
                                     </div>
-                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fas fa-box-open text-sky-500 opacity-70"></i>
-                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Bucket Principal</p>
+                                            <p className="text-[8px] sm:text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Bucket Principal</p>
                                         </div>
-                                        <p className="font-mono text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">portal-uziel-295cb.firebasestorage.app</p>
+                                        <p className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-bold truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">portal-uziel-295cb.firebasestorage.app</p>
                                     </div>
-                                    <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
+                                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/50 dark:border-white/5 hover:border-sky-500/30 transition-colors group">
                                         <div className="flex items-center gap-2 mb-2">
                                             <i className="fas fa-globe-americas text-sky-500 opacity-70"></i>
-                                            <p className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Região Geográfica</p>
+                                            <p className="text-[8px] sm:text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Região Geográfica</p>
                                         </div>
-                                        <p className="font-mono text-sm text-emerald-600 dark:text-emerald-400 font-bold group-hover:text-emerald-500 transition-colors">multi-region (US/SA-E1)</p>
+                                        <p className="font-mono text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-bold group-hover:text-emerald-500 transition-colors truncate">multi-region (US/SA-E1)</p>
                                     </div>
                                 </div>
                             </Card>
                         </div>
 
-                        <Card className="p-5 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
+                        <Card className="p-4 sm:p-8 shadow-xl border border-slate-200/50 dark:border-white/10 relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
                             <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-20 -mt-20 pointer-events-none"></div>
                             <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-8xl"><i className="fas fa-server"></i></div>
                             
-                            <div className="flex items-center gap-4 mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
-                                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-100 dark:border-indigo-500/20">
-                                    <i className="fas fa-server text-xl"></i>
+                            <div className="flex items-center gap-4 mb-6 sm:mb-8 border-b border-slate-100 dark:border-white/5 pb-6 relative z-10">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-100 dark:border-indigo-500/20 shrink-0">
+                                    <i className="fas fa-server text-lg sm:text-xl"></i>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
+                                    <h3 className="text-lg sm:text-xl font-display font-bold text-slate-800 dark:text-white leading-tight">
                                         Ambiente de Produção Edge
                                     </h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                    <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                                         Status da infraestrutura de entrega
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                                <div className="bg-slate-50/50 dark:bg-black/20 p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 relative z-10">
+                                <div className="bg-slate-50/50 dark:bg-black/20 p-4 sm:p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
+                                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
                                         <i className="fas fa-network-wired text-indigo-500"></i>
-                                        <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">CDN Network</label>
+                                        <label className="text-[9px] sm:text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">CDN Network</label>
                                     </div>
-                                    <div className="w-full p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative flex h-3 w-3">
+                                    <div className="w-full p-3 sm:p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            <div className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-500"></span>
                                             </div>
-                                            <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Cloudflare Proxy Ativo</span>
+                                            <span className="font-mono text-[9px] sm:text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">Cloudflare Proxy Ativo</span>
                                         </div>
-                                        <i className="fas fa-globe text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors text-xl"></i>
+                                        <i className="fas fa-globe text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors text-lg sm:text-xl"></i>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 dark:bg-black/20 p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 mb-4">
+                                <div className="bg-slate-50/50 dark:bg-black/20 p-4 sm:p-6 rounded-2xl border border-slate-200/50 dark:border-white/5 group hover:border-indigo-500/30 transition-colors">
+                                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
                                         <i className="fas fa-microchip text-indigo-500"></i>
-                                        <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Runtime Status</label>
+                                        <label className="text-[9px] sm:text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Runtime Status</label>
                                     </div>
-                                    <div className="w-full p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                                <i className="fab fa-react"></i>
+                                    <div className="w-full p-3 sm:p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                                                <i className="fab fa-react text-xs sm:text-base"></i>
                                             </div>
-                                            <span className="font-mono text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-black">Node 20.x • React 19</span>
+                                            <span className="font-mono text-[9px] sm:text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-black">Node 20.x • React 19</span>
                                         </div>
-                                        <i className="fas fa-bolt text-slate-300 dark:text-slate-600 group-hover:text-yellow-500 transition-colors text-xl"></i>
+                                        <i className="fas fa-bolt text-slate-300 dark:text-slate-600 group-hover:text-yellow-500 transition-colors text-lg sm:text-xl"></i>
                                     </div>
                                 </div>
                             </div>

@@ -20,7 +20,7 @@ const PremiumBackground: React.FC<PremiumBackgroundProps> = ({ variant = 'defaul
       case 'golden': // Repertório (Agora AZUL PROFUNDO conforme solicitado)
         return 'bg-gradient-to-br from-[#082f49] via-[#0369a1] to-[#172554]'; // Sky-950 -> Sky-700 -> Blue-950
       case 'dark': // Neutro (Slate rico)
-        return 'bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#020617]';
+        return 'bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#080c14]';
       default: // Home (Brand Blue / Deep Ocean)
         return 'bg-gradient-to-br from-[#075985] via-[#1e3a8a] to-[#0f172a]'; // Sky-800 -> Blue-900 -> Slate-900
     }

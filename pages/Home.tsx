@@ -72,8 +72,8 @@ const Home: React.FC = () => {
           )}
           
           {/* Layer 2: Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/60 to-transparent z-10"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/80 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/60 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a]/80 to-transparent z-10"></div>
           
           {/* Layer 3: Content */}
           <div className="relative z-20 w-full p-8 md:p-14 flex flex-col gap-8">

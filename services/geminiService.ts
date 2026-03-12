@@ -39,52 +39,6 @@ const memoryCache = new Map<string, string>();
 
 let globalQuotaExceeded = false;
 
-export const composeSong = async (idea: string, style: string) => {
-    try {
-        const prompt = `Você é um compositor musical e arranjador especialista. O usuário quer criar uma música com a seguinte ideia: "${idea}" no estilo musical: "${style}".
-
-Crie uma composição completa e emocionante.
-IMPORTANTE PARA A LETRA E CIFRAS:
-1. Retorne a letra COM as cifras inseridas nos locais corretos usando colchetes, ex: "[G]Deus é [D]bom [Em]o tempo [C]todo".
-2. Divida a letra em seções claras como [VERSO 1], [REFRÃO], [PONTE], etc.
-3. Use quebras de linha simples entre os versos de uma mesma estrofe.
-4. Use quebras de linha DUPLAS entre as seções.
-
-Retorne um JSON com a seguinte estrutura:
-{
-  "title": "Título da Música",
-  "lyricsWithChords": "Letra completa com cifras em colchetes [C]...",
-  "chordsSummary": "Sugestão de progressão de acordes resumida por seção usando colchetes, ex: Verso: [G] [D] [Em] [C]",
-  "key": "Tom sugerido (ex: G, C, Am, E)",
-  "arrangementNotes": "Dicas de arranjo, BPM e instrumentos"
-}`;
-
-        const response = await ai.models.generateContent({
-            model: "gemini-3.1-pro-preview",
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        title: { type: Type.STRING },
-                        lyricsWithChords: { type: Type.STRING },
-                        chordsSummary: { type: Type.STRING },
-                        key: { type: Type.STRING },
-                        arrangementNotes: { type: Type.STRING }
-                    },
-                    required: ["title", "lyricsWithChords", "chordsSummary", "key", "arrangementNotes"]
-                }
-            }
-        });
-
-        return JSON.parse(response.text || "{}");
-    } catch (error) {
-        console.error("Erro ao compor música:", error);
-        throw error;
-    }
-};
-
 export const getTimeUntilQuotaReset = (): string => {
     const now = new Date();
     const laTimeStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
@@ -539,57 +493,6 @@ export const fetchLiturgyDetails = async (date: Date, prioritizeSpeed: boolean =
     
     return { ...result, _fromCache: false };
   } catch (error) { throw new Error("Falha na busca."); }
-};
-
-export const fetchDailyCuriosity = async (celebrationTitle: string): Promise<string> => {
-    try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
-        const systemInstruction = "Você é um especialista em hagiografia e liturgia católica. Seu objetivo é fornecer UMA curiosidade breve, fascinante e espiritual sobre o santo ou festa do dia.";
-        const prompt = `Hoje a Igreja celebra: ${celebrationTitle}. 
-        Gere um parágrafo curto (máximo 40 palavras) com uma curiosidade histórica ou espiritual interessante sobre este santo ou festa. 
-        Se for Tempo Comum (Féria), gere uma frase inspiradora curta de um santo aleatório.
-        Não use markdown. Seja direto.`;
-
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt,
-            config: { systemInstruction, temperature: 0.7 }
-        });
-
-        return response.text?.trim() || "Dia de graça e paz no Senhor.";
-    } catch (e) {
-        return "Vivendo o mistério de Cristo no dia a dia.";
-    }
-};
-
-export const generateSaintImage = async (celebrationTitle: string) => {
-    const contextKey = `saint_${getDateKey(new Date())}`;
-    const localCached = getCachedImage(contextKey);
-    if (localCached) return localCached;
-
-    if (globalQuotaExceeded) return null;
-
-    const prompt = `Catholic iconography of ${celebrationTitle}. Sacred art style, detailed, golden halo, divine light, oil painting texture. High quality, 8k.`;
-
-    try {
-        const response = await runWithFallback(async (modelName) => {
-            const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
-            return await freshAi.models.generateContent({ 
-                model: modelName, 
-                contents: { parts: [{ text: prompt }] }, 
-                config: { imageConfig: { aspectRatio: "1:1" } } 
-            });
-        }, IMAGE_MODELS_FALLBACK);
-
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
-            if (part.inlineData) {
-                const compressedBase64 = await compressForFirestore(`data:image/png;base64,${part.inlineData.data}`);
-                saveToLocal(contextKey, compressedBase64);
-                return compressedBase64;
-            }
-        }
-        return null;
-    } catch (error) { return null; }
 };
 
 export const generateChatResponse = async (history: {role: string, parts: any[]}[], message: string, useThinking: boolean, useSearch: boolean, imageAttachments?: { mimeType: string, data: string }[] | null, currentPage: string = '/', customSystemInstruction?: string) => {

@@ -134,7 +134,7 @@ const Login: React.FC = () => {
   const CinematicBackground = () => (
       <>
         {/* Layer 1: Adaptive Atmosphere Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-50 via-slate-100 to-slate-200 dark:from-[#0f172a] dark:via-[#020617] dark:to-black z-0 transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-50 via-slate-100 to-slate-200 dark:from-[#1e293b] dark:via-[#0f172a] dark:to-[#080c14] z-0 transition-colors duration-1000"></div>
         
         {/* Texture: Ajustada para ser muito sutil e espaçada (Pontinhos brancos) */}
         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none" 
@@ -156,7 +156,7 @@ const Login: React.FC = () => {
   // --- SPLASH SCREEN (REFORMULATED) ---
   if (isPageLoading) {
       return (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#0f172a] transition-colors duration-500">
             <style>{`
                 @keyframes ken-burns {
                     0% { transform: scale(1.1); }
@@ -178,7 +178,7 @@ const Login: React.FC = () => {
                         style={{ backgroundImage: `url('${bgImage}')` }}
                     />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/80 to-white dark:from-[#020617]/60 dark:via-[#020617]/80 dark:to-[#020617]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/80 to-white dark:from-[#0f172a]/60 dark:via-[#0f172a]/80 dark:to-[#0f172a]" />
             </div>
 
             <div className="relative z-10 flex flex-col items-center w-full max-w-md px-6">
@@ -227,7 +227,7 @@ const Login: React.FC = () => {
 
   // --- MAIN LOGIN SCREEN ---
   return (
-    <div className="min-h-screen font-sans overflow-hidden relative flex items-center justify-center animate-fade-in bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen font-sans overflow-hidden relative flex items-center justify-center animate-fade-in bg-slate-50 dark:bg-[#0f172a] text-slate-900 dark:text-white transition-colors duration-500">
       <style>{`
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
@@ -272,7 +272,7 @@ const Login: React.FC = () => {
         
         <div className="relative group">
             {/* Glass Panel */}
-            <div className="relative bg-white/60 dark:bg-black/30 backdrop-blur-xl border border-white/40 dark:border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl dark:shadow-none overflow-hidden transition-all duration-500 hover:bg-white/70 dark:hover:bg-black/40 hover:border-white/60 dark:hover:border-white/20">
+            <div className="relative bg-white/60 dark:bg-[#0f172a]/40 backdrop-blur-xl border border-white/40 dark:border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl dark:shadow-none overflow-hidden transition-all duration-500 hover:bg-white/70 dark:hover:bg-[#0f172a]/60 hover:border-white/60 dark:hover:border-white/20">
                 
                 {/* Top Shine */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-slate-400/30 dark:via-white/30 to-transparent"></div>
