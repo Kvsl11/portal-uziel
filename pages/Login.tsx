@@ -13,7 +13,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { login, loginWithGoogle, currentUser } = useAuth(); 
+  const { login, currentUser } = useAuth(); 
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -104,17 +104,6 @@ const Login: React.FC = () => {
 
     initPage();
   }, []);
-
-  const handleGoogleLogin = async () => {
-    setIsSubmitting(true);
-    setError('');
-    try {
-        await loginWithGoogle();
-    } catch (e: any) {
-        setError('Erro ao autenticar com Google. Tente novamente.');
-        setIsSubmitting(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,22 +374,6 @@ const Login: React.FC = () => {
                                 {isSubmitting ? <i className="fas fa-circle-notch fa-spin"></i> : null}
                                 {isSubmitting ? 'Autenticando...' : 'Acessar'}
                             </span>
-                        </button>
-                        
-                        <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-slate-300 dark:border-white/10"></div>
-                            <span className="flex-shrink-0 mx-4 text-slate-400 text-[10px] uppercase tracking-widest font-bold">Ou</span>
-                            <div className="flex-grow border-t border-slate-300 dark:border-white/10"></div>
-                        </div>
-
-                        <button 
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            disabled={isSubmitting}
-                            className="w-full py-3.5 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold rounded-2xl shadow-sm transform hover:scale-[1.02] active:scale-[0.98] transition-all text-xs relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 dark:border-white/10 flex items-center justify-center gap-3"
-                        >
-                            <img src="https://www.gstatic.com/mobilesdk/250721_mobilesdk/mono_firebase_dark.svg" alt="Google" className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" />
-                            <span className="tracking-wide">Entrar com Google</span>
                         </button>
                     </div>
                 </form>

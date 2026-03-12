@@ -8,7 +8,7 @@ import Card from '../components/Card';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const Polls: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, checkPermission } = useAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'active' | 'closed' | 'create'>('active');
@@ -22,7 +22,9 @@ const Polls: React.FC = () => {
   // Delete Modal
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string | null }>({ isOpen: false, id: null });
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
+  const canCreate = checkPermission('polls', 'create');
+  const canEdit = checkPermission('polls', 'edit');
+  const canDelete = checkPermission('polls', 'delete');
 
   useEffect(() => {
       const unsub = PollService.subscribe((data) => {
@@ -138,7 +140,7 @@ const Polls: React.FC = () => {
             <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1 shadow-inner border border-slate-200 dark:border-white/5">
                  <button onClick={() => setActiveTab('active')} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'active' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}>Ativas</button>
                  <button onClick={() => setActiveTab('closed')} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'closed' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}>Encerradas</button>
-                 {isAdmin && (
+                 {canCreate && (
                     <button onClick={() => setActiveTab('create')} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'create' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}>
                         <i className="fas fa-plus"></i> Criar
                     </button>
@@ -146,7 +148,7 @@ const Polls: React.FC = () => {
             </div>
         </div>
 
-        {activeTab === 'create' && isAdmin && (
+        {activeTab === 'create' && canCreate && (
             <Card className="max-w-2xl mx-auto">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Nova Enquete</h3>
                 <div className="space-y-4">
@@ -207,11 +209,11 @@ const Polls: React.FC = () => {
                                             className={`w-full text-left p-3 rounded-xl border-2 transition-all relative z-10 flex justify-between items-center ${isSelected ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20'}`}
                                         >
                                             <span className={`font-bold text-sm ${isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>{opt}</span>
-                                            {(myVote || poll.status === 'CLOSED' || isAdmin) && (
+                                            {(myVote || poll.status === 'CLOSED' || canEdit) && (
                                                 <span className="text-xs font-bold">{percent}%</span>
                                             )}
                                         </button>
-                                        {(myVote || poll.status === 'CLOSED' || isAdmin) && (
+                                        {(myVote || poll.status === 'CLOSED' || canEdit) && (
                                             <div className="absolute top-0 left-0 h-full bg-slate-100 dark:bg-white/5 rounded-xl transition-all duration-1000" style={{ width: `${percent}%` }}></div>
                                         )}
                                     </div>
@@ -223,7 +225,7 @@ const Polls: React.FC = () => {
                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                 <i className="fas fa-clock mr-1"></i> Até {new Date(poll.deadline).toLocaleDateString('pt-BR')}
                             </div>
-                            {isAdmin && poll.status === 'OPEN' && (
+                            {canEdit && poll.status === 'OPEN' && (
                                 <button onClick={() => handleClosePoll(poll.id!)} className="text-red-500 hover:text-red-600 text-xs font-bold uppercase tracking-wider">Encerrar</button>
                             )}
                         </div>

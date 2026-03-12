@@ -39,6 +39,52 @@ const memoryCache = new Map<string, string>();
 
 let globalQuotaExceeded = false;
 
+export const composeSong = async (idea: string, style: string) => {
+    try {
+        const prompt = `Você é um compositor musical e arranjador especialista. O usuário quer criar uma música com a seguinte ideia: "${idea}" no estilo musical: "${style}".
+
+Crie uma composição completa e emocionante.
+IMPORTANTE PARA A LETRA E CIFRAS:
+1. Retorne a letra COM as cifras inseridas nos locais corretos usando colchetes, ex: "[G]Deus é [D]bom [Em]o tempo [C]todo".
+2. Divida a letra em seções claras como [VERSO 1], [REFRÃO], [PONTE], etc.
+3. Use quebras de linha simples entre os versos de uma mesma estrofe.
+4. Use quebras de linha DUPLAS entre as seções.
+
+Retorne um JSON com a seguinte estrutura:
+{
+  "title": "Título da Música",
+  "lyricsWithChords": "Letra completa com cifras em colchetes [C]...",
+  "chordsSummary": "Sugestão de progressão de acordes resumida por seção usando colchetes, ex: Verso: [G] [D] [Em] [C]",
+  "key": "Tom sugerido (ex: G, C, Am, E)",
+  "arrangementNotes": "Dicas de arranjo, BPM e instrumentos"
+}`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        lyricsWithChords: { type: Type.STRING },
+                        chordsSummary: { type: Type.STRING },
+                        key: { type: Type.STRING },
+                        arrangementNotes: { type: Type.STRING }
+                    },
+                    required: ["title", "lyricsWithChords", "chordsSummary", "key", "arrangementNotes"]
+                }
+            }
+        });
+
+        return JSON.parse(response.text || "{}");
+    } catch (error) {
+        console.error("Erro ao compor música:", error);
+        throw error;
+    }
+};
+
 export const getTimeUntilQuotaReset = (): string => {
     const now = new Date();
     const laTimeStr = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" });

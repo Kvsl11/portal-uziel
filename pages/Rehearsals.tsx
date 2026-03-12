@@ -146,7 +146,7 @@ const MediaPlayerOverlay = ({ url, onClose }: { url: string, onClose: () => void
 };
 
 const Rehearsals: React.FC = () => {
-  const { currentUser, usersList } = useAuth();
+  const { currentUser, usersList, checkPermission } = useAuth();
   const [activeTab, setActiveTab] = useState<'schedule' | 'create'>('schedule');
   const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
   const [repertories, setRepertories] = useState<Repertory[]>([]);
@@ -190,7 +190,9 @@ const Rehearsals: React.FC = () => {
   }>({ isOpen: false, id: null });
 
   // Permissions
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
+  const canCreate = checkPermission('rehearsals', 'create');
+  const canEdit = checkPermission('rehearsals', 'edit');
+  const canDelete = checkPermission('rehearsals', 'delete');
   const isSuperAdmin = currentUser?.role === 'super-admin';
 
   // Load Data
@@ -440,7 +442,7 @@ const Rehearsals: React.FC = () => {
                  <button onClick={() => setActiveTab('schedule')} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-2 ${activeTab === 'schedule' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}>
                      <i className="fas fa-calendar-alt"></i> Agendados
                  </button>
-                 {isAdmin && (
+                 {canCreate && (
                     <button onClick={() => { setFormData({ date: '', time: '', type: 'Ensaio', topic: '', location: '', notes: '', repertoryId: '', playlistIds: [], participants: [] }); setIsCustomType(false); setActiveTab('create'); }} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-2 ${activeTab === 'create' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}>
                         <i className="fas fa-plus-circle"></i> Novo Evento
                     </button>
@@ -449,7 +451,7 @@ const Rehearsals: React.FC = () => {
         </div>
 
         {/* --- CREATE / EDIT TAB --- */}
-        {activeTab === 'create' && isAdmin && (
+        {activeTab === 'create' && canCreate && (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in-up">
                 
                 {/* Left Column: Details */}
@@ -736,7 +738,8 @@ const Rehearsals: React.FC = () => {
                             .filter(p => rehearsal.playlistIds?.includes(p.id))
                             .filter(p => MediaUtils.parseUrl(p.url).type === 'spotify');
                         
-                        const canManage = isSuperAdmin || (isAdmin && rehearsal.createdBy === currentUser?.username);
+                        const canManageThis = isSuperAdmin || (canEdit && rehearsal.createdBy === currentUser?.username);
+                        const canDeleteThis = isSuperAdmin || (canDelete && rehearsal.createdBy === currentUser?.username);
                         const creator = usersList.find(u => u.username === rehearsal.createdBy);
                         const creatorName = creator ? creator.name.split(' ')[0] : (rehearsal.createdBy?.split('@')[0] || 'Sistema');
 
@@ -758,13 +761,15 @@ const Rehearsals: React.FC = () => {
                                                 <span>Por {creatorName}</span>
                                             </div>
                                         </div>
-
-                                        {canManage && (
-                                            <div className="flex gap-1">
+                                        
+                                        <div className="flex gap-1">
+                                            {canManageThis && (
                                                 <button onClick={() => handleEdit(rehearsal)} className="w-8 h-8 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 text-slate-400 hover:text-brand-500 transition-colors"><i className="fas fa-pen text-xs"></i></button>
+                                            )}
+                                            {canDeleteThis && (
                                                 <button onClick={() => setDeleteModal({isOpen: true, id: rehearsal.id!})} className="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"><i className="fas fa-trash text-xs"></i></button>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="mb-2">

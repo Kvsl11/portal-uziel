@@ -180,7 +180,10 @@ const Layout: React.FC = () => {
               <SidebarSection title="Liturgia & Louvor" />
               
               {checkPermission('repertory', 'view') && (
-                <SidebarItem to="/repertory" icon="fa-music" label="Repertório" />
+                <>
+                  <SidebarItem to="/repertory" icon="fa-music" label="Repertório" />
+                  <SidebarItem to="/composer" icon="fa-pen-nib" label="Compositor AI" />
+                </>
               )}
               {checkPermission('liturgy', 'view') && (
                 <SidebarItem to="/calendar" icon="fa-calendar-check" label="Liturgia" />
@@ -203,22 +206,20 @@ const Layout: React.FC = () => {
               {checkPermission('polls', 'view') && (
                 <SidebarItem to="/polls" icon="fa-poll" label="Enquetes" />
               )}
-              {isAdmin && checkPermission('attendance', 'view') && (
+              {checkPermission('attendance', 'view') && (
                 <SidebarItem to="/attendance" icon="fa-clipboard-user" label="Presença" />
               )}
-              {isAdmin && checkPermission('users', 'view') && (
+              {checkPermission('users', 'view') && (
                 <SidebarItem to="/users" icon="fa-users-cog" label="Equipe" />
               )}
 
-              {isSuperAdmin && (
+              {checkPermission('system', 'view') && (
                 <>
                   <SidebarSection title="Desenvolvedor" />
                   {checkPermission('monitoring', 'view') && (
                     <SidebarItem to="/monitoring" icon="fa-terminal" label="Comando" isDev />
                   )}
-                  {checkPermission('system', 'view') && (
-                    <SidebarItem to="/system" icon="fa-microchip" label="Engine Room" isDev />
-                  )}
+                  <SidebarItem to="/system" icon="fa-microchip" label="Engine Room" isDev />
                 </>
               )}
             </nav>
@@ -282,23 +283,21 @@ const Layout: React.FC = () => {
           )}
           
           <div className="relative -top-5 mx-1">
-            {isAdmin ? (
-                checkPermission('attendance', 'view') && (
-                    <NavLink 
-                        to="/attendance" 
-                        className={({ isActive }) => `
-                            w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
-                            transition-all duration-500 transform active:scale-90
-                            border-[4px] border-white dark:border-[#020617]
-                            ${isActive 
-                                ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
-                                : ''
-                            }
-                        `}
-                    >
-                       <i className="fas fa-clipboard-user text-xl"></i>
-                    </NavLink>
-                )
+            {checkPermission('attendance', 'view') ? (
+                <NavLink 
+                    to="/attendance" 
+                    className={({ isActive }) => `
+                        w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
+                        transition-all duration-500 transform active:scale-90
+                        border-[4px] border-white dark:border-[#020617]
+                        ${isActive 
+                            ? '!bg-brand-600 !text-white scale-110 shadow-[0_10px_25px_rgba(41,170,226,0.5)]' 
+                            : ''
+                        }
+                    `}
+                >
+                   <i className="fas fa-clipboard-user text-xl"></i>
+                </NavLink>
             ) : (
                 checkPermission('dashboard', 'view') && (
                     <NavLink 

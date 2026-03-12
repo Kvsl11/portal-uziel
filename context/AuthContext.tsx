@@ -8,7 +8,6 @@ interface AuthContextType {
   currentUser: User | null;
   usersList: User[];
   login: (username: string, pass: string) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean>;
   logout: () => void;
   addUser: (user: User) => Promise<void>;
   removeUser: (username: string) => Promise<void>;
@@ -29,6 +28,7 @@ export const PERMISSION_MODULES = {
   POLLS: 'polls',
   JUSTIFICATIONS: 'justifications',
   CREATIVE: 'creative',
+  COMPOSER: 'composer',
   MONITORING: 'monitoring',
   SYSTEM: 'system'
 } as const;
@@ -66,6 +66,7 @@ export const DEFAULT_PERMISSIONS = {
     'polls:view', 'polls:create', 'polls:edit', 'polls:delete',
     'justifications:view', 'justifications:edit', // Admins approve/reject (edit)
     'creative:view', 'creative:create',
+    'composer:view', 'composer:create', 'composer:edit', 'composer:delete',
     'monitoring:view'
   ],
   'super-admin': ['*'] // Wildcard
@@ -181,31 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
   }, [firebaseUser, usersList]);
 
-  const loginWithGoogle = async (): Promise<boolean> => {
-    try {
-        const user = await AuthService.loginWithGoogle();
-        if (user && user.email) {
-            // Check if user exists in usersList
-            const exists = usersList.some(u => u.username.toLowerCase() === user.email?.toLowerCase());
-            if (!exists) {
-                // Auto-register user as member if they don't exist
-                const newUser: User = {
-                    username: user.email,
-                    name: user.displayName || user.email.split('@')[0],
-                    role: 'member',
-                    whatsapp: ''
-                };
-                await UserService.saveUser(newUser);
-            }
-            return true;
-        }
-        return false;
-    } catch (error: any) {
-        console.error("Auth Error (Google):", error);
-        AuditService.log('unknown', 'Auth', 'ERROR', `Falha no login com Google: ${error.code || 'Desconhecido'}`, 'unknown');
-        throw error;
-    }
-  };
 
   const login = async (usernameInput: string, pass: string): Promise<boolean> => {
     if (!usernameInput || !usernameInput.trim()) {
@@ -358,13 +334,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkPermission = (module: string, action: string): boolean => {
     if (!currentUser) return false;
     
-    // 1. Super Admin Bypass
-    if (currentUser.role === 'super-admin') return true;
-
-    // 2. Check for Custom Permissions (Override)
+    // 1. Check for Custom Permissions (Override) - Highest Priority
     if (currentUser.customPermissions && currentUser.customPermissions.length > 0) {
-      return currentUser.customPermissions.includes(`${module}:${action}`) || currentUser.customPermissions.includes(`${module}:*`);
+      return currentUser.customPermissions.includes(`${module}:${action}`) || 
+             currentUser.customPermissions.includes(`${module}:*`) ||
+             currentUser.customPermissions.includes('*');
     }
+
+    // 2. Super Admin Bypass (Default for the role if no custom perms)
+    if (currentUser.role === 'super-admin') return true;
 
     // 3. Fallback to Role Defaults
     const rolePerms = DEFAULT_PERMISSIONS[currentUser.role] || [];
@@ -374,7 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, usersList, login, loginWithGoogle, logout, addUser, removeUser, updateUser, loading, checkPermission }}>
+    <AuthContext.Provider value={{ currentUser, usersList, login, logout, addUser, removeUser, updateUser, loading, checkPermission }}>
       {children}
     </AuthContext.Provider>
   );

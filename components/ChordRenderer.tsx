@@ -53,14 +53,14 @@ const renderMarkdownLine = (line: string) => {
 };
 
 
-const ChordRenderer = ({ text, center = false }: { text: string, center?: boolean }) => {
+const ChordRenderer = ({ text, center = false, showChords = true }: { text: string, center?: boolean, showChords?: boolean }) => {
     if (!text) return null;
 
-    // Remove stray asterisks that aren't part of markdown if needed, but keeping simplistic for now
-    const cleanedText = text; 
+    // Remove chords if showChords is false
+    const processedText = showChords ? text : text.replace(/\[[^\]]+\]/g, '');
 
     // Split by newline but keep empty lines
-    const lines = cleanedText.split(/\r\n|\r|\n/);
+    const lines = processedText.split(/\r\n|\r|\n/);
 
     return (
         <div className={`font-sans text-lg leading-loose w-full overflow-x-hidden ${center ? 'text-center' : 'text-left'}`}>

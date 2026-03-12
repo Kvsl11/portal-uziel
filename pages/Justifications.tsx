@@ -32,7 +32,7 @@ const REASONS = [
 ];
 
 const Justifications: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, checkPermission } = useAuth();
   const [activeTab, setActiveTab] = useState<'create' | 'history' | 'admin'>('create');
   
   // Data
@@ -65,7 +65,8 @@ const Justifications: React.FC = () => {
       action: 'ACCEPTED' | 'REJECTED';
   }>({ isOpen: false, justification: null, action: 'ACCEPTED' });
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
+  const canAdmin = checkPermission('attendance', 'edit'); // Using attendance module for justification review
+  const canDelete = checkPermission('attendance', 'delete');
 
   useEffect(() => {
       const unsubJ = JustificationService.subscribe((data) => setJustifications(data as Justification[]));
@@ -104,7 +105,7 @@ const Justifications: React.FC = () => {
       if (e) e.stopPropagation();
 
       // PERMISSION CHECK: Members cannot edit submitted justifications
-      if (!isAdmin) {
+      if (!canAdmin) {
           alert("Política de Segurança: Membros não podem editar justificativas enviadas. Caso haja erro, exclua este protocolo e envie um novo.");
           return;
       }
@@ -460,7 +461,7 @@ const Justifications: React.FC = () => {
                  <button onClick={() => { resetForm(); setActiveTab('history'); }} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'history' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                      <i className="fas fa-history"></i> Minhas
                  </button>
-                 {isAdmin && (
+                 {canAdmin && (
                     <button onClick={() => { resetForm(); setActiveTab('admin'); }} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'admin' ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                         <i className="fas fa-gavel"></i>
                         <span>Análise</span>
@@ -759,7 +760,7 @@ const Justifications: React.FC = () => {
                                     )}
 
                                     <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {isAdmin && (
+                                        {canAdmin && (
                                             <button onClick={(e) => handleEdit(e, j)} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-brand-500 text-xs font-bold uppercase tracking-wider transition-colors"><i className="fas fa-pen mr-2"></i> Editar</button>
                                         )}
                                         <button onClick={(e) => requestDelete(e, j.id!)} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-red-500 text-xs font-bold uppercase tracking-wider transition-colors"><i className="fas fa-trash mr-2"></i> Excluir</button>
@@ -778,7 +779,7 @@ const Justifications: React.FC = () => {
         )}
 
         {/* --- ADMIN TAB --- */}
-        {activeTab === 'admin' && isAdmin && (
+        {activeTab === 'admin' && canAdmin && (
             <div className="space-y-8 animate-fade-in">
                 {/* Admin Filters */}
                 <div className="flex justify-center mb-8">

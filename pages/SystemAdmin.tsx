@@ -289,6 +289,8 @@ const SystemAdmin: React.FC = () => {
         playlists: { label: 'Playlists', actions: ['view', 'create', 'edit', 'delete'] },
         polls: { label: 'Enquetes', actions: ['view', 'create', 'edit', 'delete'] },
         justifications: { label: 'Justificativas', actions: ['view', 'create', 'edit'] },
+        creative: { label: 'Creative Studio', actions: ['view', 'create'] },
+        composer: { label: 'Estúdio de Composição', actions: ['view', 'create', 'edit', 'delete'] },
         monitoring: { label: 'Comando', actions: ['view'] },
         system: { label: 'Engine Room', actions: ['view', 'edit', 'delete'] }
     };
@@ -298,11 +300,10 @@ const SystemAdmin: React.FC = () => {
         if (user) {
             setSelectedUserForACL(userId);
             
-            if (user.customPermissions && user.customPermissions.length > 0) {
-                setAclPermissions(user.customPermissions);
+            if (user.customPermissions !== undefined) {
+                setAclPermissions([...user.customPermissions]);
             } else {
                 // Pre-fill with Role Defaults
-                // We need to cast to any or keyof typeof DEFAULT_PERMISSIONS because TS might complain about string index
                 const roleDefaults = (DEFAULT_PERMISSIONS as any)[user.role] || [];
                 setAclPermissions([...roleDefaults]);
             }
@@ -319,8 +320,44 @@ const SystemAdmin: React.FC = () => {
     const togglePermission = (module: string, action: string) => {
         const perm = `${module}:${action}`;
         setAclPermissions(prev => {
-            if (prev.includes(perm)) return prev.filter(p => p !== perm);
-            return [...prev, perm];
+            let next = [...prev];
+            
+            const isGlobalWildcard = next.includes('*');
+            const isModuleWildcard = next.includes(`${module}:*`);
+            const isSpecific = next.includes(perm);
+
+            // If it's currently checked (via any means) and we want to toggle it (uncheck it)
+            if (isGlobalWildcard || isModuleWildcard || isSpecific) {
+                // We are unchecking
+                if (isGlobalWildcard) {
+                    // Expand global wildcard to all modules/actions except this one
+                    next = [];
+                    Object.entries(MODULE_CONFIG).forEach(([m, config]) => {
+                        config.actions.forEach(a => {
+                            const p = `${m}:${a}`;
+                            if (p !== perm) next.push(p);
+                        });
+                    });
+                } else if (isModuleWildcard) {
+                    // Expand module wildcard to all actions in this module except this one
+                    next = next.filter(p => p !== `${module}:*`);
+                    const config = MODULE_CONFIG[module];
+                    if (config) {
+                        config.actions.forEach(a => {
+                            const p = `${module}:${a}`;
+                            if (p !== perm) next.push(p);
+                        });
+                    }
+                } else {
+                    // Just remove the specific permission
+                    next = next.filter(p => p !== perm);
+                }
+            } else {
+                // We are checking
+                next.push(perm);
+            }
+            
+            return next;
         });
     };
 
@@ -777,6 +814,7 @@ const SystemAdmin: React.FC = () => {
                                                                 modValue === 'playlists' ? 'fab fa-spotify' :
                                                                 modValue === 'polls' ? 'fa-poll' :
                                                                 modValue === 'justifications' ? 'fa-envelope-open-text' :
+                                                                modValue === 'composer' ? 'fa-pen-nib' :
                                                                 modValue === 'monitoring' ? 'fa-terminal' :
                                                                 modValue === 'system' ? 'fa-microchip' :
                                                                 'fa-cogs'
@@ -808,7 +846,6 @@ const SystemAdmin: React.FC = () => {
                                                                         className="hidden"
                                                                         checked={isChecked}
                                                                         onChange={() => togglePermission(modValue, action)}
-                                                                        disabled={(isGlobalWildcard || isModuleWildcard)} 
                                                                     />
                                                                     <span className={`text-xs font-medium transition-colors ${isChecked ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400 group-hover/item:text-slate-800 dark:group-hover/item:text-slate-200'}`}>
                                                                         {PERMISSION_ACTIONS_LABELS[action] || action}

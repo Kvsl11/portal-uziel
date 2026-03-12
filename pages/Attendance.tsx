@@ -74,8 +74,10 @@ const Attendance: React.FC = () => {
 
   const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
-  const isSuperAdmin = currentUser?.role === 'super-admin';
+  const canAdmin = checkPermission('attendance', 'edit');
+  const canDelete = checkPermission('attendance', 'delete');
+  const canCreate = checkPermission('attendance', 'create');
+  const isSuperAdmin = currentUser?.role === 'super-admin'; // Settings modal is still super-admin only for now as per original code, but we could change it to a permission if needed. For now let's keep it consistent with the user's request of real-time permissions for modules.
 
   useEffect(() => {
     const unsubM = MemberService.subscribe((data) => setMembers(data));
@@ -440,7 +442,7 @@ const Attendance: React.FC = () => {
   };
 
   const handleToggleHistoryStatus = async (record: AttendanceRecord) => {
-      if (!checkPermission('attendance', 'edit')) return;
+      if (!canAdmin) return;
       const newStatus = record.status === 'Presente' ? 'Ausente' : 'Presente';
       setIsProcessing(true);
       try {
@@ -658,7 +660,7 @@ const Attendance: React.FC = () => {
                           </div>
                       </div>
 
-                      {checkPermission('attendance', 'create') && (
+                      {canCreate && (
                         <button onClick={handleStartSession} className="w-full sm:w-auto px-10 py-5 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-brand-500/30 hover:scale-105 hover:bg-brand-500 active:scale-95 transition-all flex items-center justify-center gap-3 group">
                             <span>Iniciar Chamada</span> <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                         </button>
@@ -691,7 +693,7 @@ const Attendance: React.FC = () => {
                        
                        <div className="flex gap-1.5 md:gap-2 shrink-0">
                            <button onClick={toggleAutoNotify} className={`w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-sm md:text-xl transition-all ${autoNotify ? 'bg-green-500 text-white shadow-md' : 'bg-slate-200 dark:bg-white/10 text-slate-400 grayscale'}`} title="Aviso WhatsApp Automático"><i className="fab fa-whatsapp"></i></button>
-                           {checkPermission('attendance', 'delete') && (
+                           {canDelete && (
                              <button onClick={handleResetSession} className="w-8 h-8 md:w-auto md:px-4 md:py-2 rounded-xl md:rounded-2xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center"><i className="fas fa-eraser text-sm md:text-base"></i></button>
                            )}
                        </div>
@@ -742,7 +744,7 @@ const Attendance: React.FC = () => {
                            <div className="w-px bg-slate-200 dark:bg-white/10 mx-0.5 md:mx-1 h-6 md:h-8 self-center hidden md:block"></div>
 
                            {/* Bulk Actions */}
-                           {checkPermission('attendance', 'create') && (
+                           {canCreate && (
                                <div className="flex gap-1.5 md:gap-2 shrink-0">
                                    <button onClick={() => handleBulkAttendance('Presente')} className="px-2 md:px-4 py-1.5 md:py-3 rounded-lg md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 md:gap-2 whitespace-nowrap transition-all bg-green-100 text-green-700 hover:bg-green-200">
                                        <i className="fas fa-check-double text-[10px] md:text-sm"></i> <span className="hidden sm:inline">Todos Presentes</span><span className="sm:hidden">Presentes</span>
