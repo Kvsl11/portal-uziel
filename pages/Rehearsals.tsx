@@ -390,7 +390,7 @@ const Rehearsals: React.FC = () => {
       let signature = "Coordenador 💙";
       const currentName = currentUser?.name || "";
       
-      if (currentName.includes("Dev Kaio")) {
+      if (currentName.includes("Kaio")) {
           signature = "Coordenador de Ensaios 💙";
       } else if (currentName.includes("Willian")) {
           signature = "Coordenador de Liturgia e Repertório 💙";
