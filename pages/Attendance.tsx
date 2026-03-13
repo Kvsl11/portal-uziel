@@ -415,6 +415,35 @@ const Attendance: React.FC = () => {
       });
   };
 
+  const handleBulkDeselect = async () => {
+      setDeleteModal({
+          isOpen: true,
+          title: `Desmarcar todos?`,
+          description: `Isso removerá o registro de presença de todos os membros listados atualmente nesta sessão.`,
+          confirmText: 'Desmarcar Todos',
+          processingText: 'Processando...',
+          iconClass: 'fas fa-minus-circle',
+          colorTheme: 'red',
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  const itemsToDelete = sessionRecords.map(r => ({
+                      id: r.id,
+                      memberId: r.memberId,
+                      points: r.points
+                  }));
+                  await AttendanceService.deleteBatch(itemsToDelete);
+                  showToast(`Desmarcado para ${itemsToDelete.length} membros!`);
+              } catch (e) {
+                  console.error("Erro ao processar em massa.", e);
+              } finally {
+                  setIsProcessing(false);
+                  setDeleteModal(prev => ({ ...prev, isOpen: false }));
+              }
+          }
+      });
+  };
+
   const handleStartSession = () => {
       if (!eventType.trim()) return alert("Defina um nome para o evento.");
       setIsSessionActive(true);

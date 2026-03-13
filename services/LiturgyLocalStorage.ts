@@ -2,6 +2,27 @@
 export const LiturgyLocalStorage = {
     save: (date: string, data: any) => {
         try {
+            // Clean up old liturgy entries to prevent QuotaExceededError
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('liturgy_') && k !== `liturgy_${date}`) {
+                    // Keep at most a few recent ones, or just let it clean up aggressively.
+                    // For simplicity, we'll just keep the current one being saved if we want to be aggressive,
+                    // but it's better to keep a small history. Let's just remove anything older than 7 days.
+                    try {
+                        const item = localStorage.getItem(k);
+                        if (item) {
+                            const parsed = JSON.parse(item);
+                            if (parsed.timestamp && Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                                keysToRemove.push(k);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+
             localStorage.setItem(`liturgy_${date}`, JSON.stringify({
                 data,
                 timestamp: Date.now()

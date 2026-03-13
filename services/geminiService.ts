@@ -248,8 +248,21 @@ export const updateLocalCache = (contextKey: string, data: string) => {
         const today = new Date().toISOString().split('T')[0];
         const key = `${CACHE_PREFIX}${contextKey}_${today}`;
         memoryCache.set(key, data);
+        
+        // Clear old cache entries to prevent QuotaExceededError
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(CACHE_PREFIX) && !k.endsWith(today)) {
+                keysToRemove.push(k);
+            }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        
         localStorage.setItem(key, data);
-    } catch (e) {}
+    } catch (e) {
+        console.warn("Local storage full or unavailable", e);
+    }
 };
 
 const saveToLocal = (contextKey: string, data: string) => {
@@ -464,10 +477,14 @@ export const fetchLiturgyDetails = async (date: Date, prioritizeSpeed: boolean =
   if (localData) return { ...localData, _fromCache: true };
 
   // 2. Check Firestore Cache
-  const cachedData = await LiturgyCacheService.get(dateKey);
-  if (cachedData) {
-      LiturgyLocalStorage.save(dateKey, cachedData);
-      return { ...cachedData, _fromCache: true };
+  try {
+      const cachedData = await LiturgyCacheService.get(dateKey);
+      if (cachedData) {
+          LiturgyLocalStorage.save(dateKey, cachedData);
+          return { ...cachedData, _fromCache: true };
+      }
+  } catch (e) {
+      console.warn("Firestore cache read failed, proceeding to generation.", e);
   }
 
   const systemInstruction = `VOCÊ É UM ASSISTENTE LITÚRGICO CATÓLICO (CNBB). OBJETIVO: Retornar a liturgia do dia EXATA para o Brasil. RETORNE JSON: { "title": "...", "reading1": "HTML", "psalm": "HTML", "reading2": "HTML", "gospel": "HTML" }. USE HTML para formatar os textos.`;
@@ -489,7 +506,11 @@ export const fetchLiturgyDetails = async (date: Date, prioritizeSpeed: boolean =
     // Save to caches
     if (result.title !== "Liturgia" && result.reading1 !== "N/A") {
         LiturgyLocalStorage.save(dateKey, result);
-        LiturgyCacheService.save(dateKey, result);
+        try {
+            LiturgyCacheService.save(dateKey, result);
+        } catch (e) {
+            console.warn("Failed to save liturgy to Firestore, but saved locally.", e);
+        }
     }
     
     return { ...result, _fromCache: false };
@@ -556,9 +577,17 @@ export const generateCatholicChurchImage = async (contextKey: string = 'default'
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
          const compressedBase64 = await compressForFirestore(`data:image/png;base64,${part.inlineData.data}`);
-         // Save with context metadata
-         await DailyImageService.saveImage(`${fullCacheKey}_${today}_${Date.now()}`, compressedBase64, today, fullCacheKey);
+         
+         // Save locally FIRST to prevent quota exhaustion if Firestore fails
          saveToLocal(fullCacheKey, compressedBase64);
+         
+         // Save with context metadata
+         try {
+             await DailyImageService.saveImage(`${fullCacheKey}_${today}_${Date.now()}`, compressedBase64, today, fullCacheKey);
+         } catch (fsError) {
+             console.warn("Failed to save image to Firestore, but saved locally.", fsError);
+         }
+         
          return compressedBase64;
       }
     }

@@ -243,6 +243,10 @@ const Rehearsals: React.FC = () => {
       setFormData(prev => ({ ...prev, participants: allIds }));
   };
 
+  const deselectAllParticipants = () => {
+      setFormData(prev => ({ ...prev, participants: [] }));
+  };
+
   const formatDateForStorage = (dateStr: string) => {
     if (!dateStr) return '';
     const [day, month, year] = dateStr.split('/');
@@ -399,6 +403,11 @@ const Rehearsals: React.FC = () => {
       navigator.clipboard.writeText(message);
       
       setIsInviteCopied(true);
+      
+      // Abre o WhatsApp com o texto preenchido para o usuário selecionar o grupo
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
       setTimeout(() => setIsInviteCopied(false), 2000);
   };
 
@@ -663,9 +672,14 @@ const Rehearsals: React.FC = () => {
                                 <span className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500"><i className="fas fa-users"></i></span>
                                 Convocação
                             </h3>
-                            <button onClick={selectAllParticipants} className="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-600 transition-colors">
-                                Selecionar Todos
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={selectAllParticipants} className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-500 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors flex items-center justify-center" title="Selecionar Todos">
+                                    <i className="fas fa-check-double"></i>
+                                </button>
+                                <button onClick={deselectAllParticipants} className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center" title="Desmarcar Todos">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
@@ -885,12 +899,12 @@ const Rehearsals: React.FC = () => {
         {activeMediaUrl && <MediaPlayerOverlay url={activeMediaUrl} onClose={() => setActiveMediaUrl(null)} />}
         
         {notificationModal.isOpen && notificationModal.rehearsal && createPortal(
-            <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-                <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-white/20 animate-scale-in relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-md flex items-center justify-center md:p-4 animate-fade-in">
+                <div className="w-full h-full md:h-auto md:max-h-[90vh] max-w-2xl bg-white dark:bg-slate-900 md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl border-0 md:border border-white/20 animate-scale-in relative overflow-hidden flex flex-col">
                     <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
-                    <button onClick={() => setNotificationModal({isOpen: false, rehearsal: null})} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"><i className="fas fa-times"></i></button>
+                    <button onClick={() => setNotificationModal({isOpen: false, rehearsal: null})} className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors z-10"><i className="fas fa-times"></i></button>
 
-                    <div className="mb-6">
+                    <div className="mb-6 mt-4 md:mt-0">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-900/20 text-green-600 flex items-center justify-center text-2xl">
                                 <i className="fab fa-whatsapp"></i>
@@ -908,13 +922,13 @@ const Rehearsals: React.FC = () => {
                                 <i className="fas fa-users"></i> Recomendado
                             </p>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Enviar para todos (Grupo)</p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">Copia a mensagem formatada para colar no grupo.</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Abre o WhatsApp para você selecionar o grupo Ministério Uziel.</p>
                         </div>
                         <button 
                             onClick={() => copyGeneralInvite(notificationModal.rehearsal!)} 
-                            className={`px-6 py-3 shadow-md rounded-xl text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-2 transform active:scale-95 ${isInviteCopied ? 'bg-green-500 text-white scale-105' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-white hover:bg-slate-50'}`}
+                            className={`px-6 py-3 shadow-md rounded-xl text-xs font-bold uppercase tracking-wide transition-all flex items-center gap-2 transform active:scale-95 ${isInviteCopied ? 'bg-green-500 text-white scale-105' : 'bg-green-600 text-white hover:bg-green-700'}`}
                         >
-                            {isInviteCopied ? <><i className="fas fa-check"></i> Copiado!</> : <><i className="fas fa-copy"></i> Copiar para Grupo</>}
+                            {isInviteCopied ? <><i className="fas fa-check"></i> Abrindo...</> : <><i className="fab fa-whatsapp text-lg"></i> Enviar no WhatsApp</>}
                         </button>
                     </div>
 
