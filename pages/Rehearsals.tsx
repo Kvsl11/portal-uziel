@@ -429,16 +429,16 @@ const Rehearsals: React.FC = () => {
   const sortedRehearsals = useMemo(() => {
       const sorted = [...rehearsals].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
-      const today = new Date();
-      today.setHours(0,0,0,0);
+      const now = new Date();
 
       return sorted.filter(r => {
           if (filterStatus === 'all') return true;
-          const rDate = new Date(r.date + 'T12:00:00');
-          rDate.setHours(0,0,0,0);
+          if (!r.date || !r.time) return true;
           
-          if (filterStatus === 'upcoming') return rDate >= today;
-          if (filterStatus === 'past') return rDate < today;
+          const eventDateTime = new Date(`${r.date}T${r.time}`);
+          
+          if (filterStatus === 'upcoming') return eventDateTime >= now;
+          if (filterStatus === 'past') return eventDateTime < now;
           return true;
       });
   }, [rehearsals, filterStatus]);

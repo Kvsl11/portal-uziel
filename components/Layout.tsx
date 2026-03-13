@@ -7,8 +7,8 @@ import UzielLogo from './UzielLogo';
 import { AiAssistant } from './AiAssistant';
 import EditProfileModal from './EditProfileModal';
 import AbsenceNotificationModal from './AbsenceNotificationModal'; 
-import { AuditService, AttendanceService, JustificationService } from '../services/firebase';
-import { AttendanceRecord, Justification } from '../types';
+import { AuditService, AttendanceService, JustificationService, RehearsalService } from '../services/firebase';
+import { AttendanceRecord, Justification, Rehearsal } from '../types';
 
 const SidebarItem = ({ to, icon, label, onClick, badgeCount = 0, isDev = false }: any) => (
   <NavLink
@@ -84,6 +84,7 @@ const Layout: React.FC = () => {
   
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [pendingAbsences, setPendingAbsences] = useState<AttendanceRecord[]>([]);
+  const [overdueAttendanceCount, setOverdueAttendanceCount] = useState(0);
   const [showAbsenceModal, setShowAbsenceModal] = useState(false);
   const [isAbsenceModalDismissed, setIsAbsenceModalDismissed] = useState(false);
 
@@ -109,25 +110,74 @@ const Layout: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+      let unsubAttendance = () => {};
+      let unsubRehearsals = () => {};
+      let unsubJustifications = () => {};
+
       if (currentUser) {
-          const unsubAttendance = AttendanceService.subscribe((recordsData) => {
+          unsubAttendance = AttendanceService.subscribe((recordsData) => {
               const records = recordsData as AttendanceRecord[];
               const myAbsences = records.filter(r => r.memberId.toLowerCase() === currentUser.username.toLowerCase() && r.status === 'Ausente' && r.points !== 0);
-              const unsubJustifications = JustificationService.subscribe((justificationsData) => {
-                  const justifications = justificationsData as Justification[];
-                  const handledDates = new Set(justifications.filter(j => j.userId === currentUser.username).map(j => j.eventDate));
-                  const trulyPending = myAbsences.filter(r => !handledDates.has(r.date));
-                  setPendingAbsences(trulyPending);
-                  if (trulyPending.length > 0 && location.pathname !== '/justifications' && !isAbsenceModalDismissed) {
-                      setShowAbsenceModal(true);
-                  } else {
-                      setShowAbsenceModal(false);
+              
+              unsubRehearsals = RehearsalService.subscribe((eventsData) => {
+                  const events = eventsData as Rehearsal[];
+                  const now = new Date();
+                  let overdueCount = 0;
+                  const pastRehearsalsAsAbsences: any[] = [];
+
+                  events.forEach(ev => {
+                      if (!ev.date || !ev.time) return;
+                      const eventDateTime = new Date(`${ev.date}T${ev.time}`);
+                      if (eventDateTime < now) {
+                          const hasRecords = records.some(r => r.eventId === ev.id || (r.date === ev.date && r.eventType === ev.topic));
+                          if (!hasRecords) {
+                              overdueCount++;
+                              
+                              if (ev.participants?.includes(currentUser.username)) {
+                                  pastRehearsalsAsAbsences.push({
+                                      id: ev.id,
+                                      date: ev.date,
+                                      eventType: ev.type ? `${ev.type}: ${ev.topic}` : `Ensaio: ${ev.topic}`,
+                                      memberId: currentUser.username,
+                                      status: 'Ausente',
+                                      points: (ev.type?.toLowerCase().includes('missa') || ev.type?.toLowerCase().includes('celebração')) ? 5 : 4,
+                                      eventId: ev.id,
+                                      isRehearsal: true
+                                  });
+                              }
+                          }
+                      }
+                  });
+
+                  if (checkPermission('attendance', 'view')) {
+                      setOverdueAttendanceCount(overdueCount);
                   }
+
+                  unsubJustifications = JustificationService.subscribe((justificationsData) => {
+                      const justifications = justificationsData as Justification[];
+                      const handledDates = new Set(justifications.filter(j => j.userId === currentUser.username).map(j => j.eventDate));
+                      const handledEventIds = new Set(justifications.filter(j => j.userId === currentUser.username && j.eventId).map(j => j.eventId));
+                      
+                      const trulyPendingAbsences = myAbsences.filter(r => !handledDates.has(r.date));
+                      const trulyPendingRehearsals = pastRehearsalsAsAbsences.filter(r => !handledDates.has(r.date) && !handledEventIds.has(r.eventId));
+                      
+                      const allPending = [...trulyPendingAbsences, ...trulyPendingRehearsals];
+                      
+                      setPendingAbsences(allPending);
+                      if (allPending.length > 0 && location.pathname !== '/justifications' && !isAbsenceModalDismissed) {
+                          setShowAbsenceModal(true);
+                      } else {
+                          setShowAbsenceModal(false);
+                      }
+                  });
               });
-              return () => unsubJustifications();
           });
-          return () => unsubAttendance();
       }
+      return () => {
+          unsubAttendance();
+          unsubRehearsals();
+          unsubJustifications();
+      };
   }, [currentUser, location.pathname, isAbsenceModalDismissed]);
 
   useEffect(() => {
@@ -206,7 +256,7 @@ const Layout: React.FC = () => {
                 <SidebarItem to="/polls" icon="fa-poll" label="Enquetes" />
               )}
               {checkPermission('attendance', 'view') && (
-                <SidebarItem to="/attendance" icon="fa-clipboard-user" label="Presença" />
+                <SidebarItem to="/attendance" icon="fa-clipboard-user" label="Presença" badgeCount={overdueAttendanceCount} />
               )}
               {checkPermission('users', 'view') && (
                 <SidebarItem to="/users" icon="fa-users-cog" label="Equipe" />
@@ -288,7 +338,7 @@ const Layout: React.FC = () => {
                     className={({ isActive }) => `
                         w-14 h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center justify-center 
                         transition-all duration-500 transform active:scale-90
-                        border-[4px] border-white dark:border-[#0f172a]
+                        border-[4px] border-white dark:border-[#0f172a] relative
                         ${isActive 
                             ? '!bg-brand-600 !text-white scale-110' 
                             : ''
@@ -296,6 +346,11 @@ const Layout: React.FC = () => {
                     `}
                 >
                    <i className="fas fa-clipboard-user text-xl"></i>
+                   {overdueAttendanceCount > 0 && (
+                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white dark:ring-[#0f172a] shadow-md">
+                           {overdueAttendanceCount}
+                       </span>
+                   )}
                 </NavLink>
             ) : (
                 checkPermission('dashboard', 'view') && (

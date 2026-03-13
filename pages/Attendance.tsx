@@ -570,10 +570,44 @@ const Attendance: React.FC = () => {
       }));
   }, [eventHistory]);
 
+  const allEventsWithStatus = useMemo(() => {
+      const now = new Date();
+      return scheduledEvents.map(ev => {
+          const eventDateTime = new Date(`${ev.date}T${ev.time}`);
+          const isPast = eventDateTime < now;
+          const hasRecords = records.some(r => r.eventId === ev.id || (r.date === ev.date && r.eventType === ev.topic));
+          
+          let status: 'upcoming' | 'completed' | 'overdue' = 'upcoming';
+          if (hasRecords) {
+              status = 'completed';
+          } else if (isPast) {
+              status = 'overdue';
+          }
+
+          return { ...ev, status, eventDateTime };
+      }).filter(ev => ev.status !== 'completed').sort((a, b) => {
+          // Sort overdue first, then upcoming (closest first)
+          if (a.status === 'overdue' && b.status !== 'overdue') return -1;
+          if (a.status !== 'overdue' && b.status === 'overdue') return 1;
+          
+          return a.eventDateTime.getTime() - b.eventDateTime.getTime();
+      });
+  }, [scheduledEvents, records]);
+
   const selectScheduledEvent = (ev: Rehearsal) => {
-      setEventType(ev.topic || 'Ensaio');
-      setSelectedEventId(ev.id || '');
-      setIsManualEventType(false);
+      if (selectedEventId === ev.id) {
+          // Deselect
+          setSelectedEventId('');
+          setEventType('Missa');
+          setDate('');
+          setDateInput('');
+      } else {
+          setEventType(ev.topic || 'Ensaio');
+          setSelectedEventId(ev.id || '');
+          setDate(ev.date);
+          setDateInput(formatDateForDisplay(ev.date));
+          setIsManualEventType(false);
+      }
   };
 
   if (initialLoading) return <Loading />;
@@ -613,76 +647,95 @@ const Attendance: React.FC = () => {
               <div className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-800 p-8 md:p-12 flex flex-col justify-between group border border-slate-100 dark:border-white/5 shadow-xl">
                   <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
                   <div className="relative z-10">
-                      <h2 className="text-3xl md:text-4xl font-display font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white">
-                          <span className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-white/5 flex items-center justify-center text-2xl shadow-inner border border-brand-100 dark:border-white/10">
+                      <h2 className="text-2xl md:text-4xl font-display font-bold mb-6 md:mb-8 flex items-center gap-3 md:gap-4 text-slate-900 dark:text-white">
+                          <span className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-brand-50 dark:bg-white/5 flex items-center justify-center text-xl md:text-2xl shadow-inner border border-brand-100 dark:border-white/10 shrink-0">
                               <i className="fas fa-play text-brand-500"></i>
                           </span>
                           Painel de Controle
                       </h2>
                       
-                      <div className="space-y-8 max-w-xl mb-12">
-                          {/* Date Selector */}
-                          <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
-                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Data do Evento</label>
-                              <div className="relative">
-                                  <input type="text" value={dateInput} onChange={handleDateInputChange} placeholder="DD/MM/AAAA" maxLength={10} className="w-full pl-12 pr-4 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm" />
-                                  <i className="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                              </div>
-                          </div>
-
-                          {/* Dynamic Event Selector based on Date */}
+                      <div className="space-y-6 md:space-y-8 max-w-xl mb-8 md:mb-12">
+                          {/* Events List */}
                           <div>
-                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Selecione o Evento</label>
-                              {eventsForSelectedDate.length > 0 ? (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-                                      {eventsForSelectedDate.map(ev => (
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Eventos Agendados</label>
+                              {allEventsWithStatus.length > 0 ? (
+                                  <div className="flex flex-col gap-3 mb-5 max-h-[350px] overflow-y-auto custom-scrollbar pr-1 md:pr-2">
+                                      {allEventsWithStatus.map(ev => (
                                           <button 
                                             key={ev.id} 
                                             onClick={() => selectScheduledEvent(ev)}
-                                            className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${selectedEventId === ev.id ? 'bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/20 scale-[1.02]' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-brand-300 dark:hover:border-brand-500/50 text-slate-700 dark:text-slate-300 shadow-sm hover:shadow-md'}`}
+                                            className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border transition-all relative overflow-hidden group w-full text-left ${selectedEventId === ev.id ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 shadow-md shadow-brand-500/10' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-brand-300 dark:hover:border-brand-500/50 hover:shadow-sm'}`}
                                           >
-                                              <div className="flex justify-between items-start mb-3">
-                                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedEventId === ev.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400'}`}>
-                                                      <i className="fas fa-calendar-check text-lg"></i>
-                                                  </div>
-                                                  {selectedEventId === ev.id && <div className="bg-white text-brand-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-sm">Selecionado</div>}
+                                              {/* Left: Date/Time Badge */}
+                                              <div className={`flex flex-col items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl shrink-0 ${selectedEventId === ev.id ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400'}`}>
+                                                  <span className="text-[11px] md:text-xs font-bold uppercase">{formatDateBR(ev.date).substring(0, 5)}</span>
+                                                  <span className="text-[9px] md:text-[10px] opacity-80">{ev.time}</span>
                                               </div>
-                                              <div>
-                                                  <p className="font-bold text-base leading-tight mb-1.5 truncate">{ev.topic || 'Evento Sem Nome'}</p>
-                                                  <div className="flex flex-col gap-1">
-                                                      <p className={`text-[11px] font-bold uppercase ${selectedEventId === ev.id ? 'text-brand-100' : 'text-slate-500 dark:text-slate-400'}`}><i className="far fa-clock mr-1"></i> {ev.time} • <i className="fas fa-map-marker-alt mx-1"></i> {ev.location || 'Sede'}</p>
-                                                      {ev.type && <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-md w-fit mt-1 ${selectedEventId === ev.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400'}`}>{ev.type}</span>}
+                                              
+                                              {/* Middle: Info */}
+                                              <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 mb-1">
+                                                      <p className={`font-bold text-sm md:text-base truncate ${selectedEventId === ev.id ? 'text-brand-700 dark:text-brand-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                          {ev.topic || 'Evento Sem Nome'}
+                                                      </p>
+                                                      {selectedEventId === ev.id && <i className="fas fa-check-circle text-brand-500 text-sm shrink-0"></i>}
+                                                  </div>
+                                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                                      {ev.type && <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wide px-1.5 md:px-2 py-0.5 rounded-md bg-slate-100 dark:bg-black/20 text-slate-500 dark:text-slate-400">{ev.type}</span>}
+                                                      {ev.status === 'overdue' && <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wide px-1.5 md:px-2 py-0.5 rounded-md bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 flex items-center gap-1"><i className="fas fa-exclamation-circle"></i> Atrasado</span>}
                                                   </div>
                                               </div>
                                           </button>
                                       ))}
                                   </div>
                               ) : (
-                                  <div className="p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 text-slate-500 dark:text-slate-400 text-sm font-medium mb-5 flex items-center gap-3 shadow-sm">
+                                  <div className="p-4 md:p-5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium mb-5 flex items-center gap-3 shadow-sm">
                                       <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center shrink-0"><i className="fas fa-info text-slate-500 dark:text-slate-300"></i></div>
-                                      Nenhum agendamento para hoje. Use a opção manual abaixo.
+                                      Nenhum evento agendado. Use a opção manual abaixo.
                                   </div>
                               )}
 
-                              <button 
+                              {/* Modern Toggle for Manual Event */}
+                              <div 
                                 onClick={() => { setSelectedEventId(''); setIsManualEventType(!isManualEventType); setEventType('Missa'); }}
-                                className={`text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2 rounded-lg ${!selectedEventId || isManualEventType ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                                className={`cursor-pointer flex items-center justify-between p-3 md:p-4 rounded-2xl border transition-all ${isManualEventType ? 'bg-brand-50 dark:bg-brand-900/10 border-brand-200 dark:border-brand-500/30 shadow-sm' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'}`}
                               >
-                                  <i className={`fas ${isManualEventType ? 'fa-check-square' : 'fa-square'}`}></i> Criar Evento Avulso / Manual
-                              </button>
+                                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                                      <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${isManualEventType ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' : 'bg-white dark:bg-black/20 text-slate-400 border border-slate-200 dark:border-white/10'}`}>
+                                          <i className="fas fa-edit"></i>
+                                      </div>
+                                      <div className="min-w-0">
+                                          <p className={`font-bold text-sm truncate ${isManualEventType ? 'text-brand-700 dark:text-brand-400' : 'text-slate-700 dark:text-slate-300'}`}>Evento Avulso / Manual</p>
+                                          <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider truncate">Criar chamada sem agendamento</p>
+                                      </div>
+                                  </div>
+                                  {/* Toggle Switch */}
+                                  <div className={`w-10 md:w-12 h-5 md:h-6 shrink-0 rounded-full p-0.5 md:p-1 transition-colors flex items-center ${isManualEventType ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                      <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${isManualEventType ? 'translate-x-5 md:translate-x-6' : 'translate-x-0'}`}></div>
+                                  </div>
+                              </div>
 
                               {/* Manual Input Fallback */}
-                              {(isManualEventType || eventsForSelectedDate.length === 0) && (
-                                  <div className="animate-fade-in-up mt-5 bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
-                                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Tipo do Evento</label>
-                                      <div className="relative">
-                                          <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full pl-12 pr-10 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none appearance-none cursor-pointer focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm">
-                                              <option className="text-slate-900" value="Missa">Santa Missa</option>
-                                              <option className="text-slate-900" value="Ensaio">Ensaio Geral</option>
-                                              <option className="text-slate-900" value="Evento">Evento Extra</option>
-                                          </select>
-                                          <i className="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                                          <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                              {(isManualEventType || allEventsWithStatus.length === 0) && (
+                                  <div className="animate-fade-in-up mt-5 space-y-4">
+                                      <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
+                                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Data do Evento</label>
+                                          <div className="relative">
+                                              <input type="text" value={dateInput} onChange={handleDateInputChange} placeholder="DD/MM/AAAA" maxLength={10} className="w-full pl-12 pr-4 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm" />
+                                              <i className="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                          </div>
+                                      </div>
+                                      <div className="bg-slate-50 dark:bg-white/5 p-5 rounded-2xl border border-slate-100 dark:border-white/10 shadow-sm">
+                                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-3">Tipo do Evento</label>
+                                          <div className="relative">
+                                              <select value={eventType} onChange={e => setEventType(e.target.value)} className="w-full pl-12 pr-10 py-4 bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold outline-none appearance-none cursor-pointer focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm">
+                                                  <option className="text-slate-900" value="Missa">Santa Missa</option>
+                                                  <option className="text-slate-900" value="Ensaio">Ensaio Geral</option>
+                                                  <option className="text-slate-900" value="Evento">Evento Extra</option>
+                                              </select>
+                                              <i className="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                              <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                          </div>
                                       </div>
                                   </div>
                               )}

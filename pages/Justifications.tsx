@@ -260,7 +260,7 @@ const Justifications: React.FC = () => {
               const reh = rehearsals.find(r => r.id === selectedEventId);
               if (reh) {
                   eventDate = reh.date;
-                  eventType = `Ensaio: ${reh.topic}`;
+                  eventType = reh.type ? `${reh.type}: ${reh.topic}` : `Ensaio: ${reh.topic}`;
               }
           }
 
@@ -373,7 +373,7 @@ const Justifications: React.FC = () => {
       
       const editingJustification = editingId ? justifications.find(j => j.id === editingId) : null;
 
-      return attendance.filter(a => {
+      const missedFromAttendance = attendance.filter(a => {
           // 1. Filtrar registros do USUÁRIO ALVO (seja o próprio ou quem o Admin está editando)
           if (a.memberId.toLowerCase() !== targetUserId.toLowerCase()) return false;
           
@@ -396,16 +396,56 @@ const Justifications: React.FC = () => {
           if (resolvedJustification && resolvedJustification.id !== editingId) return false;
 
           return true;
-      }).sort((a,b) => b.date.localeCompare(a.date));
-  }, [attendance, targetUserId, justifications, editingId]);
+      }).map(a => ({
+          id: a.id,
+          date: a.date,
+          eventType: a.eventType,
+          isRehearsal: false
+      }));
+
+      const now = new Date();
+
+      const missedFromRehearsals = rehearsals.filter(r => {
+          if (!r.date || !r.time) return false;
+          const eventDateTime = new Date(`${r.date}T${r.time}`);
+          const isPast = eventDateTime < now;
+          const isParticipant = r.participants?.includes(targetUserId);
+          
+          if (!isPast || !isParticipant) return false;
+
+          const hasAttendance = attendance.some(a => 
+              a.memberId.toLowerCase() === targetUserId.toLowerCase() &&
+              (a.eventId === r.id || (a.date === r.date && a.eventType.includes(r.topic)))
+          );
+          if (hasAttendance) return false;
+
+          const resolvedJustification = justifications.find(j => 
+              j.userId.toLowerCase() === targetUserId.toLowerCase() && 
+              (j.eventId === r.id || j.eventDate === r.date) && 
+              (j.status === 'ACCEPTED' || j.status === 'REJECTED')
+          );
+
+          if (resolvedJustification && resolvedJustification.id !== editingId) return false;
+
+          return true;
+      }).map(r => ({
+          id: r.id!,
+          date: r.date,
+          eventType: r.type ? `${r.type}: ${r.topic}` : `Ensaio: ${r.topic}`,
+          isRehearsal: true
+      }));
+
+      return [...missedFromAttendance, ...missedFromRehearsals].sort((a,b) => b.date.localeCompare(a.date));
+  }, [attendance, rehearsals, targetUserId, justifications, editingId]);
 
   const upcomingRehearsals = useMemo(() => {
       if (!currentUser || !targetUserId) return [];
-      const today = new Date();
-      today.setHours(0,0,0,0);
+      const now = new Date();
       
       return rehearsals.filter(r => {
-          const isUpcoming = new Date(r.date + 'T12:00:00') >= today;
+          if (!r.date || !r.time) return false;
+          const eventDateTime = new Date(`${r.date}T${r.time}`);
+          const isUpcoming = eventDateTime >= now;
           // Check participation for the TARGET USER, not necessarily the logged admin
           const isParticipant = r.participants?.includes(targetUserId);
           
@@ -500,7 +540,7 @@ const Justifications: React.FC = () => {
                         {myMissedRecords.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {myMissedRecords.map(ev => {
-                                    const eventKey = `missed|${ev.date}|${ev.eventType}`;
+                                    const eventKey = ev.isRehearsal ? ev.id : `missed|${ev.date}|${ev.eventType}`;
                                     const isSelected = selectedEventId === eventKey;
                                     const dateObj = new Date(ev.date + 'T12:00:00');
                                     
@@ -508,7 +548,7 @@ const Justifications: React.FC = () => {
                                     // Use targetUserId to check the correct user's pending status
                                     const isPending = justifications.some(j => 
                                         j.userId.toLowerCase() === targetUserId?.toLowerCase() && 
-                                        j.eventDate === ev.date && 
+                                        (j.eventDate === ev.date || (ev.isRehearsal && j.eventId === ev.id)) && 
                                         j.status === 'PENDING' &&
                                         j.id !== editingId // Allow selection if editing
                                     );
@@ -534,7 +574,7 @@ const Justifications: React.FC = () => {
                                                             ? 'bg-white/20 text-white' 
                                                             : 'bg-red-50 dark:bg-red-900/20 text-red-500'
                                                     }`}>
-                                                    {isPending ? 'Em Análise' : 'Falta Registrada'}
+                                                    {isPending ? 'Em Análise' : (ev.isRehearsal ? 'Evento Atrasado' : 'Falta Registrada')}
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     {isPending ? <i className="fas fa-hourglass-half text-amber-500 text-sm animate-pulse"></i> : <i className="fas fa-exclamation-circle text-sm animate-pulse"></i>}
