@@ -389,12 +389,13 @@ const Rehearsals: React.FC = () => {
 
       let signature = "Coordenador 💙";
       const currentName = currentUser?.name || "";
+      const upperName = currentName.toUpperCase();
       
-      if (currentName.includes("Kaio")) {
+      if (upperName.includes("KAIO")) {
           signature = "Coordenador de Ensaios 💙";
-      } else if (currentName.includes("Willian")) {
+      } else if (upperName.includes("WILLIAN")) {
           signature = "Coordenador de Liturgia e Repertório 💙";
-      } else if (currentName.includes("Junior")) {
+      } else if (upperName.includes("JUNIOR")) {
           signature = "Presidente 💙";
       } else if (currentName) {
           signature = `${currentName} 💙`;
