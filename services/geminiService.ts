@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { FALLBACK_IMAGES, REPERTORY_COVERS } from "../constants";
-import { DailyImageService, LiturgyCacheService } from "./firebase"; 
+import { DailyImageService, LiturgyCacheService, DailyQuoteService } from "./firebase"; 
 import { LiturgyLocalStorage } from "./LiturgyLocalStorage"; 
 
 // --- DYNAMIC API KEY LOADING ---
@@ -546,6 +546,14 @@ export const generateCatholicChurchImage = async (contextKey: string = 'default'
   let period: 'morning' | 'afternoon' | 'night' = 'morning';
   if (hour >= 12 && hour < 18) period = 'afternoon'; else if (hour >= 18 || hour < 5) period = 'night';
   const today = new Date().toISOString().split('T')[0];
+  
+  // Try to get liturgical context for better image generation
+  let liturgicalTitle = "";
+  try {
+      const liturgy = await fetchLiturgyDetails(new Date(), true);
+      liturgicalTitle = liturgy.title;
+  } catch (e) {}
+
   const fullCacheKey = `${contextKey}_${period}`; 
   
   // 1. Check strict in-memory/local storage cache
@@ -554,7 +562,6 @@ export const generateCatholicChurchImage = async (contextKey: string = 'default'
 
   try {
       // 2. CHECK FIRESTORE FOR EXISTING ACTIVE IMAGE (ROBUST CHECK)
-      // Instead of guessing the ID, we query for an active image matching the context and date.
       const existingImage = await DailyImageService.findActiveImage(fullCacheKey, today);
       
       if (existingImage && existingImage.imageUrl) {
@@ -567,7 +574,7 @@ export const generateCatholicChurchImage = async (contextKey: string = 'default'
 
   // 3. Generate New Image (Only if quota allows)
   if (globalQuotaExceeded) return null;
-  const prompt = getDiversePrompt(contextKey, period);
+  const prompt = getDiversePrompt(contextKey, period, liturgicalTitle);
 
   try {
     const response = await runWithFallback(async (modelName) => {
@@ -595,12 +602,71 @@ export const generateCatholicChurchImage = async (contextKey: string = 'default'
   } catch (error: any) { return null; }
 };
 
-const getDiversePrompt = (contextKey: string, period: 'morning' | 'afternoon' | 'night'): string => {
+const getDiversePrompt = (contextKey: string, period: 'morning' | 'afternoon' | 'night', liturgicalTitle?: string): string => {
     const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
     const catIdx = (dayOfYear + (period === 'morning' ? 0 : period === 'afternoon' ? 2 : 4)) % 4; 
     let base = [PROMPTS_ARCHITECTURE, PROMPTS_NATURE_FAITH, PROMPTS_OBJECTS, PROMPTS_ARTISTIC][catIdx][dayOfYear % 10];
     let lighting = period === 'morning' ? "soft morning sunlight" : period === 'afternoon' ? "vivid natural daylight" : "mystical night candlelight";
-    return `${base} Style: ${ART_STYLES[dayOfYear % 5]}. Context: ${lighting}. Masterpiece, 8k.`;
+    
+    let liturgicalContext = "";
+    if (liturgicalTitle) {
+        liturgicalContext = ` Theme: ${liturgicalTitle}.`;
+    }
+
+    return `${base}${liturgicalContext} Style: ${ART_STYLES[dayOfYear % 5]}. Context: ${lighting}. Masterpiece, 8k.`;
+};
+
+export const getDailyVerse = async (): Promise<{ text: string, reference: string, liturgicalContext?: string, curiosity?: string }> => {
+    const today = getDateKey(new Date());
+    
+    // 1. Check Firestore
+    try {
+        const cached = await DailyQuoteService.get(today);
+        if (cached) return cached;
+    } catch (e) {
+        console.warn("DailyQuoteService.get failed", e);
+    }
+
+    // 2. Generate with Gemini
+    try {
+        const liturgy = await fetchLiturgyDetails(new Date());
+        const systemInstruction = `Você é um teólogo católico. Forneça uma citação bíblica (versículo) que se relacione com a liturgia do dia ou o tempo litúrgico atual. Além disso, forneça uma breve frase (máximo 15 palavras) que resuma o que o dia de hoje representa no calendário litúrgico. Por fim, adicione uma "curiosidade litúrgica" curta e interessante sobre o dia de hoje, o santo do dia ou o tempo litúrgico. Retorne JSON: { "text": "...", "reference": "...", "liturgicalContext": "...", "curiosity": "..." }`;
+        const prompt = `Liturgia de hoje: ${liturgy.title}. Por favor, forneça o versículo, o contexto litúrgico resumido e uma curiosidade litúrgica.`;
+
+        const response = await runWithFallback(async (modelName) => {
+            const freshAi = new GoogleGenAI({ apiKey: getApiKey() });
+            return await freshAi.models.generateContent({ 
+                model: modelName, 
+                contents: prompt, 
+                config: { systemInstruction, responseMimeType: "application/json" } 
+            });
+        }, TEXT_MODELS_FALLBACK);
+
+        const text = response.text || "";
+        const jsonString = extractJson(text);
+        if (jsonString) {
+            const parsed = JSON.parse(jsonString);
+            const result = {
+                text: parsed.text || "O Senhor é meu pastor, nada me faltará.",
+                reference: parsed.reference || "Salmo 23:1",
+                liturgicalContext: parsed.liturgicalContext || liturgy.title,
+                curiosity: parsed.curiosity || ""
+            };
+            
+            // Save to Firestore
+            try {
+                await DailyQuoteService.save(today, result);
+            } catch (e) {
+                console.warn("DailyQuoteService.save failed", e);
+            }
+            
+            return result;
+        }
+    } catch (e) {
+        console.error("getDailyVerse error", e);
+    }
+
+    return { text: "O Senhor é meu pastor, nada me faltará.", reference: "Salmo 23:1", liturgicalContext: "Tempo Comum", curiosity: "Você sabia que o Tempo Comum é o período mais longo do ano litúrgico?" };
 };
 
 export const generateRepertoryImage = async (theme: string) => {

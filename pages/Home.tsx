@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { PORTAL_LINKS, HOURLY_VERSES } from '../constants';
 import { useAuth } from '../context/AuthContext';
-import { generateCatholicChurchImage, getCachedImage } from '../services/geminiService';
+import { generateCatholicChurchImage, getCachedImage, getDailyVerse } from '../services/geminiService';
 import PremiumBackground from '../components/PremiumBackground';
+import { BibleVerse } from '../types';
 
 const Home: React.FC = () => {
   const { currentUser } = useAuth();
-  const [verse, setVerse] = useState(HOURLY_VERSES[0]);
+  const [verse, setVerse] = useState<BibleVerse>(HOURLY_VERSES[0]);
   
   const getContextKey = () => {
       const hour = new Date().getHours();
@@ -23,7 +24,16 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    setVerse(HOURLY_VERSES[Math.floor(Math.random() * HOURLY_VERSES.length)]);
+    const fetchVerse = async () => {
+      try {
+        const dailyVerse = await getDailyVerse();
+        setVerse(dailyVerse);
+      } catch (error) {
+        console.error("Failed to fetch daily verse", error);
+        setVerse(HOURLY_VERSES[Math.floor(Math.random() * HOURLY_VERSES.length)]);
+      }
+    };
+    fetchVerse();
   }, []);
 
   // Listen for real-time background updates

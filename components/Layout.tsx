@@ -8,7 +8,8 @@ import { AiAssistant } from './AiAssistant';
 import EditProfileModal from './EditProfileModal';
 import AbsenceNotificationModal from './AbsenceNotificationModal'; 
 import { AuditService, AttendanceService, JustificationService, RehearsalService } from '../services/firebase';
-import { AttendanceRecord, Justification, Rehearsal } from '../types';
+import { AttendanceRecord, Justification, Rehearsal, BibleVerse } from '../types';
+import { getDailyVerse } from '../services/geminiService';
 
 const SidebarItem = ({ to, icon, label, onClick, badgeCount = 0, isDev = false }: any) => (
   <NavLink
@@ -79,7 +80,7 @@ const Layout: React.FC = () => {
   const { currentUser, logout, checkPermission } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(false); 
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); 
-  const [verse, setVerse] = useState(HOURLY_VERSES[0]);
+  const [verse, setVerse] = useState<BibleVerse>(HOURLY_VERSES[0]);
   const location = useLocation();
   
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -105,8 +106,17 @@ const Layout: React.FC = () => {
   };
 
   useEffect(() => {
-    const idx = Math.floor(Math.random() * HOURLY_VERSES.length);
-    setVerse(HOURLY_VERSES[idx]);
+    const fetchVerse = async () => {
+      try {
+        const dailyVerse = await getDailyVerse();
+        setVerse(dailyVerse);
+      } catch (error) {
+        console.error("Failed to fetch daily verse in layout", error);
+        const idx = Math.floor(Math.random() * HOURLY_VERSES.length);
+        setVerse(HOURLY_VERSES[idx]);
+      }
+    };
+    fetchVerse();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -294,9 +304,13 @@ const Layout: React.FC = () => {
               <div className="relative p-5 rounded-[2rem] bg-brand-600 text-white overflow-hidden shadow-lg shadow-brand-500/20 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-600 to-brand-800"></div>
                 <div className="relative z-10">
-                  <p className="text-[10px] font-bold opacity-60 uppercase mb-2">Palavra</p>
-                  <p className="text-[11px] italic font-medium leading-relaxed">"{verse.text}"</p>
-                  <p className="text-[9px] font-bold mt-2 text-right opacity-80">— {verse.reference}</p>
+                  <p className="text-[10px] font-bold opacity-60 uppercase mb-2">Curiosidade Litúrgica</p>
+                  <p className="text-[11px] italic font-medium leading-relaxed">
+                    {verse.curiosity ? `"${verse.curiosity}"` : (verse.liturgicalContext ? `"${verse.liturgicalContext}"` : `"${verse.text}"`)}
+                  </p>
+                  <p className="text-[9px] font-bold mt-2 text-right opacity-80">
+                    {verse.curiosity ? "— Você sabia?" : (verse.liturgicalContext ? "— Representação do Dia" : `— ${verse.reference}`)}
+                  </p>
                 </div>
               </div>
 

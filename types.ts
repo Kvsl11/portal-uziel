@@ -151,3 +151,10 @@ export interface PollVote {
   optionIndex: number;
   timestamp: any;
 }
+
+export interface BibleVerse {
+  text: string;
+  reference: string;
+  liturgicalContext?: string;
+  curiosity?: string;
+}

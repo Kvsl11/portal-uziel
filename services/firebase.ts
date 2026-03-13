@@ -482,6 +482,24 @@ export const LiturgyCacheService = {
     }
 };
 
+export const DailyQuoteService = {
+    get: async (dateStr: string) => {
+        const docRef = getDocRef('daily_quotes', `quote_${dateStr}`);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+            return snap.data() as { text: string, reference: string, liturgicalContext?: string, curiosity?: string, date: string };
+        }
+        return null;
+    },
+    save: async (dateStr: string, quote: { text: string, reference: string, liturgicalContext?: string, curiosity?: string }) => {
+        await setDoc(getDocRef('daily_quotes', `quote_${dateStr}`), { 
+            ...quote, 
+            date: dateStr, 
+            createdAt: serverTimestamp() 
+        }, { merge: true });
+    }
+};
+
 export const SystemAdminService = {
     getCollectionPreview: async (collName: string, limitCount = 3) => {
         const q = query(getColRef(collName), limit(limitCount));
