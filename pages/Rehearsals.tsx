@@ -384,10 +384,23 @@ const Rehearsals: React.FC = () => {
   const generateMessage = (rehearsal: Rehearsal, name?: string) => {
       const dateStr = new Date(rehearsal.date + 'T12:00:00').toLocaleDateString('pt-BR');
       const greeting = getGreeting();
-      const targetName = name ? name.split(' ')[0] : 'Galera'; // Generic for group
+      const targetName = name ? name.split(' ')[0] : 'Ministério Uziel'; // Generic for group
       const location = rehearsal.location ? rehearsal.location : 'Igreja/Sede';
 
-      return `*${greeting}, ${targetName}!* 👋\n\n📢 *CONVOCAÇÃO DE EVENTO*\n🏛️ *Ministério Uziel*\n\n📌 *Tipo:* ${rehearsal.type}\n📌 *Tema:* ${rehearsal.topic}\n🗓 *Data:* ${dateStr} às ${rehearsal.time}\n📍 *Local:* ${location}\n\n📝 *Pauta:* ${rehearsal.notes || 'Detalhes do evento.'}\n\nContamos com sua presença! 🙏\n\nAtt,\n*Coordenador*`;
+      let signature = "Coordenador 💙";
+      const currentName = currentUser?.name || "";
+      
+      if (currentName.includes("Dev Kaio")) {
+          signature = "Coordenador de Ensaios 💙";
+      } else if (currentName.includes("Willian")) {
+          signature = "Coordenador de Liturgia e Repertório 💙";
+      } else if (currentName.includes("Junior")) {
+          signature = "Presidente 💙";
+      } else if (currentName) {
+          signature = `${currentName} 💙`;
+      }
+
+      return `*${greeting}, ${targetName}!* 👋\n\n📢 *CONVOCAÇÃO DE EVENTO*\n🏛️ *Ministério Uziel*\n\n📌 *Tipo:* ${rehearsal.type}\n📌 *Tema:* ${rehearsal.topic}\n🗓 *Data:* ${dateStr} às ${rehearsal.time}\n📍 *Local:* ${location}\n\n📝 *Pauta:* ${rehearsal.notes || 'Detalhes do evento.'}\n\nContamos com sua presença! 🙏\n\nAtt,\n*${signature}*`;
   };
 
   // --- WhatsApp Actions ---
