@@ -323,6 +323,12 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   };
 
   useEffect(() => {
+    if (isOpen && !isExpanded && !embedded) {
+      setIsOpen(false);
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
     if (embedded) setIsOpen(true);
   }, [embedded]);
 
@@ -796,20 +802,74 @@ INSTRUÇÕES ADICIONAIS:
     }
   };
 
-  const containerClasses = embedded 
-    ? "relative w-full h-full bg-white dark:bg-[#0f172a] rounded-[2rem] flex flex-col shadow-none border-0 overflow-hidden transition-all duration-300"
-    : isExpanded
-        ? `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up ${enableTransition ? 'transition-all duration-300' : ''}
-           inset-0 w-full h-full rounded-none`
-        : `fixed z-[10000] bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in-up ${enableTransition ? 'transition-all duration-300' : ''}
-           inset-0 w-full h-full rounded-none
-           md:bottom-8 md:right-8 md:w-[420px] md:h-[650px] md:max-h-[80vh] md:rounded-3xl md:left-auto md:top-auto md:origin-bottom-right`;
+  const assistantVariants = {
+    hidden: { 
+      opacity: 0, 
+      scale: 0.95, 
+      y: 20,
+      transition: { duration: 0.2 }
+    },
+    collapsed: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      width: '420px',
+      height: '650px',
+      right: '32px',
+      bottom: '32px',
+      borderRadius: '24px',
+      transition: { type: 'spring', damping: 25, stiffness: 200 }
+    },
+    expanded: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      width: '100vw',
+      height: '100vh',
+      right: '0px',
+      bottom: '0px',
+      borderRadius: '0px',
+      transition: { type: 'spring', damping: 25, stiffness: 200 }
+    },
+    embedded: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      width: '800px',
+      height: '700px',
+      borderRadius: '24px',
+      transition: { type: 'spring', damping: 25, stiffness: 200 }
+    }
+  };
 
   const assistantContent = (
     <>
       {embedded && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" onClick={onClose}></div>}
       
-      <div className={`${containerClasses} ${embedded ? 'fixed z-[160] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] h-[85vh] md:w-[800px] md:h-[700px] shadow-2xl !rounded-3xl' : ''}`}>
+      <motion.div 
+        initial="hidden"
+        animate={embedded ? "embedded" : (isExpanded ? "expanded" : "collapsed")}
+        variants={assistantVariants}
+        style={{
+          position: 'fixed',
+          zIndex: 10000,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          ...(embedded ? {
+            top: '50%',
+            left: '50%',
+            x: '-50%',
+            y: '-50%',
+            maxWidth: '95%',
+            maxHeight: '85vh',
+          } : {
+            top: 'auto',
+            left: 'auto',
+          })
+        }}
+        className="bg-white dark:bg-[#0f172a] shadow-2xl border border-slate-200 dark:border-slate-800 !transition-none"
+      >
             
             <div className="flex justify-between items-center p-5 pt-6 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-20 border-b border-slate-100 dark:border-white/5">
                 <div className={`${isExpanded ? 'max-w-4xl mx-auto w-full' : 'w-full'} flex justify-between items-center`}>
@@ -1074,7 +1134,7 @@ INSTRUÇÕES ADICIONAIS:
             )}
 
             <DeleteConfirmationModal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)} onConfirm={confirmClear} title="Limpar Conversa?" description="Esta ação removerá todas as mensagens e o histórico atual do assistente." />
-      </div>
+      </motion.div>
     </>
   );
 

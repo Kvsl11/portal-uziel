@@ -19,8 +19,10 @@ import {
   updateDoc, 
   limit,
   getDocs,
-  where
+  where,
+  Timestamp
 } from "firebase/firestore";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { APP_ID } from "../constants";
 
 // --- DEFAULT CONFIGURATION EXPORT ---
@@ -56,6 +58,18 @@ export const db = initializeFirestore(app, {
 });
 
 export const auth = getAuth(app);
+export const messaging = getMessaging(app);
+
+onMessage(messaging, (payload) => {
+  console.log('Message received. ', payload);
+  // Customize notification here
+  if (payload.notification) {
+    new Notification(payload.notification.title || 'Nova Notificação', {
+      body: payload.notification.body,
+      icon: '/logo.svg'
+    });
+  }
+});
 
 const getColRef = (collName: string) => collection(db, `artifacts/${APP_ID}/public/data/${collName}`);
 const getDocRef = (collName: string, id: string) => doc(db, `artifacts/${APP_ID}/public/data/${collName}`, id);
@@ -176,6 +190,25 @@ export const UserService = {
   },
   deleteUser: async (username: string) => {
     await deleteDoc(getDocRef('users', username.toLowerCase().trim()));
+  },
+  requestNotificationPermission: async (username: string) => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const token = await getToken(messaging);
+        if (token) {
+          await updateDoc(getDocRef('users', username.toLowerCase().trim()), { fcmToken: token });
+          // Send token to backend
+          await fetch('/api/register-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: username.toLowerCase().trim(), token })
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error requesting notification permission:", e);
+    }
   }
 };
 
@@ -386,6 +419,48 @@ export const AuditService = {
     },
     deleteLog: async (id: string) => {
         await deleteDoc(getDocRef('audit_logs', id));
+    },
+    getDailyAIUsage: async () => {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayTimestamp = Timestamp.fromDate(today);
+
+            const q = query(
+                collection(db, `artifacts/${APP_ID}/public/data/audit_logs`),
+                where('timestamp', '>=', todayTimestamp)
+            );
+            const snap = await getDocs(q);
+            
+            let count = 0;
+            snap.docs.forEach(d => {
+                const log = d.data();
+                const detailsLower = (log.details || '').toLowerCase();
+                
+                // Logic matching SystemAdmin.tsx
+                if (
+                    (log.module === 'AI Assistant' && log.action === 'CREATE') ||
+                    (log.module === 'Repertory' && (log.action === 'AI_LYRICS' || log.action === 'AI_COVER' || log.action === 'AI_PROCESS_LYRICS')) ||
+                    (log.module === 'Liturgy' && log.action === 'AI_LITURGY') ||
+                    (log.module === 'Composer' && log.action === 'AI_COMPOSER')
+                ) {
+                    count++;
+                }
+            });
+
+            // Also count daily images (they are tracked in a separate collection)
+            const imgQ = query(
+                collection(db, `artifacts/${APP_ID}/public/data/daily_images`),
+                where('createdAt', '>=', todayTimestamp)
+            );
+            const imgSnap = await getDocs(imgQ);
+            count += imgSnap.size;
+
+            return count;
+        } catch (e) {
+            console.error("Error fetching daily AI usage:", e);
+            return 0;
+        }
     },
     clearAllLogs: async () => {
         const snapshot = await getDocs(getColRef('audit_logs'));

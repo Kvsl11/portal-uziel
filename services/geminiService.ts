@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { FALLBACK_IMAGES, REPERTORY_COVERS } from "../constants";
-import { DailyImageService, LiturgyCacheService, DailyQuoteService } from "./firebase"; 
+import { DailyImageService, LiturgyCacheService, DailyQuoteService, AuditService } from "./firebase"; 
 import { LiturgyLocalStorage } from "./LiturgyLocalStorage"; 
 
 // --- DYNAMIC API KEY LOADING ---
@@ -38,6 +38,8 @@ const CACHE_PREFIX = 'uziel_daily_';
 const memoryCache = new Map<string, string>();
 
 let globalQuotaExceeded = false;
+
+export const isQuotaExceeded = () => globalQuotaExceeded;
 
 export const getTimeUntilQuotaReset = (): string => {
     const now = new Date();
@@ -269,6 +271,41 @@ const saveToLocal = (contextKey: string, data: string) => {
     updateLocalCache(contextKey, data);
 };
 
+const DAILY_QUOTA_LIMIT = 1500;
+
+let rateLimitToastElement: HTMLDivElement | null = null;
+
+const showRateLimitNotification = () => {
+    if (rateLimitToastElement) return;
+
+    rateLimitToastElement = document.createElement('div');
+    rateLimitToastElement.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[99999] bg-amber-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up font-medium text-sm border border-amber-400/50 backdrop-blur-md';
+    
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-exclamation-triangle animate-pulse';
+    rateLimitToastElement.appendChild(icon);
+
+    const textSpan = document.createElement('span');
+    textSpan.innerText = 'Muitas requisições. Aguarde alguns segundos...';
+    rateLimitToastElement.appendChild(textSpan);
+
+    document.body.appendChild(rateLimitToastElement);
+
+    setTimeout(() => {
+        if (rateLimitToastElement) {
+            rateLimitToastElement.style.opacity = '0';
+            rateLimitToastElement.style.transform = 'translate(-50%, -20px)';
+            rateLimitToastElement.style.transition = 'all 0.5s ease';
+            setTimeout(() => {
+                if (rateLimitToastElement) {
+                    rateLimitToastElement.remove();
+                    rateLimitToastElement = null;
+                }
+            }, 500);
+        }
+    }, 5000);
+};
+
 async function runWithFallback<T>(
   operation: (model: string) => Promise<T>, 
   modelsList: string[], 
@@ -305,14 +342,30 @@ async function runWithFallback<T>(
             }
 
             if (msg.includes("429") || msg.includes("quota") || msg.includes("resource_exhausted")) {
-                console.warn(`[Gemini Service] Cota atingida para modelo ${model}.`);
-                if (modelsList === IMAGE_MODELS_FALLBACK && model === modelsToTry[modelsToTry.length - 1]) {
-                    globalQuotaExceeded = true;
-                    showQuotaNotification();
-                } else if (model === modelsToTry[modelsToTry.length - 1]) {
-                    // If it's the last model in ANY fallback list and it fails with quota, trigger global quota
-                    globalQuotaExceeded = true;
-                    showQuotaNotification();
+                console.warn(`[Gemini Service] Cota atingida para modelo ${model}. Verificando uso real...`);
+                
+                // Check if it's the last model in the list
+                const isLastModel = model === modelsToTry[modelsToTry.length - 1];
+                
+                if (isLastModel) {
+                    try {
+                        const actualUsage = await AuditService.getDailyAIUsage();
+                        console.log(`[Gemini Service] Uso real hoje: ${actualUsage}/${DAILY_QUOTA_LIMIT}`);
+                        
+                        if (actualUsage >= DAILY_QUOTA_LIMIT) {
+                            globalQuotaExceeded = true;
+                            showQuotaNotification();
+                        } else {
+                            console.warn(`[Gemini Service] 429 recebido mas uso (${actualUsage}) está abaixo do limite (${DAILY_QUOTA_LIMIT}). Provavelmente limite de RPM.`);
+                            showRateLimitNotification();
+                            await wait(3000); // Wait a bit
+                        }
+                    } catch (usageErr) {
+                        console.error("Erro ao verificar uso real:", usageErr);
+                        // Fallback to old behavior if check fails
+                        globalQuotaExceeded = true;
+                        showQuotaNotification();
+                    }
                 }
                 break; 
             }
@@ -718,8 +771,18 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore') =
       console.error("Gemini TTS Error:", e);
       const msg = e.toString().toLowerCase();
       if (msg.includes("429") || msg.includes("quota") || msg.includes("resource_exhausted")) {
-          globalQuotaExceeded = true;
-          showQuotaNotification();
+          try {
+              const actualUsage = await AuditService.getDailyAIUsage();
+              if (actualUsage >= DAILY_QUOTA_LIMIT) {
+                  globalQuotaExceeded = true;
+                  showQuotaNotification();
+              } else {
+                  showRateLimitNotification();
+              }
+          } catch (usageErr) {
+              globalQuotaExceeded = true;
+              showQuotaNotification();
+          }
       }
       throw e; 
   }

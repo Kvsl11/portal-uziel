@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application users and their preferences",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["super-admin", "admin", "member", "guest"] },
+        "voicePreference": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["username", "name", "role"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Ministry members and their points",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "totalPoints": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Attendance records for events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "eventType": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "justification": { "type": "string" },
+        "points": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "eventId": { "type": "string" }
+      },
+      "required": ["id", "memberId", "status", "points"]
+    },
+    "Repertory": {
+      "title": "Repertory",
+      "description": "Musical repertoire for specific dates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "title": { "type": "string" },
+        "songs": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["date"]
+    },
+    "Playlist": {
+      "title": "Playlist",
+      "description": "Shared musical playlists",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "title": { "type": "string" },
+        "image": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["url", "addedBy"]
+    },
+    "Rehearsal": {
+      "title": "Rehearsal",
+      "description": "Scheduled rehearsals",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["date"]
+    },
+    "Justification": {
+      "title": "Justification",
+      "description": "Absence justifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "date": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "ACCEPTED", "REJECTED"] },
+        "adminNotes": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["memberId", "date", "reason"]
+    },
+    "Poll": {
+      "title": "Poll",
+      "description": "Internal polls",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["OPEN", "CLOSED"] },
+        "votes": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["question", "options"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "System audit logs",
+      "type": "object",
+      "properties": {
+        "user": { "type": "string" },
+        "userName": { "type": "string" },
+        "role": { "type": "string" },
+        "module": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "userAgent": { "type": "string" },
+        "timestamp": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "System users" },
+    "members": { "schema": "Member", "description": "Ministry members" },
+    "attendance": { "schema": "Attendance", "description": "Attendance records" },
+    "repertory": { "schema": "Repertory", "description": "Musical repertoire" },
+    "playlists": { "schema": "Playlist", "description": "Shared playlists" },
+    "rehearsals": { "schema": "Rehearsal", "description": "Scheduled rehearsals" },
+    "justifications": { "schema": "Justification", "description": "Absence justifications" },
+    "polls": { "schema": "Poll", "description": "Internal polls" },
+    "audit_logs": { "schema": "AuditLog", "description": "System audit logs" },
+    "settings": { "schema": "object", "description": "System settings" },
+    "schedules": { "schema": "object", "description": "Rotas and schedules" },
+    "chat_histories": { "schema": "object", "description": "User chat history" },
+    "daily_images": { "schema": "object", "description": "Daily generated images" },
+    "liturgy_cache": { "schema": "object", "description": "Liturgy API cache" },
+    "daily_quotes": { "schema": "object", "description": "Daily quotes and curiosities" }
+  }
+}

@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { getDocs, collection, query, writeBatch, orderBy, limit, where, doc, getDoc, Timestamp } from "firebase/firestore";
-import { db, AuditService, DailyImageService, SystemAdminService, DEFAULT_FIREBASE_CONFIG } from '../services/firebase';
-import { APP_ID } from '../constants';
+import { db, AuditService, DailyImageService, SystemAdminService } from '../services/firebase';
+import firebaseConfig from '../firebase-applet-config.json';
 import { useAuth, DEFAULT_PERMISSIONS, PERMISSION_MODULES } from '../context/AuthContext';
 import Card from '../components/Card';
 import Loading from '../components/Loading';
@@ -422,7 +422,7 @@ const SystemAdmin: React.FC = () => {
         
         try {
             await Promise.all(collections.map(async (col) => {
-                const colPath = `artifacts/${APP_ID}/public/data/${col}`;
+                const colPath = col;
                 const snap = await getDocs(collection(db, colPath));
                 newStats[col] = snap.size;
                 
@@ -433,7 +433,7 @@ const SystemAdmin: React.FC = () => {
             setPreviews(newPreviews);
 
             const imgSnap = await getDocs(query(
-                collection(db, `artifacts/${APP_ID}/public/data/daily_images`),
+                collection(db, `daily_images`),
                 orderBy('createdAt', 'desc'),
                 limit(200)
             ));
@@ -445,14 +445,14 @@ const SystemAdmin: React.FC = () => {
             const todayTimestamp = Timestamp.fromDate(today);
 
             const recentImagesQuery = query(
-                collection(db, `artifacts/${APP_ID}/public/data/daily_images`),
+                collection(db, `daily_images`),
                 where('createdAt', '>=', todayTimestamp)
             );
             const recentImagesSnap = await getDocs(recentImagesQuery);
             const dailyImageCount = recentImagesSnap.size;
             
             const logsSnap = await getDocs(query(
-                collection(db, `artifacts/${APP_ID}/public/data/audit_logs`),
+                collection(db, `audit_logs`),
                 where('timestamp', '>=', todayTimestamp)
             ));
             
@@ -524,11 +524,11 @@ const SystemAdmin: React.FC = () => {
                 setCustomFirebaseConfig(JSON.stringify(parsed, null, 2));
                 setFbSource('custom');
             } catch(e) {
-                setCustomFirebaseConfig(JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2));
+                setCustomFirebaseConfig(JSON.stringify(firebaseConfig, null, 2));
                 setFbSource('default');
             }
         } else {
-            setCustomFirebaseConfig(JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2));
+            setCustomFirebaseConfig(JSON.stringify(firebaseConfig, null, 2));
             setFbSource('default');
         }
     }, []);
@@ -605,7 +605,7 @@ const SystemAdmin: React.FC = () => {
     const handlePurgeCollection = async (target: string) => {
         setIsCleaning(true);
         try {
-            const colRef = collection(db, `artifacts/${APP_ID}/public/data/${target}`);
+            const colRef = collection(db, target);
             const snap = await getDocs(colRef);
             const batch = writeBatch(db);
             snap.docs.forEach(d => batch.delete(d.ref));
@@ -657,7 +657,7 @@ const SystemAdmin: React.FC = () => {
     const handleResetFirebase = () => {
         if(confirm("Restaurar configuração Firebase para o padrão do sistema?")) {
             localStorage.removeItem('uziel_custom_firebase_config');
-            setCustomFirebaseConfig(JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2));
+            setCustomFirebaseConfig(JSON.stringify(firebaseConfig, null, 2));
             setFbSource('default');
             setIsEditingFirebase(false);
         }

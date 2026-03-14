@@ -6,8 +6,8 @@ import { User } from "../types";
 import { STATUTES_CONTEXT } from "../utils/statutes";
 
 // Helper to get collection ref
-const getColRef = (collName: string) => collection(db, `artifacts/${APP_ID}/public/data/${collName}`);
-const getDocRef = (collName: string, id: string) => doc(db, `artifacts/${APP_ID}/public/data/${collName}`, id);
+const getColRef = (collName: string) => collection(db, collName);
+const getDocRef = (collName: string, id: string) => doc(db, collName, id);
 
 export const ContextService = {
     /**
