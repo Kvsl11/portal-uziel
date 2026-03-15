@@ -228,7 +228,16 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [enableTransition, setEnableTransition] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   
   const [messages, setMessages] = useState<{
       role: 'user' | 'model', 
@@ -813,10 +822,10 @@ INSTRUÇÕES ADICIONAIS:
       opacity: 1,
       scale: 1,
       y: 0,
-      width: '420px',
-      height: '650px',
-      right: '32px',
-      bottom: '32px',
+      width: 'min(420px, calc(100vw - 32px))',
+      height: 'min(650px, calc(100vh - 120px))',
+      right: '16px',
+      bottom: '16px',
       borderRadius: '24px',
       transition: { type: 'spring', damping: 25, stiffness: 200 }
     },
@@ -824,8 +833,8 @@ INSTRUÇÕES ADICIONAIS:
       opacity: 1,
       scale: 1,
       y: 0,
-      width: '100vw',
-      height: '100vh',
+      width: '100%',
+      height: '100%',
       right: '0px',
       bottom: '0px',
       borderRadius: '0px',
@@ -835,8 +844,8 @@ INSTRUÇÕES ADICIONAIS:
       opacity: 1,
       scale: 1,
       y: 0,
-      width: '800px',
-      height: '700px',
+      width: 'min(800px, calc(100vw - 32px))',
+      height: 'min(700px, calc(100vh - 32px))',
       borderRadius: '24px',
       transition: { type: 'spring', damping: 25, stiffness: 200 }
     }
@@ -848,7 +857,7 @@ INSTRUÇÕES ADICIONAIS:
       
       <motion.div 
         initial="hidden"
-        animate={embedded ? "embedded" : (isExpanded ? "expanded" : "collapsed")}
+        animate={embedded ? "embedded" : ((isExpanded || isMobile) ? "expanded" : "collapsed")}
         variants={assistantVariants}
         style={{
           position: 'fixed',
